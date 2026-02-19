@@ -30,7 +30,7 @@ build-backend = "maturin"
 
 [tool.maturin]
 python-source = "src"
-manifest-path = "native/Cargo.toml"
+manifest-path = "riichienv-python/Cargo.toml"
 module-name = "riichienv._riichienv"
 features = ["extension-module"]
 
@@ -106,4 +106,4 @@ members = [
 
 [tool.ty.environment]
 python = "./.venv"
-root = ["./src", "./native", "."]
+root = ["./src", "."]

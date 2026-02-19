@@ -2,13 +2,13 @@ use pyo3::prelude::*;
 use pyo3::IntoPyObject;
 use std::collections::HashMap;
 
-use crate::action::{Action, Phase};
-use crate::observation::Observation;
-use crate::replay::MjaiEvent;
-use crate::rule::GameRule;
-use crate::state::legal_actions::GameStateLegalActions; // Import trait
-use crate::state::GameState;
-use crate::types::{Meld, WinResult};
+use riichienv_core::action::{Action, Phase};
+use riichienv_core::observation::Observation;
+use riichienv_core::replay::MjaiEvent;
+use riichienv_core::rule::GameRule;
+use riichienv_core::state::legal_actions::GameStateLegalActions; // Import trait
+use riichienv_core::state::GameState;
+use riichienv_core::types::{Meld, WinResult};
 
 #[pyclass(module = "riichienv._riichienv")]
 #[derive(Debug, Clone)]
