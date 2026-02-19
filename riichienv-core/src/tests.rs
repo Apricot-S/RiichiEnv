@@ -147,30 +147,20 @@ mod unit_tests {
         assert!(res.yaku_ids.contains(&50));
     }
 
-    #[cfg(feature = "python")]
-    fn create_test_env(game_type: u8) -> crate::env::RiichiEnv {
-        crate::env::RiichiEnv {
-            state: crate::state::GameState::new(
-                game_type,
-                false,
-                None,
-                0,
-                crate::rule::GameRule::default(),
-            ),
-        }
+    fn create_test_state(game_type: u8) -> crate::state::GameState {
+        crate::state::GameState::new(game_type, false, None, 0, crate::rule::GameRule::default())
     }
 
-    #[cfg(feature = "python")]
     #[test]
     fn test_seeded_shuffle_changes_between_rounds() {
-        let mut env = create_test_env(2);
-        env.state.seed = Some(42);
+        let mut state = create_test_state(2);
+        state.seed = Some(42);
 
-        env.state._initialize_next_round(true, false);
-        let digest1 = env.state.wall.wall_digest.clone();
+        state._initialize_next_round(true, false);
+        let digest1 = state.wall.wall_digest.clone();
 
-        env.state._initialize_next_round(true, false);
-        let digest2 = env.state.wall.wall_digest.clone();
+        state._initialize_next_round(true, false);
+        let digest2 = state.wall.wall_digest.clone();
 
         assert_ne!(
             digest1, digest2,
@@ -178,55 +168,52 @@ mod unit_tests {
         );
     }
 
-    #[cfg(feature = "python")]
     #[test]
     fn test_sudden_death_hanchan_logic() {
         use serde_json::Value;
 
-        let mut env = create_test_env(2);
-        env.state.round_wind = 1;
-        env.state.kyoku_idx = 3;
-        env.state.oya = 3;
+        let mut state = create_test_state(2);
+        state.round_wind = 1;
+        state.kyoku_idx = 3;
+        state.oya = 3;
         for i in 0..4 {
-            env.state.players[i].score = 25000;
-            env.state.players[i].nagashi_eligible = false;
+            state.players[i].score = 25000;
+            state.players[i].nagashi_eligible = false;
         }
-        env.state.needs_initialize_next_round = false;
+        state.needs_initialize_next_round = false;
 
-        env.state._trigger_ryukyoku("exhaustive_draw");
+        state._trigger_ryukyoku("exhaustive_draw");
 
-        if env.state.needs_initialize_next_round {
-            env.state
-                ._initialize_next_round(env.state.pending_oya_won, env.state.pending_is_draw);
-            env.state.needs_initialize_next_round = false;
+        if state.needs_initialize_next_round {
+            state._initialize_next_round(state.pending_oya_won, state.pending_is_draw);
+            state.needs_initialize_next_round = false;
         }
 
         assert!(
-            !env.state.is_done,
+            !state.is_done,
             "Game should not be done (Sudden Death should trigger)"
         );
-        assert_eq!(env.state.round_wind, 2, "Should enter West round");
-        assert_eq!(env.state.kyoku_idx, 0, "Should be West 1 (Kyoku 0)");
-        assert_eq!(env.state.oya, 0, "Oya should rotate to player 0");
+        assert_eq!(state.round_wind, 2, "Should enter West round");
+        assert_eq!(state.kyoku_idx, 0, "Should be West 1 (Kyoku 0)");
+        assert_eq!(state.oya, 0, "Oya should rotate to player 0");
 
         let new_scores = [31000, 25000, 24000, 20000];
-        for (player, &score) in env.state.players.iter_mut().zip(new_scores.iter()) {
+        for (player, &score) in state.players.iter_mut().zip(new_scores.iter()) {
             player.score = score;
         }
 
-        env.state._trigger_ryukyoku("exhaustive_draw");
-        if env.state.needs_initialize_next_round {
-            env.state
-                ._initialize_next_round(env.state.pending_oya_won, env.state.pending_is_draw);
-            env.state.needs_initialize_next_round = false;
+        state._trigger_ryukyoku("exhaustive_draw");
+        if state.needs_initialize_next_round {
+            state._initialize_next_round(state.pending_oya_won, state.pending_is_draw);
+            state.needs_initialize_next_round = false;
         }
 
         assert!(
-            env.state.is_done,
+            state.is_done,
             "Game should be done (Score >= 30000 in West)"
         );
 
-        let logs = &env.state.mjai_log;
+        let logs = &state.mjai_log;
         let event_types: Vec<String> = logs
             .iter()
             .filter_map(|s| {
@@ -254,42 +241,41 @@ mod unit_tests {
         assert!(waits.contains(&18)); // 1s
     }
 
-    #[cfg(feature = "python")]
     #[test]
     fn test_kuikae_deadlock_repro() {
         use crate::action::{Action, ActionType};
         use std::collections::HashMap;
 
-        let mut env = create_test_env(4);
+        let mut state = create_test_state(4);
         let pid = 0;
 
         // Hand: 4m, 5m, 6m, 6m. (12, 16, 20, 21)
         // 3m is 8.
-        env.state.players[pid as usize].hand = vec![12, 16, 20, 21];
+        state.players[pid as usize].hand = vec![12, 16, 20, 21];
 
         // Setup P3 (Kamicha of P0)
-        env.state.current_player = 3;
-        env.state.phase = Phase::WaitAct;
-        env.state.active_players = vec![3];
-        env.state.players[3].hand.push(8); // Give 3m
+        state.current_player = 3;
+        state.phase = Phase::WaitAct;
+        state.active_players = vec![3];
+        state.players[3].hand.push(8); // Give 3m
 
         // Action: P3 discards 3m
         let mut actions = HashMap::new();
         actions.insert(3, Action::new(ActionType::Discard, Some(8), vec![]));
 
-        env.state.step(&actions);
+        state.step(&actions);
 
-        env.state.step(&actions);
+        state.step(&actions);
 
         assert_eq!(
-            env.state.phase,
+            state.phase,
             Phase::WaitAct,
             "Should proceed to WaitAct as deadlock Chi is filtered out"
         );
-        assert_eq!(env.state.current_player, 0, "Should be P0's turn");
+        assert_eq!(state.current_player, 0, "Should be P0's turn");
 
         // Verify current_claims is empty or does not contain 0
-        if let Some(claims) = env.state.current_claims.get(&0) {
+        if let Some(claims) = state.current_claims.get(&0) {
             assert!(claims.is_empty(), "P0 should have no legal claims");
         }
     }
@@ -355,25 +341,24 @@ mod unit_tests {
         assert!(res9p.han >= 3, "9p should be Junchan (>= 3 Han)"); // Junchan (3)
     }
 
-    #[cfg(feature = "python")]
     #[test]
     fn test_tobi_ends_game() {
-        let mut env = create_test_env(4);
-        env.state.game_mode = 2; // 4p-red-half (Hanchan)
+        let mut state = create_test_state(4);
+        state.game_mode = 2; // 4p-red-half (Hanchan)
 
         // Set scores with one player having negative score
-        env.state.players[0].score = 30000;
-        env.state.players[1].score = 40000;
-        env.state.players[2].score = 35000;
-        env.state.players[3].score = -5000; // Negative score - should trigger tobi
+        state.players[0].score = 30000;
+        state.players[1].score = 40000;
+        state.players[2].score = 35000;
+        state.players[3].score = -5000; // Negative score - should trigger tobi
 
-        env.state.needs_initialize_next_round = false;
+        state.needs_initialize_next_round = false;
 
         // Try to initialize next round - should end game due to tobi
-        env.state._initialize_next_round(false, false);
+        state._initialize_next_round(false, false);
 
         assert!(
-            env.state.is_done,
+            state.is_done,
             "Game should be done due to tobi (player with negative score)"
         );
     }
@@ -526,26 +511,25 @@ mod unit_tests {
         );
     }
 
-    #[cfg(feature = "python")]
     #[test]
     fn test_no_tobi_with_positive_scores() {
-        let mut env = create_test_env(4);
-        env.state.game_mode = 2; // 4p-red-half (Hanchan)
-        env.state.round_wind = 0; // East round
+        let mut state = create_test_state(4);
+        state.game_mode = 2; // 4p-red-half (Hanchan)
+        state.round_wind = 0; // East round
 
         // Set scores with all players having positive scores
-        env.state.players[0].score = 25000;
-        env.state.players[1].score = 25000;
-        env.state.players[2].score = 25000;
-        env.state.players[3].score = 25000;
+        state.players[0].score = 25000;
+        state.players[1].score = 25000;
+        state.players[2].score = 25000;
+        state.players[3].score = 25000;
 
-        env.state.needs_initialize_next_round = false;
+        state.needs_initialize_next_round = false;
 
         // Try to initialize next round - should NOT end game
-        env.state._initialize_next_round(false, false);
+        state._initialize_next_round(false, false);
 
         assert!(
-            !env.state.is_done,
+            !state.is_done,
             "Game should NOT be done (all players have positive scores)"
         );
     }

@@ -63,7 +63,10 @@ jobs:
         with:
           toolchain: 1.87.0
 
-      - name: Rust Cargo Test
+      - name: Rust Cargo Test (pure core)
+        run: cargo test -p riichienv-core
+
+      - name: Rust Cargo Test (all features)
         run: cargo test --all-targets --all-features
 
   rs-lint:
@@ -95,7 +98,10 @@ jobs:
       - name: Rust Clippy
         run: PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1 cargo clippy --all-targets --all-features -- -D warnings
 
-      - name: Rust Cargo Check
+      - name: Rust Cargo Check (pure core)
+        run: cargo check -p riichienv-core --no-default-features
+
+      - name: Rust Cargo Check (all features)
         run: cargo check --all-targets --all-features
 
       - name: Install dependencies

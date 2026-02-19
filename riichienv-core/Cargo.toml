@@ -1,11 +1,13 @@
 [package]
-name = "riichienv"
+name = "riichienv-core"
 version = "0.2.1"
 edition = "2021"
+license = "Apache-2.0"
+description = "Core Rust library for Riichi Mahjong game logic"
+repository = "https://github.com/smly/RiichiEnv"
 
 [lib]
-name = "_riichienv"
-crate-type = ["cdylib", "rlib"]
+crate-type = ["rlib"]
 
 [dependencies]
 pyo3 = { version = "0.27.0", optional = true }
@@ -22,4 +24,3 @@ base64 = "0.22"
 [features]
 default = []
 python = ["dep:pyo3"]
-extension-module = ["python", "pyo3/extension-module"]
