@@ -12,9 +12,9 @@ use std::sync::Arc;
 use crate::action::Action as EnvAction;
 #[cfg(feature = "python")]
 use crate::hand_evaluator::HandEvaluator;
-use crate::types::{Conditions, Meld, MeldType};
 #[cfg(feature = "python")]
 use crate::types::WinResult;
+use crate::types::{Conditions, Meld, MeldType};
 
 pub mod mjai_replay;
 pub mod mjsoul_replay;
@@ -364,7 +364,10 @@ impl KyokuStepIterator {
     }
 }
 
-#[cfg_attr(feature = "python", pyclass(name = "Kyoku", module = "riichienv._riichienv"))]
+#[cfg_attr(
+    feature = "python",
+    pyclass(name = "Kyoku", module = "riichienv._riichienv")
+)]
 #[derive(Clone)]
 pub struct LogKyoku {
     pub scores: Vec<i32>,
@@ -388,33 +391,61 @@ pub struct LogKyoku {
 #[pymethods]
 impl LogKyoku {
     #[getter]
-    fn get_scores(&self) -> Vec<i32> { self.scores.clone() }
+    fn get_scores(&self) -> Vec<i32> {
+        self.scores.clone()
+    }
     #[getter]
-    fn get_doras(&self) -> Vec<u8> { self.doras.clone() }
+    fn get_doras(&self) -> Vec<u8> {
+        self.doras.clone()
+    }
     #[getter]
-    fn get_ura_doras(&self) -> Vec<u8> { self.ura_doras.clone() }
+    fn get_ura_doras(&self) -> Vec<u8> {
+        self.ura_doras.clone()
+    }
     #[getter]
-    fn get_hands(&self) -> Vec<Vec<u8>> { self.hands.clone() }
+    fn get_hands(&self) -> Vec<Vec<u8>> {
+        self.hands.clone()
+    }
     #[getter]
-    fn get_chang(&self) -> u8 { self.chang }
+    fn get_chang(&self) -> u8 {
+        self.chang
+    }
     #[getter]
-    fn get_ju(&self) -> u8 { self.ju }
+    fn get_ju(&self) -> u8 {
+        self.ju
+    }
     #[getter]
-    fn get_ben(&self) -> u8 { self.ben }
+    fn get_ben(&self) -> u8 {
+        self.ben
+    }
     #[getter]
-    fn get_liqibang(&self) -> u8 { self.liqibang }
+    fn get_liqibang(&self) -> u8 {
+        self.liqibang
+    }
     #[getter]
-    fn get_left_tile_count(&self) -> u8 { self.left_tile_count }
+    fn get_left_tile_count(&self) -> u8 {
+        self.left_tile_count
+    }
     #[getter]
-    fn get_end_scores(&self) -> Vec<i32> { self.end_scores.clone() }
+    fn get_end_scores(&self) -> Vec<i32> {
+        self.end_scores.clone()
+    }
     #[getter]
-    fn get_wliqi(&self) -> Vec<bool> { self.wliqi.clone() }
+    fn get_wliqi(&self) -> Vec<bool> {
+        self.wliqi.clone()
+    }
     #[getter]
-    fn get_paishan(&self) -> Option<String> { self.paishan.clone() }
+    fn get_paishan(&self) -> Option<String> {
+        self.paishan.clone()
+    }
     #[getter]
-    fn get_rule(&self) -> crate::rule::GameRule { self.rule }
+    fn get_rule(&self) -> crate::rule::GameRule {
+        self.rule
+    }
     #[getter]
-    fn get_game_end_scores(&self) -> Option<Vec<i32>> { self.game_end_scores.clone() }
+    fn get_game_end_scores(&self) -> Option<Vec<i32>> {
+        self.game_end_scores.clone()
+    }
 
     fn take_win_result_contexts(&self) -> PyResult<WinResultContextIterator> {
         Ok(WinResultContextIterator::new(self.clone()))

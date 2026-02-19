@@ -974,20 +974,18 @@ impl Observation {
 
     /// Serialize this Observation to a base64-encoded JSON string.
     pub fn serialize_to_base64(&self) -> RiichiResult<String> {
-        let json = serde_json::to_vec(self).map_err(|e| {
-            RiichiError::new(format!("serialization failed: {e}"))
-        })?;
+        let json = serde_json::to_vec(self)
+            .map_err(|e| RiichiError::new(format!("serialization failed: {e}")))?;
         Ok(BASE64.encode(&json))
     }
 
     /// Deserialize an Observation from a base64-encoded JSON string.
     pub fn deserialize_from_base64(s: &str) -> RiichiResult<Self> {
-        let bytes = BASE64.decode(s).map_err(|e| {
-            RiichiError::new(format!("base64 decode failed: {e}"))
-        })?;
-        let obs: Observation = serde_json::from_slice(&bytes).map_err(|e| {
-            RiichiError::new(format!("JSON deserialize failed: {e}"))
-        })?;
+        let bytes = BASE64
+            .decode(s)
+            .map_err(|e| RiichiError::new(format!("base64 decode failed: {e}")))?;
+        let obs: Observation = serde_json::from_slice(&bytes)
+            .map_err(|e| RiichiError::new(format!("JSON deserialize failed: {e}")))?;
         Ok(obs)
     }
 }
@@ -1019,10 +1017,25 @@ impl Observation {
         last_discard: Option<u32>,
     ) -> Self {
         Self::new(
-            player_id, hands, melds, discards, dora_indicators, scores,
-            riichi_declared, legal_actions, events, honba, riichi_sticks,
-            round_wind, oya, kyoku_index, waits, is_tenpai, riichi_sutehais,
-            last_tedashis, last_discard,
+            player_id,
+            hands,
+            melds,
+            discards,
+            dora_indicators,
+            scores,
+            riichi_declared,
+            legal_actions,
+            events,
+            honba,
+            riichi_sticks,
+            round_wind,
+            oya,
+            kyoku_index,
+            waits,
+            is_tenpai,
+            riichi_sutehais,
+            last_tedashis,
+            last_discard,
         )
     }
 

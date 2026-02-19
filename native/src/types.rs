@@ -303,7 +303,15 @@ impl WinResult {
         has_win_shape: bool,
     ) -> Self {
         Self::new(
-            is_win, yakuman, ron_agari, tsumo_agari_oya, tsumo_agari_ko, yaku, han, fu, pao_payer,
+            is_win,
+            yakuman,
+            ron_agari,
+            tsumo_agari_oya,
+            tsumo_agari_ko,
+            yaku,
+            han,
+            fu,
+            pao_payer,
             has_win_shape,
         )
     }

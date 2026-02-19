@@ -8,7 +8,10 @@ use serde_json::Value;
 use crate::errors::{RiichiError, RiichiResult};
 use crate::parser::tid_to_mjai;
 
-#[cfg_attr(feature = "python", pyclass(module = "riichienv._riichienv", eq, eq_int))]
+#[cfg_attr(
+    feature = "python",
+    pyclass(module = "riichienv._riichienv", eq, eq_int)
+)]
 #[repr(i32)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Phase {
@@ -24,7 +27,10 @@ impl Phase {
     }
 }
 
-#[cfg_attr(feature = "python", pyclass(module = "riichienv._riichienv", eq, eq_int))]
+#[cfg_attr(
+    feature = "python",
+    pyclass(module = "riichienv._riichienv", eq, eq_int)
+)]
 #[repr(i32)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ActionType {

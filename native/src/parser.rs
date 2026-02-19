@@ -72,9 +72,7 @@ pub fn parse_hand_internal(text: &str) -> RiichiResult<(Vec<u8>, Vec<Meld>)> {
                 } else {
                     (suit_offset + val - 1, false)
                 };
-                let tid = tm
-                    .get_tile(tile_34, is_red)
-                    .map_err(RiichiError::new)?;
+                let tid = tm.get_tile(tile_34, is_red).map_err(RiichiError::new)?;
                 tiles_136.push(tid);
             }
             pending_digits.clear();
@@ -207,10 +205,7 @@ fn parse_meld(chars: &mut Peekable<Chars>, tm: &mut TileManager) -> RiichiResult
             } else {
                 (suit_offset + val - 1, false)
             };
-            tiles_136.push(
-                tm.get_tile(tile_34, is_red)
-                    .map_err(RiichiError::new)?,
-            );
+            tiles_136.push(tm.get_tile(tile_34, is_red).map_err(RiichiError::new)?);
         }
         tiles_136.sort();
         Ok(Meld::new(MeldType::Chi, tiles_136, true, -1, None))
@@ -230,10 +225,7 @@ fn parse_meld(chars: &mut Peekable<Chars>, tm: &mut TileManager) -> RiichiResult
 
         let mut got_red = false;
         if is_red_indicated {
-            tiles_136.push(
-                tm.get_tile(base_34, true)
-                    .map_err(RiichiError::new)?,
-            );
+            tiles_136.push(tm.get_tile(base_34, true).map_err(RiichiError::new)?);
             got_red = true;
         }
 

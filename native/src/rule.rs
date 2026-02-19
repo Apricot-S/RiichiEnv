@@ -2,7 +2,10 @@
 use pyo3::{pyclass, pymethods};
 use serde::{Deserialize, Serialize};
 
-#[cfg_attr(feature = "python", pyclass(module = "riichienv._riichienv", eq, eq_int))]
+#[cfg_attr(
+    feature = "python",
+    pyclass(module = "riichienv._riichienv", eq, eq_int)
+)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum KuikaeMode {
     None = 0,
@@ -10,7 +13,10 @@ pub enum KuikaeMode {
     StrictFlank = 2,
 }
 
-#[cfg_attr(feature = "python", pyclass(module = "riichienv._riichienv", eq, eq_int))]
+#[cfg_attr(
+    feature = "python",
+    pyclass(module = "riichienv._riichienv", eq, eq_int)
+)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum KanDoraTimingMode {
     /// Tenhou style: All kan types reveal dora after discard (後めくり)
@@ -25,7 +31,10 @@ pub enum KanDoraTimingMode {
     AfterDiscard = 2,
 }
 
-#[cfg_attr(feature = "python", pyclass(module = "riichienv._riichienv", get_all, set_all))]
+#[cfg_attr(
+    feature = "python",
+    pyclass(module = "riichienv._riichienv", get_all, set_all)
+)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct GameRule {
     pub allows_ron_on_ankan_for_kokushi_musou: bool,
