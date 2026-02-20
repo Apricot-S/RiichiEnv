@@ -628,10 +628,15 @@ impl GameState3P {
                             melds.clone(),
                         );
                         let win_tile = self.drawn_tile.unwrap_or(0);
+                        let ura_indicators = if self.players[pid as usize].riichi_declared {
+                            self._get_ura_indicators()
+                        } else {
+                            vec![]
+                        };
                         let res = calc.calc(
                             win_tile,
                             self.wall.dora_indicators.clone(),
-                            vec![],
+                            ura_indicators,
                             Some(cond),
                         );
 
@@ -859,10 +864,15 @@ impl GameState3P {
                         hand.clone(),
                         melds.clone(),
                     );
+                    let ura_indicators = if self.players[w_pid as usize].riichi_declared {
+                        self._get_ura_indicators()
+                    } else {
+                        vec![]
+                    };
                     let res = calc.calc(
                         win_tile,
                         self.wall.dora_indicators.clone(),
-                        vec![],
+                        ura_indicators,
                         Some(cond),
                     );
 
@@ -1084,6 +1094,11 @@ impl GameState3P {
     }
 
     fn _resolve_discard(&mut self, pid: u8, tile: u8, tsumogiri: bool) {
+        // Clear ippatsu for the discarding player. When a riichi player discards
+        // without tsumo winning, their ippatsu window is over. Note: the riichi
+        // declaration discard won't wrongly clear it because _accept_riichi() runs
+        // AFTER this and sets ippatsu_cycle = true.
+        self.players[pid as usize].ippatsu_cycle = false;
         self.players[pid as usize].discards.push(tile);
         self.last_discard = Some((pid, tile));
         self.drawn_tile = None;
@@ -1696,6 +1711,17 @@ impl GameState3P {
             }
         }
         markers
+    }
+
+    fn _get_ura_indicators(&self) -> Vec<u8> {
+        let mut indicators = Vec::new();
+        for i in 0..self.wall.dora_indicators.len() {
+            let idx = (5 + 2 * i).saturating_sub(self.wall.rinshan_draw_count as usize);
+            if idx < self.wall.tiles.len() {
+                indicators.push(self.wall.tiles[idx]);
+            }
+        }
+        indicators
     }
 
     pub(crate) fn _process_end_game(&mut self) {
