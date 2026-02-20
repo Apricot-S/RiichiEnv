@@ -50,7 +50,7 @@ impl GameState3PLegalActions for GameState3P {
                     if let Some(idx) = hand.iter().rposition(|&t| t == tile) {
                         hand.remove(idx);
                     }
-                    let calc = crate::hand_evaluator::HandEvaluator::new(
+                    let calc = crate::hand_evaluator_3p::HandEvaluator3P::new(
                         hand,
                         self.players[pid_us].melds.clone(),
                     );
@@ -102,7 +102,7 @@ impl GameState3PLegalActions for GameState3P {
                     for &skip_idx in &indices {
                         let mut temp_hand = self.players[pid_us].hand.clone();
                         temp_hand.remove(skip_idx);
-                        let calc = crate::hand_evaluator::HandEvaluator::new(
+                        let calc = crate::hand_evaluator_3p::HandEvaluator3P::new(
                             temp_hand,
                             self.players[pid_us].melds.clone(),
                         );
@@ -170,7 +170,7 @@ impl GameState3PLegalActions for GameState3P {
                             if let Some(pos) = hand_pre.iter().position(|&x| x == t) {
                                 hand_pre.remove(pos);
                             }
-                            let calc_pre = crate::hand_evaluator::HandEvaluator::new(
+                            let calc_pre = crate::hand_evaluator_3p::HandEvaluator3P::new(
                                 hand_pre,
                                 self.players[pid_us].melds.clone(),
                             );
@@ -189,7 +189,7 @@ impl GameState3PLegalActions for GameState3P {
                                 None,
                             ));
                             let calc_post =
-                                crate::hand_evaluator::HandEvaluator::new(hand_post, melds_post);
+                                crate::hand_evaluator_3p::HandEvaluator3P::new(hand_post, melds_post);
                             let mut waits_post = calc_post.get_waits();
                             waits_post.sort();
 
@@ -257,7 +257,7 @@ impl GameState3PLegalActions for GameState3P {
             || (self.players[i_us].riichi_declared && self.players[i_us].missed_agari_riichi);
 
         if !in_discards && !in_missed {
-            let calc = crate::hand_evaluator::HandEvaluator::new(hand.clone(), melds.clone());
+            let calc = crate::hand_evaluator_3p::HandEvaluator3P::new(hand.clone(), melds.clone());
             let p_wind = (i + np - self.oya) % np;
             let cond = Conditions {
                 tsumo: false,

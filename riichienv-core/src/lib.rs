@@ -1,10 +1,12 @@
 mod agari;
 pub mod errors;
 pub mod hand_evaluator;
+pub mod hand_evaluator_3p;
 pub mod score;
 mod tests;
 pub mod types;
 mod yaku;
+mod yaku_3p;
 
 pub mod action;
 pub mod game_variant;

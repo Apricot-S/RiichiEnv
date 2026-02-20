@@ -227,10 +227,27 @@ impl MjSoulReplay {
             ));
         };
 
+        // Detect 3P from the first round's scores length
+        let is_3p = rounds_raw
+            .first()
+            .and_then(|r| {
+                if let RawAction::NewRound { scores, .. } = &r[0] {
+                    Some(scores.len() == 3)
+                } else {
+                    None
+                }
+            })
+            .unwrap_or(false);
+        let rule = if is_3p {
+            crate::rule::GameRule::default_mjsoul_sanma()
+        } else {
+            _rule
+        };
+
         let mut rounds = Vec::with_capacity(rounds_raw.len());
         for r_raw in rounds_raw {
             let mut kyoku = Self::kyoku_from_raw_actions(r_raw);
-            kyoku.rule = _rule;
+            kyoku.rule = rule;
             rounds.push(kyoku);
         }
 

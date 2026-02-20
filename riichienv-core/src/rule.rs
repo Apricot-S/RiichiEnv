@@ -83,6 +83,20 @@ impl GameRule {
         }
     }
 
+    pub fn default_mjsoul_sanma() -> Self {
+        Self {
+            allows_ron_on_ankan_for_kokushi_musou: true,
+            is_kokushi_musou_13machi_double: true,
+            yakuman_pao_is_liability_only: true,
+            allow_double_ron: true,
+            kuikae_mode: KuikaeMode::StrictFlank,
+            kan_dora_timing: KanDoraTimingMode::MajsoulImmediate,
+            is_sanma: true,
+            allow_kita: true,
+            sanma_tsumo_zon: true,
+        }
+    }
+
     pub fn default_tenhou_sanma() -> Self {
         Self {
             allows_ron_on_ankan_for_kokushi_musou: false,

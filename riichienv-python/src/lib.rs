@@ -42,6 +42,7 @@ fn _riichienv(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<riichienv_core::types::WinResult>()?;
     m.add_class::<riichienv_core::score::Score>()?;
     m.add_class::<riichienv_core::hand_evaluator::HandEvaluator>()?;
+    m.add_class::<riichienv_core::hand_evaluator_3p::HandEvaluator3P>()?;
     m.add_class::<riichienv_core::replay::MjSoulReplay>()?;
     m.add_class::<riichienv_core::replay::MjaiReplay>()?;
     m.add_class::<riichienv_core::replay::LogKyoku>()?;

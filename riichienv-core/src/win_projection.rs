@@ -1019,7 +1019,6 @@ impl<const MAX_TSUMO: usize> WinProjectionState<'_, MAX_TSUMO> {
             dora_count,
             aka_dora: aka_count,
             ura_dora_count: 0,
-            nukidora_count: 0,
             round_wind: self.sup.round_wind_tile,
             seat_wind: self.sup.seat_wind_tile,
         };

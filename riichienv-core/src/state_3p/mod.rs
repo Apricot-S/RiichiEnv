@@ -188,7 +188,7 @@ impl GameState3P {
         };
         self.player_event_counts[pid] = full_log_len;
 
-        let calc = crate::hand_evaluator::HandEvaluator::new(
+        let calc = crate::hand_evaluator_3p::HandEvaluator3P::new(
             self.players[pid].hand.clone(),
             self.players[pid].melds.clone(),
         );
@@ -460,7 +460,7 @@ impl GameState3P {
                                     num_players: NP as u8,
                                     ..Default::default()
                                 };
-                                let calc = crate::hand_evaluator::HandEvaluator::new(
+                                let calc = crate::hand_evaluator_3p::HandEvaluator3P::new(
                                     hand.clone(),
                                     melds.clone(),
                                 );
@@ -547,7 +547,7 @@ impl GameState3P {
                                 num_players: NP as u8,
                                 ..Default::default()
                             };
-                            let calc = crate::hand_evaluator::HandEvaluator::new(
+                            let calc = crate::hand_evaluator_3p::HandEvaluator3P::new(
                                 hand.clone(),
                                 melds.clone(),
                             );
@@ -622,7 +622,7 @@ impl GameState3P {
                             num_players: NP as u8,
                             ..Default::default()
                         };
-                        let calc = crate::hand_evaluator::HandEvaluator::new(
+                        let calc = crate::hand_evaluator_3p::HandEvaluator3P::new(
                             hand.clone(),
                             melds.clone(),
                         );
@@ -853,7 +853,7 @@ impl GameState3P {
                         ..Default::default()
                     };
 
-                    let calc = crate::hand_evaluator::HandEvaluator::new(
+                    let calc = crate::hand_evaluator_3p::HandEvaluator3P::new(
                         hand.clone(),
                         melds.clone(),
                     );
@@ -1532,7 +1532,7 @@ impl GameState3P {
         if reason == "exhaustive_draw" {
             for (i, p) in self.players.iter().enumerate() {
                 let calc =
-                    crate::hand_evaluator::HandEvaluator::new(p.hand.clone(), p.melds.clone());
+                    crate::hand_evaluator_3p::HandEvaluator3P::new(p.hand.clone(), p.melds.clone());
                 if calc.is_tenpai() {
                     tenpai[i] = true;
                 }

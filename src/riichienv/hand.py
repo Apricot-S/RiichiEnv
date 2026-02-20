@@ -74,6 +74,7 @@ class YakuList:
         Yaku(name="ドラ", name_en="Dora", mjsoul_id=31, tenhou_id=52),
         Yaku(name="赤ドラ", name_en="Aka Dora", mjsoul_id=32, tenhou_id=54),
         Yaku(name="裏ドラ", name_en="Ura Dora", mjsoul_id=33, tenhou_id=52),  # ドラと同じ
+        Yaku(name="抜きドラ", name_en="Nuki Dora", mjsoul_id=34, tenhou_id=52),  # ドラと同じ
     ]
 
     @staticmethod

@@ -38,7 +38,7 @@ impl GameState3P {
             let melds = &self.players[i as usize].melds;
 
             // Furiten check
-            let calc = crate::hand_evaluator::HandEvaluator::new(hand.clone(), melds.clone());
+            let calc = crate::hand_evaluator_3p::HandEvaluator3P::new(hand.clone(), melds.clone());
             let waits = calc.get_waits_u8();
             let mut is_furiten = false;
             for &w in &waits {
