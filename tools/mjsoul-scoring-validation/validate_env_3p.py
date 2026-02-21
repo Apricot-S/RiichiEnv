@@ -76,42 +76,6 @@ def parse_paishan(paishan_str: str) -> List[int]:
     return wall
 
 
-def rearrange_dead_wall_for_env(wall: List[int]) -> List[int]:
-    """Rearrange dead wall tiles to match env's expected layout.
-
-    MjSoul 3P dead wall (positions 94-107) has 7 stacks (bottom,top pairs):
-      Stack 1 [94,95]: D3 indicators (leftmost dora)
-      Stack 2 [96,97]: D2 indicators
-      Stack 3 [98,99]: D1 indicators (initial dora at pos 99)
-      Stack 4 [100,101]: D4 indicators
-      Stack 5 [102,103]: D5 indicators
-      Stack 6 [104,105]: Rinshan 3,4
-      Stack 7 [106,107]: Rinshan 1,2
-
-    Env expects after load_wall reversal (tiles[i] = input[107-i]):
-      tiles[0..3] = rinshan (positions 107..104, already correct)
-      tiles[4,5]  = D1,U1 → need input[103,102] = paishan[99,98]
-      tiles[6,7]  = D2,U2 → need input[101,100] = paishan[97,96]
-      tiles[8,9]  = D3,U3 → need input[99,98]   = paishan[95,94]
-      tiles[10,11]= D4,U4 → need input[97,96]   = paishan[101,100]
-      tiles[12,13]= D5,U5 → need input[95,94]   = paishan[103,102]
-    """
-    w = list(wall)
-    # Save original dora area (positions 94-103)
-    orig = [wall[i] for i in range(94, 104)]
-    # Rearrange to env's expected order
-    w[94] = orig[8]   # old pos 102 → D5/U5 area
-    w[95] = orig[9]   # old pos 103
-    w[96] = orig[6]   # old pos 100 → D4/U4 area
-    w[97] = orig[7]   # old pos 101
-    w[98] = orig[0]   # old pos 94  → D3/U3 area
-    w[99] = orig[1]   # old pos 95
-    w[100] = orig[2]  # old pos 96  → D2/U2 area
-    w[101] = orig[3]  # old pos 97
-    w[102] = orig[4]  # old pos 98  → D1/U1 area
-    w[103] = orig[5]  # old pos 99
-    return w
-
 
 def find_tile_in_hand(hand: List[int], tile_str: str) -> Optional[int]:
     """Find a tile in hand matching the tile string. Returns 136-format ID."""
@@ -402,9 +366,6 @@ def validate_kyoku(
 
     if len(wall) != 108:
         return False, f"Wall has {len(wall)} tiles, expected 108"
-
-    # Rearrange dead wall to match env's expected layout
-    wall = rearrange_dead_wall_for_env(wall)
 
     # Setup round
     scores = nr["scores"]

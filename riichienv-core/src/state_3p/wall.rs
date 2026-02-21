@@ -68,6 +68,26 @@ impl WallState3P {
 
     pub fn load_wall(&mut self, tiles: Vec<u8>) {
         let mut t = tiles;
+
+        // MjSoul 3P dead wall wraps around a table corner.
+        // Paishan positions 94-103 encode dora indicator stacks as:
+        //   [94,95]=D3/U3  [96,97]=D2/U2  [98,99]=D1/U1  [100,101]=D4/U4  [102,103]=D5/U5
+        // Rearrange to standard descending order (D5, D4, D3, D2, D1 from left
+        // to right) so that after reversal D1 lands at index 4, matching 4P.
+        if t.len() == 108 {
+            let orig: [u8; 10] = t[94..104].try_into().unwrap();
+            t[94] = orig[8];
+            t[95] = orig[9]; // D5 (was at 102,103)
+            t[96] = orig[6];
+            t[97] = orig[7]; // D4 (was at 100,101)
+            t[98] = orig[0];
+            t[99] = orig[1]; // D3 (was at 94,95)
+            t[100] = orig[2];
+            t[101] = orig[3]; // D2 (was at 96,97)
+            t[102] = orig[4];
+            t[103] = orig[5]; // D1 (was at 98,99)
+        }
+
         t.reverse();
         self.tiles = t;
         self.dora_indicators.clear();
