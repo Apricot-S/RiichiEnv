@@ -38,6 +38,16 @@ impl GameState3P {
             self._push_mjai_event(Value::Object(ev));
         }
 
+        // Reveal any pending kan dora (e.g. from a prior kakan/daiminkan) before
+        // checking for ron on kita.  Kita acts like a discard for dora timing
+        // purposes, so the pending dora must be active when evaluating and
+        // scoring the ron.  Without this, a kakan→kita→ron sequence would
+        // miss the kakan dora in the scoring.
+        while self.wall.pending_kan_dora_count > 0 {
+            self.wall.pending_kan_dora_count -= 1;
+            self._reveal_kan_dora();
+        }
+
         // Check other players for chankan-style ron on kita
         let np: u8 = 3;
         let mut chankan_ronners = Vec::new();
