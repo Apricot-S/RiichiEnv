@@ -666,7 +666,14 @@ impl GameState3P {
                             }
 
                             if pao_yakuman_val > 0 {
-                                let unit = if pid == self.oya { 48000 } else { 32000 };
+                                // Per-yakuman tsumo total depends on player count.
+                                // Yakuman base = 8000; pay_oya = 16000, pay_ko = 8000.
+                                let np = NP as i32;
+                                let unit = if pid == self.oya {
+                                    (np - 1) * 16000 // oya tsumo: each ko pays 16000
+                                } else {
+                                    16000 + (np - 2) * 8000 // ko tsumo: oya pays 16000 + (np-2) ko pay 8000
+                                };
                                 let pao_amt = pao_yakuman_val * unit;
                                 let non_pao_yakuman_val = total_yakuman_val - pao_yakuman_val;
                                 let non_pao_amt = non_pao_yakuman_val * unit;
@@ -906,7 +913,7 @@ impl GameState3P {
                             }
                             if pao_yakuman_val > 0 {
                                 let unit = if w_pid == self.oya { 48000 } else { 32000 };
-                                let honba_pts = (self.honba as i32) * 300; // NOTE: 200?
+                                let honba_pts = (self.honba as i32) * (NP as i32 - 1) * 100;
                                 pao_amt = pao_yakuman_val * unit / 2 + honba_pts as u32;
                             }
                         }

@@ -339,6 +339,7 @@ impl GameState3PEventHandler for GameState3P {
                     .zip(froms.iter())
                     .find(|(_, &f)| f != *seat)
                     .map(|(&t, _)| t);
+                let discarder = from_who.max(0) as u8;
                 self.players[*seat].melds.push(Meld {
                     meld_type: *meld_type,
                     tiles: tiles.clone(),
@@ -346,6 +347,39 @@ impl GameState3PEventHandler for GameState3P {
                     from_who,
                     called_tile: ct,
                 });
+
+                // PAO detection: daisangen (3 dragon melds) or daisuushii (4 wind melds)
+                if *meld_type == MeldType::Pon || *meld_type == MeldType::Daiminkan {
+                    if let Some(&called) = ct.as_ref() {
+                        let tile_val = called / 4;
+                        if (31..=33).contains(&tile_val) {
+                            let dragon_melds = self.players[*seat]
+                                .melds
+                                .iter()
+                                .filter(|m| {
+                                    let t = m.tiles[0] / 4;
+                                    (31..=33).contains(&t) && m.meld_type != MeldType::Chi
+                                })
+                                .count();
+                            if dragon_melds == 3 {
+                                self.players[*seat].pao.insert(37, discarder);
+                            }
+                        } else if (27..=30).contains(&tile_val) {
+                            let wind_melds = self.players[*seat]
+                                .melds
+                                .iter()
+                                .filter(|m| {
+                                    let t = m.tiles[0] / 4;
+                                    (27..=30).contains(&t) && m.meld_type != MeldType::Chi
+                                })
+                                .count();
+                            if wind_melds == 4 {
+                                self.players[*seat].pao.insert(50, discarder);
+                            }
+                        }
+                    }
+                }
+
                 self.current_player = *seat as u8;
                 self.phase = Phase::WaitAct;
                 self.active_players = vec![self.current_player];
@@ -458,36 +492,151 @@ impl GameState3PEventHandler for GameState3P {
                     let is_tsumo = h.zimo;
 
                     if is_tsumo {
-                        // Tsumo: each non-winner pays base + honba*100
-                        for i in 0..np as usize {
-                            if i != winner {
-                                let base_pay = if (winner as u8) == self.oya {
-                                    // Oya tsumo: all pay xian rate
-                                    h.point_zimo_xian
-                                } else if (i as u8) == self.oya {
-                                    // Ko tsumo: oya pays qin rate
-                                    h.point_zimo_qin
+                        let is_oya = (winner as u8) == self.oya;
+
+                        // Check PAO (sekinin barai) for yakuman tsumo
+                        let mut pao_payer = None;
+                        let mut pao_yakuman_val: i32 = 0;
+                        let mut total_yakuman_val: i32 = 0;
+
+                        if h.yiman {
+                            for &yid in &h.fans {
+                                let val: i32 = if [47, 48, 49, 50].contains(&yid) {
+                                    2
                                 } else {
-                                    // Ko tsumo: other ko pays xian rate
-                                    h.point_zimo_xian
+                                    1
                                 };
-                                let pay = base_pay as i32 + honba as i32 * 100;
-                                self.players[i].score -= pay;
-                                self.players[winner].score += pay;
+                                total_yakuman_val += val;
+                                if let Some(&liable) =
+                                    self.players[winner].pao.get(&(yid as u8))
+                                {
+                                    pao_yakuman_val += val;
+                                    pao_payer = Some(liable);
+                                }
+                            }
+                        }
+
+                        if pao_yakuman_val > 0 {
+                            // PAO tsumo: pao payer pays the full tsumo total
+                            // for the liable portion.
+                            let tsumo_total: i32 = if is_oya {
+                                // Oya: each ko pays xian, total = xian * (np-1)
+                                h.point_zimo_xian as i32 * (np as i32 - 1)
+                            } else {
+                                // Ko: oya pays qin, each other ko pays xian
+                                h.point_zimo_qin as i32
+                                    + h.point_zimo_xian as i32 * (np as i32 - 2)
+                            };
+                            let pao_amt = if total_yakuman_val > 0 {
+                                tsumo_total * pao_yakuman_val / total_yakuman_val
+                            } else {
+                                tsumo_total
+                            };
+                            let non_pao_amt = tsumo_total - pao_amt;
+
+                            if let Some(pp) = pao_payer {
+                                self.players[pp as usize].score -= pao_amt;
+                                self.players[winner].score += pao_amt;
+                            }
+
+                            // Non-PAO part split normally
+                            if non_pao_amt > 0 {
+                                for i in 0..np as usize {
+                                    if i != winner {
+                                        let share = if is_oya {
+                                            non_pao_amt / (np as i32 - 1)
+                                        } else if (i as u8) == self.oya {
+                                            // Approximate: qin share
+                                            h.point_zimo_qin as i32
+                                                * non_pao_amt
+                                                / tsumo_total
+                                        } else {
+                                            h.point_zimo_xian as i32
+                                                * non_pao_amt
+                                                / tsumo_total
+                                        };
+                                        self.players[i].score -= share;
+                                        self.players[winner].score += share;
+                                    }
+                                }
+                            }
+
+                            // Honba paid by pao payer
+                            if let Some(pp) = pao_payer {
+                                let honba_total = honba as i32 * (np as i32 - 1) * 100;
+                                self.players[pp as usize].score -= honba_total;
+                                self.players[winner].score += honba_total;
+                            }
+                        } else {
+                            // Standard tsumo distribution (no pao)
+                            for i in 0..np as usize {
+                                if i != winner {
+                                    let base_pay = if is_oya {
+                                        h.point_zimo_xian
+                                    } else if (i as u8) == self.oya {
+                                        h.point_zimo_qin
+                                    } else {
+                                        h.point_zimo_xian
+                                    };
+                                    let pay = base_pay as i32 + honba as i32 * 100;
+                                    self.players[i].score -= pay;
+                                    self.players[winner].score += pay;
+                                }
                             }
                         }
                     } else if let Some((discarder, _)) = self.last_discard {
-                        // Ron: only the first ron winner gets the honba bonus
+                        // Ron
                         let ron_honba = if !honba_taken {
                             honba_taken = true;
                             honba
                         } else {
                             0
                         };
-                        // 3P ron: honba × 200 (matching tsumo total: 2 players × 100)
-                        let pay = h.point_rong as i32 + ron_honba as i32 * 200;
-                        self.players[discarder as usize].score -= pay;
-                        self.players[winner].score += pay;
+
+                        // Check PAO for ron
+                        let mut pao_payer = None;
+                        let mut pao_yakuman_val: i32 = 0;
+                        let mut total_yakuman_val: i32 = 0;
+
+                        if h.yiman {
+                            for &yid in &h.fans {
+                                let val: i32 = if [47, 48, 49, 50].contains(&yid) {
+                                    2
+                                } else {
+                                    1
+                                };
+                                total_yakuman_val += val;
+                                if let Some(&liable) =
+                                    self.players[winner].pao.get(&(yid as u8))
+                                {
+                                    pao_yakuman_val += val;
+                                    pao_payer = Some(liable);
+                                }
+                            }
+                        }
+
+                        if pao_yakuman_val > 0 && pao_payer.is_some() {
+                            let pp = pao_payer.unwrap();
+                            let ron_total = h.point_rong as i32;
+                            let pao_amt = ron_total * pao_yakuman_val / total_yakuman_val;
+                            let honba_pts =
+                                ron_honba as i32 * (np as i32 - 1) * 100;
+
+                            // PAO ron: split between pao payer and discarder
+                            let pao_share = pao_amt / 2 + honba_pts;
+                            let discarder_share =
+                                ron_total - pao_amt / 2;
+
+                            self.players[pp as usize].score -= pao_share;
+                            self.players[discarder as usize].score -= discarder_share;
+                            self.players[winner].score += pao_share + discarder_share;
+                        } else {
+                            // Standard ron
+                            let pay = h.point_rong as i32
+                                + ron_honba as i32 * (np as i32 - 1) * 100;
+                            self.players[discarder as usize].score -= pay;
+                            self.players[winner].score += pay;
+                        }
                     }
                 }
 

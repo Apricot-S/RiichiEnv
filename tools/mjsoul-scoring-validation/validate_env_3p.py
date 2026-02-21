@@ -23,7 +23,7 @@ from riichienv import (
 )
 from mjsoul_parser import MjsoulPaifuParser, Paifu
 
-TARGET_FILE_PATTERN = "/data/mjsoul/game_record_3p_thr/2024/01/02/*.bin.xz"
+TARGET_FILE_PATTERN = "/data/mjsoul/game_record_3p_thr/2024/**/*.bin.xz"
 NP = 3
 
 
@@ -550,7 +550,7 @@ def main():
         print(f"No files found matching {TARGET_FILE_PATTERN}")
         sys.exit(1)
 
-    target_files = list(target_files)[:1000]
+    target_files = list(target_files)[7000:10000]
 
     total_kyoku = 0
     total_success = 0
