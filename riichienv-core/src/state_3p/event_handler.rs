@@ -277,6 +277,8 @@ impl GameState3PEventHandler for GameState3P {
                         Some(self.players[s].discards.len() - 1);
                     self.riichi_pending_acceptance = Some(s as u8);
                 }
+                // Track nagashi eligibility: discard must be terminal/honor
+                self.players[s].nagashi_eligible &= crate::types::is_terminal_tile(t);
                 self.current_player = (s as u8 + 1) % np;
                 self.phase = Phase::WaitAct;
                 self.active_players = vec![self.current_player];
@@ -313,6 +315,10 @@ impl GameState3PEventHandler for GameState3P {
                 if let Some(rp) = self.riichi_pending_acceptance.take() {
                     self.players[rp as usize].score -= 1000;
                     self.riichi_sticks += 1;
+                }
+                // Discard was called → discarder loses nagashi eligibility
+                if let Some((discarder_pid, _)) = self.last_discard {
+                    self.players[discarder_pid as usize].nagashi_eligible = false;
                 }
                 for (i, t) in tiles.iter().enumerate() {
                     if i < froms.len() && froms[i] == *seat {
@@ -421,6 +427,9 @@ impl GameState3PEventHandler for GameState3P {
                 {
                     let tile = self.players[*seat].hand.remove(idx);
                     self.players[*seat].kita_tiles.push(tile);
+                    // Record as last_discard so ron-on-kita (Hule) can identify
+                    // the kita declarer as the payer.
+                    self.last_discard = Some((*seat as u8, tile));
                 }
                 self.players[*seat].hand.sort();
                 self.current_player = *seat as u8;
@@ -494,21 +503,61 @@ impl GameState3PEventHandler for GameState3P {
                     self.players[rp as usize].score -= 1000;
                     self.riichi_sticks += 1;
                 }
-                // Compute tenpai/noten payments (pool = 2000 in 3P)
-                let mut tenpai = [false; 3];
+
+                // Check for nagashi mangan first
+                let mut nagashi_winners = Vec::new();
                 for (i, p) in self.players.iter().enumerate() {
-                    if i < 3 {
-                        let calc = HandEvaluator3P::new(p.hand.clone(), p.melds.clone());
-                        tenpai[i] = calc.is_tenpai();
+                    if p.nagashi_eligible {
+                        nagashi_winners.push(i as u8);
                     }
                 }
-                let num_tp = tenpai.iter().filter(|&&t| t).count();
-                if num_tp > 0 && num_tp < 3 {
-                    let pk = 2000 / num_tp as i32;
-                    let pn = 2000 / (3 - num_tp) as i32;
-                    for (i, tp) in tenpai.iter().enumerate() {
-                        let delta = if *tp { pk } else { -pn };
-                        self.players[i].score += delta;
+
+                if !nagashi_winners.is_empty() {
+                    // Nagashi mangan: apply mangan tsumo payment (no honba)
+                    for &w in &nagashi_winners {
+                        let is_oya = w == self.oya;
+                        let score_res =
+                            crate::score::calculate_score(5, 30, is_oya, true, 0, np);
+                        if is_oya {
+                            for i in 0..np as usize {
+                                if i as u8 != w {
+                                    self.players[i].score -= score_res.pay_tsumo_ko as i32;
+                                    self.players[w as usize].score +=
+                                        score_res.pay_tsumo_ko as i32;
+                                }
+                            }
+                        } else {
+                            for i in 0..np as usize {
+                                if i as u8 != w {
+                                    let pay = if i as u8 == self.oya {
+                                        score_res.pay_tsumo_oya as i32
+                                    } else {
+                                        score_res.pay_tsumo_ko as i32
+                                    };
+                                    self.players[i].score -= pay;
+                                    self.players[w as usize].score += pay;
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    // Regular tenpai/noten payments (pool = 2000 in 3P)
+                    let mut tenpai = [false; 3];
+                    for (i, p) in self.players.iter().enumerate() {
+                        if i < 3 {
+                            let calc =
+                                HandEvaluator3P::new(p.hand.clone(), p.melds.clone());
+                            tenpai[i] = calc.is_tenpai();
+                        }
+                    }
+                    let num_tp = tenpai.iter().filter(|&&t| t).count();
+                    if num_tp > 0 && num_tp < 3 {
+                        let pk = 2000 / num_tp as i32;
+                        let pn = 2000 / (3 - num_tp) as i32;
+                        for (i, tp) in tenpai.iter().enumerate() {
+                            let delta = if *tp { pk } else { -pn };
+                            self.players[i].score += delta;
+                        }
                     }
                 }
                 self.is_done = true;

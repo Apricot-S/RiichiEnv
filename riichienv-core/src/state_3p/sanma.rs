@@ -23,10 +23,11 @@ impl GameState3P {
         // Kita declaration breaks first-turn status (invalidates Tenhou/Chiihou)
         self.is_first_turn = false;
 
-        // Kita declaration breaks ippatsu for all players
-        for p in &mut self.players {
-            p.ippatsu_cycle = false;
-        }
+        // NOTE: Don't break ippatsu here (before chankan ron check).
+        // MjSoul awards ippatsu for ron on kita tiles, so the check below
+        // must use the pre-kita ippatsu state.  Ippatsu is broken later:
+        //  - in the "no ron" branch below (before rinshan draw), or
+        //  - when "all pass" resolves pending_kan (mod.rs).
 
         // Log kita event
         if !self.skip_mjai_logging {
@@ -109,7 +110,10 @@ impl GameState3P {
             // Store kita as pending kan for resolution
             self.pending_kan = Some((pid, act.clone()));
         } else {
-            // No ron - draw from rinshan
+            // No ron - break ippatsu for all players, then draw from rinshan
+            for p in &mut self.players {
+                p.ippatsu_cycle = false;
+            }
             self.resolve_kita_rinshan(pid);
         }
     }

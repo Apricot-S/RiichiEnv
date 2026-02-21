@@ -839,7 +839,7 @@ impl GameState3P {
                     let p_wind = (w_pid + NP as u8 - self.oya) % NP as u8;
                     // Chankan yaku applies to kakan/ankan, but NOT to kita (BaBei).
                     // MjSoul allows ron on kita tiles but does not award chankan yaku.
-                    let is_chankan = self.pending_kan.as_ref().map_or(false, |(_, act)| {
+                    let is_chankan = self.pending_kan.as_ref().is_some_and(|(_, act)| {
                         act.action_type != ActionType::Kita
                     });
 
@@ -1097,6 +1097,10 @@ impl GameState3P {
 
                 if let Some((pk_pid, pk_act)) = self.pending_kan.take() {
                     if pk_act.action_type == ActionType::Kita {
+                        // All players passed on kita ron — break ippatsu now
+                        for p in &mut self.players {
+                            p.ippatsu_cycle = false;
+                        }
                         self.resolve_kita_rinshan(pk_pid);
                     } else {
                         self._resolve_kan(pk_pid, pk_act);
