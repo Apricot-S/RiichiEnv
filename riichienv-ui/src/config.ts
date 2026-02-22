@@ -79,3 +79,77 @@ export function createLayoutConfig3P(): LayoutConfig {
         viewAreaSize: 880,
     };
 }
+
+// ---------------------------------------------------------------------------
+// 3D layout configuration (16:9 perspective view)
+// ---------------------------------------------------------------------------
+
+export interface LayoutConfig3D {
+    /** View area width in px. */
+    viewAreaWidth: number;
+    /** View area height in px. */
+    viewAreaHeight: number;
+    /** Overall content area width (same as viewAreaWidth; sidebar is overlay). */
+    contentWidth: number;
+    /** Overall content area height. */
+    contentHeight: number;
+    /** Table surface dimension in px (square). */
+    tableSize: number;
+    /** CSS perspective value in px (higher = weaker perspective / telephoto). */
+    perspective: number;
+    /** Table tilt angle in degrees (rotateX). */
+    tiltAngle: number;
+    /** Hand layer height at bottom of viewport in px. */
+    handLayerHeight: number;
+    /** Tile dimensions [width, height] per rendering context. */
+    tileSizes: {
+        riverTile: [number, number];
+        opponentTile: [number, number];
+        ownTile: [number, number];
+        doraTile: [number, number];
+        meldTileTable: [number, number];
+        meldTileOwn: [number, number];
+    };
+}
+
+export function createLayout3DConfig4P(): LayoutConfig3D {
+    return {
+        viewAreaWidth: 1280,
+        viewAreaHeight: 720,
+        contentWidth: 1280,
+        contentHeight: 720,
+        tableSize: 800,
+        perspective: 1800,
+        tiltAngle: 55,
+        handLayerHeight: 120,
+        tileSizes: {
+            riverTile: [26, 36],
+            opponentTile: [22, 30],
+            ownTile: [50, 70],
+            doraTile: [18, 25],
+            meldTileTable: [20, 28],
+            meldTileOwn: [40, 56],
+        },
+    };
+}
+
+export function createLayout3DConfig3P(): LayoutConfig3D {
+    return {
+        viewAreaWidth: 1280,
+        viewAreaHeight: 720,
+        contentWidth: 1280,
+        contentHeight: 720,
+        tableSize: 800,
+        perspective: 1800,
+        tiltAngle: 55,
+        handLayerHeight: 120,
+        tileSizes: {
+            riverTile: [26, 36],
+            opponentTile: [22, 30],
+            ownTile: [50, 70],
+            doraTile: [18, 25],
+            meldTileTable: [20, 28],
+            meldTileOwn: [40, 56],
+        },
+    };
+}
