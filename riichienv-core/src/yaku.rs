@@ -1,6 +1,132 @@
+#[cfg(feature = "python")]
+use pyo3::prelude::*;
+
 use crate::agari::{self, Division, Mentsu};
 use crate::types::{Hand, Meld};
 
+// ---------------------------------------------------------------------------
+// Yaku struct (exposed to Python via PyO3)
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "python", pyclass(get_all))]
+pub struct Yaku {
+    pub id: u32,
+    pub name: String,
+    pub name_en: String,
+    pub tenhou_id: i32,
+    pub mjsoul_id: i32,
+}
+
+#[cfg(feature = "python")]
+#[pymethods]
+impl Yaku {
+    fn __repr__(&self) -> String {
+        format!(
+            "Yaku(id={}, name='{}', name_en='{}', tenhou_id={}, mjsoul_id={})",
+            self.id, self.name, self.name_en, self.tenhou_id, self.mjsoul_id
+        )
+    }
+}
+
+/// Ref: https://tenhou.net/1/script/tenhou.js for tenhou_id.
+/// (id, name, name_en, tenhou_id, mjsoul_id)
+/// id == mjsoul_id for all entries.
+const YAKU_TABLE: &[(u32, &str, &str, i32, i32)] = &[
+    // 1 Han
+    (1, "門前清自摸和", "Menzen Tsumo", 0, 1),
+    (2, "立直", "Riichi", 1, 2),
+    (3, "槍槓", "Chankan", 3, 3),
+    (4, "嶺上開花", "Rinshan Kaihou", 4, 4),
+    (5, "海底摸月", "Haitei Raoyue", 5, 5),
+    (6, "河底撈魚", "Houtei Raoyui", 6, 6),
+    (7, "役牌 白", "Yakuhai (haku)", 18, 7),
+    (8, "役牌 發", "Yakuhai (hatsu)", 19, 8),
+    (9, "役牌 中", "Yakuhai (chun)", 20, 9),
+    (10, "自風牌", "Yakuhai (wind of place)", 10, 10), // tenhou_id=10 自風 東, tenhou_id=11 自風 南, tenhou_id=12 自風 西, tenhou_id=13 自風 北
+    (11, "場風牌", "Yakuhai (wind of round)", 14, 11), // tenhou_id=14 場風 東, tenhou_id=15 場風 南, tenhou_id=16 場風 西, tenhou_id=17 場風 北
+    (12, "断幺九", "Tanyao", 8, 12),
+    (13, "一盃口", "Iipeiko", 9, 13),
+    (14, "平和", "Pinfu", 7, 14),
+    (15, "混全帯幺九", "Chantai", 23, 15),
+    (16, "一気通貫", "Ittsu", 24, 16),
+    (17, "三色同順", "Sanshoku Doujun", 25, 17),
+    // 2 Han
+    (18, "ダブル立直", "Double Riichi", 21, 18),
+    (19, "三色同刻", "Sanshoku Doukou", 26, 19),
+    (20, "三槓子", "San Kantsu", 27, 20),
+    (21, "対々和", "Toitoi", 28, 21),
+    (22, "三暗刻", "San Ankou", 29, 22),
+    (23, "小三元", "Shou Sangen", 30, 23),
+    (24, "混老頭", "Honroutou", 31, 24),
+    (25, "七対子", "Chiitoitsu", 22, 25),
+    (26, "純全帯幺九", "Junchan", 33, 26),
+    (27, "混一色", "Honitsu", 34, 27),
+    // 3 Han
+    (28, "二盃口", "Ryanpeikou", 32, 28),
+    // 6 Han
+    (29, "清一色", "Chinitsu", 35, 29),
+    // Special
+    (30, "一発", "Ippatsu", 2, 30),
+    (31, "ドラ", "Dora", 52, 31),
+    (32, "赤ドラ", "Aka Dora", 54, 32),
+    (33, "裏ドラ", "Ura Dora", 53, 33),
+    (34, "抜きドラ", "Nuki Dora", 52, 34),
+    // Yakuman
+    (35, "天和", "Tenhou", 37, 35),
+    (36, "地和", "Chiihou", 38, 36),
+    (37, "大三元", "Dai Sangen", 39, 37),
+    (38, "四暗刻", "Su Ankou", 40, 38),
+    (39, "字一色", "Tsuu iisou", 42, 39),
+    (40, "緑一色", "Ryuu iisou", 43, 40),
+    (41, "清老頭", "Chinroutou", 44, 41),
+    (42, "国士無双", "Kokushi Musou", 47, 42),
+    (43, "小四喜", "Sho Suusi", 50, 43),
+    (44, "四槓子", "Su Kantsu", 51, 44),
+    (45, "九蓮宝燈", "Chuuren Poutou", 45, 45),
+    // Double Yakuman
+    (47, "純正九蓮宝燈", "Junsei Chuuren Poutou", 46, 47),
+    (48, "四暗刻単騎", "Su Ankou Tanki", 41, 48),
+    (49, "国士無双十三面待ち", "Kokushi Musou 13-men", 48, 49),
+    (50, "大四喜", "Dai Suusi", 49, 50),
+];
+
+pub fn get_yaku_by_id(id: u32) -> Option<Yaku> {
+    YAKU_TABLE.iter().find(|&&(yid, ..)| yid == id).map(
+        |&(yid, name, name_en, tenhou_id, mjsoul_id)| Yaku {
+            id: yid,
+            name: name.to_string(),
+            name_en: name_en.to_string(),
+            tenhou_id,
+            mjsoul_id,
+        },
+    )
+}
+
+#[cfg(feature = "python")]
+#[pyfunction]
+#[pyo3(name = "get_yaku_by_id")]
+pub fn get_yaku_by_id_py(id: u32) -> Option<Yaku> {
+    get_yaku_by_id(id)
+}
+
+#[cfg(feature = "python")]
+#[pyfunction]
+#[pyo3(name = "get_all_yaku")]
+pub fn get_all_yaku_py() -> Vec<Yaku> {
+    YAKU_TABLE
+        .iter()
+        .map(|&(id, name, name_en, tenhou_id, mjsoul_id)| Yaku {
+            id,
+            name: name.to_string(),
+            name_en: name_en.to_string(),
+            tenhou_id,
+            mjsoul_id,
+        })
+        .collect()
+}
+
+// ---------------------------------------------------------------------------
 // Yaku IDs based on yans.yml
 pub const ID_TSUMO: u32 = 1;
 pub const ID_RIICHI: u32 = 2;

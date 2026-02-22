@@ -126,6 +126,14 @@ class Conditions:
         honba: int = 0,
     ): ...
 
+class Yaku:
+    id: int
+    name: str
+    name_en: str
+    tenhou_id: int
+    mjsoul_id: int
+    def __repr__(self) -> str: ...
+
 class WinResult:
     is_win: bool
     yakuman: bool
@@ -137,6 +145,7 @@ class WinResult:
     fu: int
     pao_payer: int | None
     has_win_shape: bool
+    def yaku_list(self) -> list[Yaku]: ...
 
 class WinResultContext:
     actual: WinResult
@@ -327,6 +336,8 @@ def calculate_shanten_3p(hand_tiles: list[int]) -> int: ...
 def check_riichi_candidates(tiles: list[int]) -> list[int]: ...
 def parse_hand(hand_str: str) -> tuple[list[int], list[Meld]]: ...
 def parse_tile(tile_str: str) -> int: ...
+def get_yaku_by_id(id: int) -> Yaku | None: ...
+def get_all_yaku() -> list[Yaku]: ...
 
 __all__ = [
     "Action",
@@ -357,4 +368,7 @@ __all__ = [
     "parse_tile",
     "KuikaeMode",
     "KanDoraTimingMode",
+    "Yaku",
+    "get_yaku_by_id",
+    "get_all_yaku",
 ]

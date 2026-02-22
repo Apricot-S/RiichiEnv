@@ -15,10 +15,13 @@ from ._riichienv import (  # type: ignore
     Score,
     Wind,
     WinResultContext,
+    Yaku,
     calculate_score,
     calculate_shanten,
     calculate_shanten_3p,
     check_riichi_candidates,
+    get_all_yaku,
+    get_yaku_by_id,
     parse_hand,
     parse_tile,
 )
@@ -65,4 +68,7 @@ __all__ = [
     "SOUTH",
     "WEST",
     "NORTH",
+    "Yaku",
+    "get_yaku_by_id",
+    "get_all_yaku",
 ]

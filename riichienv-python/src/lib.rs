@@ -64,6 +64,7 @@ fn _riichienv(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<riichienv_core::rule::KuikaeMode>()?;
     m.add_class::<riichienv_core::rule::KanDoraTimingMode>()?;
     m.add_class::<riichienv_core::rule::GameRule>()?;
+    m.add_class::<riichienv_core::yaku::Yaku>()?;
 
     // Env classes
     m.add_class::<riichienv_core::action::ActionType>()?;
@@ -79,5 +80,10 @@ fn _riichienv(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(check_riichi_candidates_py, m)?)?;
     m.add_function(wrap_pyfunction!(calculate_shanten_py, m)?)?;
     m.add_function(wrap_pyfunction!(calculate_shanten_3p_py, m)?)?;
+    m.add_function(wrap_pyfunction!(
+        riichienv_core::yaku::get_yaku_by_id_py,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(riichienv_core::yaku::get_all_yaku_py, m)?)?;
     Ok(())
 }

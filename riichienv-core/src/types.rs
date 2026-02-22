@@ -348,6 +348,13 @@ impl WinResult {
             has_win_shape,
         )
     }
+
+    pub fn yaku_list(&self) -> Vec<crate::yaku::Yaku> {
+        self.yaku
+            .iter()
+            .filter_map(|&id| crate::yaku::get_yaku_by_id(id))
+            .collect()
+    }
 }
 
 pub fn is_terminal_tile(t: u8) -> bool {
