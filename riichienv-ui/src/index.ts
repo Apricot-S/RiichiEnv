@@ -3,6 +3,8 @@ import { COLORS } from './constants';
 import { Renderer } from './renderer';
 import { MjaiEvent } from './types';
 import { ReplayController } from './controller';
+import { LiveViewer } from './live_viewer';
+import { initWasm } from './wasm/loader';
 import {
     ICON_EYE, ICON_ARROW_LEFT, ICON_ARROW_RIGHT,
     ICON_CHEVRON_LEFT, ICON_CHEVRON_RIGHT, ICON_PLAY_PAUSE
@@ -25,6 +27,13 @@ export class Viewer {
         if (!el) throw new Error(`Container #${containerId} not found`);
         this.container = el;
         this.log = log;
+
+        // Start WASM initialization in background (non-blocking)
+        initWasm().then(() => {
+            console.log('[Viewer] WASM module loaded');
+        }).catch(e => {
+            console.warn('[Viewer] WASM load failed, continuing without:', e);
+        });
 
         // ... (styles) ...
         this.container.innerHTML = '';
@@ -372,3 +381,4 @@ export class Viewer {
 }
 
 (window as any).RiichiEnvViewer = Viewer;
+(window as any).RiichiEnvLiveViewer = LiveViewer;

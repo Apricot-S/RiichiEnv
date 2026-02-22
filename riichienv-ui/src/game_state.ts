@@ -1,4 +1,6 @@
 import { MjaiEvent, PlayerState, BoardState } from './types';
+import { calculateWaits, mjaiToTileId, tileIdToMjai } from './wasm/bridge';
+import { isWasmReady } from './wasm/loader';
 
 // Helper to sort hand (simple alphanumeric sort for now, ideally strictly by tile order)
 const sortHand = (hand: string[]) => {
@@ -234,6 +236,30 @@ export class GameState {
         return false;
     }
 
+    /**
+     * Append a single event incrementally (for live mode).
+     * Automatically advances the cursor to the latest event.
+     */
+    appendEvent(event: MjaiEvent): void {
+        if (!event || event.type === 'start_game' || event.type === 'end_game') return;
+
+        this.events.push(event);
+        this.current.totalEvents = this.events.length;
+
+        if (event.type === 'start_kyoku') {
+            this.kyokus.push({
+                index: this.events.length - 1,
+                round: this.getRoundIndex(event),
+                honba: event.honba || 0,
+                scores: event.scores || [25000, 25000, 25000, 25000]
+            });
+        }
+
+        this.processEvent(event);
+        this.cursor++;
+        this.current.eventIndex = this.cursor;
+    }
+
     reset() {
         this.cursor = 0;
         this.current = this.initialState();
@@ -333,6 +359,22 @@ export class GameState {
 
                     p.discards.push({ tile: e.pai, isRiichi, isTsumogiri: !!e.tsumogiri });
                     p.waits = e.meta?.waits;
+
+                    // WASM fallback: calculate waits when meta is absent
+                    if (!p.waits && isWasmReady()) {
+                        const tileIds = p.hand
+                            .map(t => mjaiToTileId(t))
+                            .filter((id): id is number => id !== null);
+                        if (tileIds.length === 13 || tileIds.length === 10 || tileIds.length === 7 || tileIds.length === 4 || tileIds.length === 1) {
+                            const waits34 = calculateWaits(tileIds);
+                            if (waits34 && waits34.length > 0) {
+                                p.waits = waits34
+                                    .map(t34 => tileIdToMjai(t34 * 4))
+                                    .filter((s): s is string => s !== null);
+                            }
+                        }
+                    }
+
                     this.current.currentActor = e.actor;
                 }
                 break;
