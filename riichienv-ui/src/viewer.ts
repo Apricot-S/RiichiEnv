@@ -107,13 +107,15 @@ export class Viewer {
             position: 'relative',
             backgroundColor: COLORS.boardBackground,
             boxShadow: '0 0 20px rgba(0,0,0,0.5)',
-            flexShrink: '0'
+            flexShrink: '0',
+            outline: 'none'
         });
+        viewArea.tabIndex = 0;
         contentWrapper.appendChild(viewArea);
 
         // 4. Sidebar
         const rightSidebar = document.createElement('div');
-        rightSidebar.id = 'controls';
+        rightSidebar.id = `${containerId}-controls`;
         Object.assign(rightSidebar.style, {
             width: '40px',
             backgroundColor: '#000000ff',
@@ -133,7 +135,7 @@ export class Viewer {
 
         this.debugPanel = document.createElement('div');
         this.debugPanel.className = 'debug-panel';
-        this.debugPanel.id = 'log-panel';
+        this.debugPanel.id = `${containerId}-log-panel`;
         Object.assign(this.debugPanel.style, {
             position: 'absolute',
             top: '0',
@@ -205,14 +207,18 @@ export class Viewer {
 
             // Hidden button for Round Selector
             const rBtn = document.createElement('div');
-            rBtn.id = 'btn-round';
+            rBtn.id = `${containerId}-btn-round`;
             rBtn.style.display = 'none';
             rightSidebar.appendChild(rBtn);
 
             // Initialize Controller
             this.controller = new ReplayController(this);
-            this.controller.setupKeyboardControls(window);
+            this.controller.setupKeyboardControls(viewArea);
             this.controller.setupWheelControls(viewArea);
+
+            // Auto-focus on interaction for keyboard controls
+            viewArea.addEventListener('mouseenter', () => viewArea.focus());
+            viewArea.addEventListener('click', () => viewArea.focus());
         } else {
             rightSidebar.style.display = 'none';
         }

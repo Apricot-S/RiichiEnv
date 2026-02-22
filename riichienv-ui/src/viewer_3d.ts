@@ -21,6 +21,7 @@ export class Viewer3D {
     isFrozen: boolean = false;
 
     debugPanel!: HTMLElement;
+    private viewArea!: HTMLElement;
 
     constructor(
         containerId: string,
@@ -108,13 +109,16 @@ export class Viewer3D {
             backgroundColor: COLORS.boardBackground,
             boxShadow: '0 0 20px rgba(0,0,0,0.5)',
             flexShrink: '0',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            outline: 'none'
         });
+        viewArea.tabIndex = 0;
         contentWrapper.appendChild(viewArea);
+        this.viewArea = viewArea;
 
         // 4. Sidebar (overlay, top-right corner inside viewArea)
         const rightSidebar = document.createElement('div');
-        rightSidebar.id = 'controls';
+        rightSidebar.id = `${containerId}-controls`;
         Object.assign(rightSidebar.style, {
             position: 'absolute',
             top: '16px',
@@ -137,7 +141,7 @@ export class Viewer3D {
         // Debug panel
         this.debugPanel = document.createElement('div');
         this.debugPanel.className = 'debug-panel';
-        this.debugPanel.id = 'log-panel';
+        this.debugPanel.id = `${containerId}-log-panel`;
         Object.assign(this.debugPanel.style, {
             position: 'absolute',
             top: '0',
@@ -207,14 +211,18 @@ export class Viewer3D {
 
             // Hidden button for Round Selector
             const rBtn = document.createElement('div');
-            rBtn.id = 'btn-round';
+            rBtn.id = `${containerId}-btn-round`;
             rBtn.style.display = 'none';
             rightSidebar.appendChild(rBtn);
 
             // Initialize Controller
             this.controller = new ReplayController(this);
-            this.controller.setupKeyboardControls(window);
+            this.controller.setupKeyboardControls(viewArea);
             this.controller.setupWheelControls(viewArea);
+
+            // Auto-focus on interaction for keyboard controls
+            viewArea.addEventListener('mouseenter', () => viewArea.focus());
+            viewArea.addEventListener('click', () => viewArea.focus());
         } else {
             rightSidebar.style.display = 'none';
         }
@@ -364,7 +372,7 @@ export class Viewer3D {
         content.appendChild(table);
 
         overlay.appendChild(content);
-        this.container.appendChild(overlay);
+        this.viewArea.appendChild(overlay);
     }
 
     update() {
