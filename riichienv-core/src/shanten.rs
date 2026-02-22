@@ -330,105 +330,46 @@ pub fn calculate_best_ukeire(hand_tiles: &[u32], visible_tiles: &[u32]) -> u32 {
     max_ukeire
 }
 
-/// Check whether a tile position allows sequences in 3-player mahjong.
-/// Only pinzu (9-17) and souzu (18-26) suits allow sequences.
-#[inline]
-fn can_sequence_3p(pos: usize) -> bool {
-    (9..=26).contains(&pos)
-}
-
-/// Recursive normal-form shanten for 3-player mahjong.
-/// Manzu tiles (1m at pos 0, 9m at pos 8) are treated as honor-like
-/// (koutsu/pair only, no sequences).
-fn calc_normal_3p_rec(
-    tiles: &mut [u8; TILE_MAX],
-    pos: usize,
-    mentsu: i8,
-    jantai: i8,
-    target: i8,
-    best_so_far: i8,
-) -> i8 {
-    // Skip zero-count positions
-    let mut pos = pos;
-    while pos < TILE_MAX && tiles[pos] == 0 {
-        pos += 1;
-    }
-
-    if pos >= TILE_MAX {
-        let jcap = jantai.min((target - mentsu + 1).max(0));
-        return (target - mentsu) * 2 - jcap;
-    }
-
-    // Upper bound pruning: even if all remaining tiles form perfect sets,
-    // we can't beat the current best
-    let jcap = jantai.min((target - mentsu + 1).max(0));
-    let current_est = (target - mentsu) * 2 - jcap;
-    if current_est <= best_so_far {
-        // Already at or below best — can't improve by skipping to end
-        // but might improve by taking more sets. Don't prune yet.
-    }
-
-    // Option 1: skip this position (tiles become leftover)
-    let mut best = calc_normal_3p_rec(tiles, pos + 1, mentsu, jantai, target, best_so_far);
-
-    // Option 2: koutsu
-    if tiles[pos] >= 3 {
-        tiles[pos] -= 3;
-        let v = calc_normal_3p_rec(tiles, pos, mentsu + 1, jantai, target, best);
-        best = best.min(v);
-        tiles[pos] += 3;
-    }
-
-    // Option 3: pair (jantai)
-    if tiles[pos] >= 2 {
-        tiles[pos] -= 2;
-        let v = calc_normal_3p_rec(tiles, pos + 1, mentsu, jantai + 1, target, best);
-        best = best.min(v);
-        tiles[pos] += 2;
-    }
-
-    let seq_ok = can_sequence_3p(pos) && pos % 9 <= 6;
-
-    // Option 4: shuntsu (complete sequence)
-    if seq_ok && tiles[pos + 1] > 0 && tiles[pos + 2] > 0 {
-        tiles[pos] -= 1;
-        tiles[pos + 1] -= 1;
-        tiles[pos + 2] -= 1;
-        let v = calc_normal_3p_rec(tiles, pos, mentsu + 1, jantai, target, best);
-        best = best.min(v);
-        tiles[pos] += 1;
-        tiles[pos + 1] += 1;
-        tiles[pos + 2] += 1;
-    }
-
-    if can_sequence_3p(pos) {
-        // Option 5: taatsu (adjacent partial sequence)
-        if pos % 9 <= 7 && pos + 1 < TILE_MAX && tiles[pos + 1] > 0 {
-            tiles[pos] -= 1;
-            tiles[pos + 1] -= 1;
-            let v = calc_normal_3p_rec(tiles, pos + 1, mentsu, jantai + 1, target, best);
-            best = best.min(v);
-            tiles[pos] += 1;
-            tiles[pos + 1] += 1;
-        }
-
-        // Option 6: kanchan (skip partial sequence)
-        if pos % 9 <= 6 && pos + 2 < TILE_MAX && tiles[pos + 2] > 0 {
-            tiles[pos] -= 1;
-            tiles[pos + 2] -= 1;
-            let v = calc_normal_3p_rec(tiles, pos + 1, mentsu, jantai + 1, target, best);
-            best = best.min(v);
-            tiles[pos] += 1;
-            tiles[pos + 2] += 1;
-        }
-    }
-
-    best
-}
-
+/// Normal-form shanten for 3-player mahjong using the nyanten lookup tables.
+///
+/// In 3P mahjong, manzu tiles (1m, 9m) cannot form sequences — they behave
+/// like honor tiles (koutsu/pair only). The shupai hash gives tiles sequence
+/// adjacency potential, which is incorrect for 3P manzu. We fix this by
+/// relocating 1m/9m counts into empty honor (zipai) slots, then using the
+/// standard 4P lookup chain. Zipai keys are position-independent, so the
+/// relocation produces the correct key regardless of which slot is used.
+///
+/// When all 7 honor slots are occupied and both 1m and 9m are present (rare),
+/// we relocate as many as possible and leave the rest in manzu. The residual
+/// adjacency error (at most 1) is masked by kokushi in such scattered hands.
 fn calc_normal_3p(tiles: &[u8; TILE_MAX], len_div3: u8) -> i8 {
-    let mut tiles = *tiles;
-    calc_normal_3p_rec(&mut tiles, 0, 0, 0, len_div3 as i8, 13)
+    let mut t = *tiles;
+
+    // Relocate manzu tiles to empty honor slots
+    let manzu_counts = [t[0], t[8]];
+    let manzu_positions = [0usize, 8];
+    t[0] = 0;
+    t[8] = 0;
+
+    let mut next_slot = 27;
+    for i in 0..2 {
+        if manzu_counts[i] == 0 {
+            continue;
+        }
+        // Find the next empty honor slot
+        while next_slot < 34 && t[next_slot] != 0 {
+            next_slot += 1;
+        }
+        if next_slot < 34 {
+            t[next_slot] = manzu_counts[i];
+            next_slot += 1;
+        } else {
+            // No empty slot: put back in manzu (fallback for overflow)
+            t[manzu_positions[i]] = manzu_counts[i];
+        }
+    }
+
+    calc_normal(&t, len_div3)
 }
 
 fn calc_chitoi_3p(tiles: &[u8; TILE_MAX]) -> i8 {
