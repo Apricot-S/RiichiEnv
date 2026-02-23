@@ -5,7 +5,7 @@ import { LayoutConfig3D, createLayout3DConfig4P } from '../config';
 import { IRenderer } from './renderer_interface';
 import { TileRenderer } from './tile_renderer';
 import { ResultRenderer } from './result_renderer';
-import { COLORS } from '../constants';
+import { COLORS, CALL_TYPES } from '../constants';
 import { CHAR_SPRITE_BASE64, CHAR_MAP } from '../char_assets';
 import { AVATAR_PLACEHOLDER } from '../icons';
 
@@ -173,7 +173,7 @@ export class Renderer3D implements IRenderer {
         // Score panels (at viewport edges)
         state.players.forEach((p, i) => {
             const relIndex = (i - this.viewpoint + pc) % pc;
-            const panel = this.renderScorePanel(p, i, relIndex, state);
+            const panel = this.renderPlayerPanel(p, i, relIndex, state);
             uiOverlay.appendChild(panel);
         });
 
@@ -843,12 +843,12 @@ export class Renderer3D implements IRenderer {
     // =========================================================================
     // Score panel (UI overlay)
     // =========================================================================
-    private renderScorePanel(
+    private renderPlayerPanel(
         player: PlayerState, playerIdx: number,
         relIndex: number, state: BoardState
     ): HTMLElement {
         const panel = document.createElement('div');
-        panel.className = 'score-panel-3d';
+        panel.className = 'player-panel-3d';
         if (playerIdx === this.viewpoint) panel.classList.add('active-vp');
 
         // Position — corners and edges
@@ -900,16 +900,23 @@ export class Renderer3D implements IRenderer {
         if (!state.lastEvent) return;
 
         let label = '';
+        let actorIdx: number | undefined;
         const evt = state.lastEvent;
+        const pc = state.playerCount || 4;
+
+        let callCssClass: string | undefined;
 
         if (evt.actor !== undefined) {
             const type = evt.type;
-            if (['chi', 'pon', 'kan', 'ankan', 'daiminkan', 'kakan', 'reach'].includes(type)) {
-                label = type.charAt(0).toUpperCase() + type.slice(1);
-                if (type === 'daiminkan') label = 'Kan';
-                if (type === 'reach') label = 'Reach';
+            const callDef = CALL_TYPES[type];
+            if (callDef) {
+                label = callDef.label;
+                callCssClass = callDef.cssClass;
+                actorIdx = evt.actor;
             } else if (type === 'hora') {
                 label = (evt.target === evt.actor) ? 'Tsumo' : 'Ron';
+                callCssClass = 'call-hora';
+                actorIdx = evt.actor;
             }
         }
 
@@ -920,7 +927,28 @@ export class Renderer3D implements IRenderer {
         if (label) {
             const el = document.createElement('div');
             el.className = 'call-overlay-3d';
+            if (callCssClass) el.classList.add(callCssClass);
             el.textContent = label;
+
+            if (actorIdx !== undefined) {
+                const relIndex = (actorIdx - this.viewpoint + pc) % pc;
+                // Position adjacent to each player's panel
+                // Panel positions:
+                //   0: bottom: 130px, left: 25%
+                //   1: right: 50px, top: 45%
+                //   2: top: 100px, right: 380px
+                //   3: left: 100px, top: 120px
+                const callPositions: { [key: number]: { [k: string]: string } } = {
+                    0: { bottom: '180px', left: '25%', top: 'auto', right: 'auto', transform: 'translateX(-50%)' },
+                    1: { right: '120px', top: '45%', bottom: 'auto', left: 'auto', transform: 'translateY(-50%)' },
+                    2: { top: '95px', right: '470px', bottom: 'auto', left: 'auto', transform: 'none' },
+                    3: { left: '170px', top: '115px', bottom: 'auto', right: 'auto', transform: 'none' },
+                };
+                const pos = callPositions[relIndex];
+                if (pos) Object.assign(el.style, pos);
+            }
+            // Ryukyoku: keeps default CSS center position
+
             overlay.appendChild(el);
         }
     }

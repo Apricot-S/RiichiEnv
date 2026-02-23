@@ -394,7 +394,7 @@ export const VIEWER_3D_CSS = `
     /* ========================================
        UI Overlay
        ======================================== */
-    .score-panel-3d {
+    .player-panel-3d {
         position: absolute;
         pointer-events: auto;
         background: rgba(0,0,0,0.7);
@@ -410,21 +410,21 @@ export const VIEWER_3D_CSS = `
         flex-direction: column;
         align-items: center;
     }
-    .score-panel-3d:hover {
+    .player-panel-3d:hover {
         background: rgba(60,60,100,0.8);
     }
-    .score-panel-3d.active-vp {
+    .player-panel-3d.active-vp {
         border: 2px solid #aaa;
         background: rgba(0,0,0,0.85);
     }
-    .score-panel-3d .player-name {
+    .player-panel-3d .player-name {
         font-size: 14px;
         font-weight: bold;
         color: #ffffff;
         margin-top: 2px;
         text-shadow: 0 1px 3px rgba(0,0,0,0.8);
     }
-    .score-panel-3d .avatar-3d {
+    .player-panel-3d .avatar-3d {
         width: 36px;
         height: 36px;
         border-radius: 50%;
@@ -433,7 +433,7 @@ export const VIEWER_3D_CSS = `
         margin: 0 auto;
         flex-shrink: 0;
     }
-    .score-panel-3d .avatar-img {
+    .player-panel-3d .avatar-img {
         width: 100%;
         height: 100%;
         object-fit: cover;
@@ -443,7 +443,7 @@ export const VIEWER_3D_CSS = `
         position: absolute;
         pointer-events: auto;
         font-family: monospace;
-        font-size: 18px;
+        font-size: 24px;
         font-weight: bold;
         color: #ffdd00;
         text-shadow: 0 1px 3px rgba(0,0,0,0.9), 0 0 6px rgba(0,0,0,0.5);
@@ -461,18 +461,49 @@ export const VIEWER_3D_CSS = `
         font-weight: bold;
         color: white;
         text-shadow: 0 0 5px #ff0000, 0 0 10px #000;
-        padding: 8px 25px;
+        padding: 5px 16px;
         background: rgba(0,0,0,0.6);
-        border-radius: 10px;
+        border-radius: 8px;
         border: 2px solid white;
         z-index: 50;
         pointer-events: none;
         animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
+    .call-overlay-3d.call-chii {
+        background: ${COLORS.callChiiBg};
+        color: white;
+        text-shadow: 0 0 5px rgba(0,80,0,0.8), 0 0 10px #000;
+        border-color: rgba(255,255,255,0.7);
+    }
+    .call-overlay-3d.call-pon {
+        background: ${COLORS.callPonBg};
+        color: white;
+        text-shadow: 0 0 5px rgba(0,40,120,0.8), 0 0 10px #000;
+        border-color: rgba(255,255,255,0.7);
+    }
+    .call-overlay-3d.call-kan {
+        background: ${COLORS.callKanBg};
+        color: white;
+        text-shadow: 0 0 5px rgba(60,20,100,0.8), 0 0 10px #000;
+        border-color: rgba(255,255,255,0.7);
+    }
+    .call-overlay-3d.call-reach {
+        background: ${COLORS.callReachBg};
+        color: white;
+        text-shadow: 0 0 5px rgba(140,60,0,0.8), 0 0 10px #000;
+        border-color: rgba(255,255,255,0.7);
+    }
+    .call-overlay-3d.call-hora {
+        background: ${COLORS.callHoraBg};
+        color: white;
+        text-shadow: 0 0 5px rgba(120,0,0,0.8), 0 0 10px #000;
+        border-color: rgba(255,255,255,0.7);
+    }
+
     @keyframes popIn {
-        0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
-        100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        0% { scale: 0.5; opacity: 0; }
+        100% { scale: 1; opacity: 1; }
     }
 
     /* ========================================
