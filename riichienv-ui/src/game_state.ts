@@ -80,6 +80,9 @@ export class GameState {
     // Cache state at each step to allow fast jumping
     current: BoardState;
 
+    // Checkpoint cache: cursor position -> deep-cloned BoardState at kyoku boundaries
+    private stateCache: Map<number, BoardState> = new Map();
+
     constructor(events: MjaiEvent[], config?: GameConfig) {
         this.config = config ?? createGameConfig4P();
         // Filter out null events and start/end game events
@@ -155,6 +158,12 @@ export class GameState {
         this.processEvent(event);
         this.cursor++;
         this.current.eventIndex = this.cursor; // Sync
+
+        // Cache state right after processing start_kyoku for fast backward jumps
+        if (event.type === 'start_kyoku' && !this.stateCache.has(this.cursor)) {
+            this.stateCache.set(this.cursor, this.cloneState(this.current));
+        }
+
         return true;
     }
 
@@ -174,7 +183,20 @@ export class GameState {
         if (index > this.events.length) index = this.events.length;
 
         if (index < this.cursor) {
-            this.reset();
+            // Find nearest cached checkpoint at or before target index
+            let bestCursor = 0;
+            for (const cpCursor of this.stateCache.keys()) {
+                if (cpCursor <= index && cpCursor > bestCursor) {
+                    bestCursor = cpCursor;
+                }
+            }
+
+            if (bestCursor > 0) {
+                this.current = this.cloneState(this.stateCache.get(bestCursor)!);
+                this.cursor = bestCursor;
+            } else {
+                this.reset();
+            }
         }
         while (this.cursor < index) {
             this.stepForward();
@@ -292,6 +314,44 @@ export class GameState {
     reset() {
         this.cursor = 0;
         this.current = this.initialState();
+    }
+
+    /** Deep clone a BoardState for checkpoint caching. */
+    private cloneState(state: BoardState): BoardState {
+        return {
+            playerCount: state.playerCount,
+            players: state.players.map(p => ({
+                hand: [...p.hand],
+                discards: p.discards.map(d => ({ ...d })),
+                melds: p.melds.map(m => ({ type: m.type, tiles: [...m.tiles], from: m.from })),
+                score: p.score,
+                riichi: p.riichi,
+                pendingRiichi: p.pendingRiichi,
+                wind: p.wind,
+                waits: p.waits ? [...p.waits] : undefined,
+                lastDrawnTile: p.lastDrawnTile,
+            })),
+            doraMarkers: [...state.doraMarkers],
+            round: state.round,
+            honba: state.honba,
+            kyotaku: state.kyotaku,
+            wallRemaining: state.wallRemaining,
+            currentActor: state.currentActor,
+            lastEvent: state.lastEvent,
+            eventIndex: state.eventIndex,
+            totalEvents: state.totalEvents,
+            dahaiAnim: state.dahaiAnim,
+            conditions: {
+                ippatsu: [...state.conditions.ippatsu],
+                afterKan: state.conditions.afterKan,
+                pendingChankan: state.conditions.pendingChankan,
+                chankanTarget: state.conditions.chankanTarget,
+                callsMade: state.conditions.callsMade,
+                firstTurnCompleted: [...state.conditions.firstTurnCompleted],
+                turnCount: state.conditions.turnCount,
+                doubleRiichi: [...state.conditions.doubleRiichi],
+            },
+        };
     }
 
     private getRoundIndex(e: MjaiEvent): number {

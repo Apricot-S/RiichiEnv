@@ -19,6 +19,7 @@ export class Viewer {
     controller!: ReplayController;
 
     isFrozen: boolean = false;
+    private _rafId: number = 0;
 
     debugPanel!: HTMLElement;
 
@@ -165,11 +166,7 @@ export class Viewer {
             return btn;
         };
 
-        console.log("[Viewer] Initializing GameState with log length:", log.length);
         this.gameState = new GameState(log, gc);
-        console.log("[Viewer] GameState initialized. Current event index:", this.gameState.current.eventIndex);
-
-        console.log("[Viewer] Initializing Renderer2D");
         this.renderer = new Renderer2D(viewArea, lc);
 
         // Create Buttons
@@ -232,12 +229,10 @@ export class Viewer {
 
         if (typeof initialStep === 'number') {
             targetStep = initialStep;
-            console.log(`[Viewer] Initializing with explicit step: ${targetStep}`);
         } else if (eventStepParam) {
             const parsed = parseInt(eventStepParam, 10);
             if (!isNaN(parsed)) {
                 targetStep = parsed;
-                console.log(`[Viewer] Initializing with permalink step: ${targetStep}`);
             }
         }
 
@@ -300,8 +295,7 @@ export class Viewer {
             };
         }
 
-        console.log("[Viewer] Calling first update()");
-        this.update();
+        this.updateImmediate();
     }
 
     showRoundSelector() {
@@ -375,8 +369,16 @@ export class Viewer {
 
     update() {
         if (!this.gameState || !this.renderer) return;
+        if (this._rafId) cancelAnimationFrame(this._rafId);
+        this._rafId = requestAnimationFrame(() => {
+            this._rafId = 0;
+            this.updateImmediate();
+        });
+    }
+
+    updateImmediate() {
+        if (!this.gameState || !this.renderer) return;
         const state = this.gameState.getState();
         this.renderer.render(state, this.debugPanel);
-        // Update URL/History?
     }
 }

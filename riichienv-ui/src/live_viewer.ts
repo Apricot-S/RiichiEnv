@@ -22,6 +22,7 @@ export class LiveViewer {
     container: HTMLElement;
     controller: LiveController;
     debugPanel: HTMLElement;
+    private _rafId: number = 0;
 
     constructor(containerId: string, options?: { perspective?: number, config?: GameConfig, layout?: LayoutConfig }) {
         const gc = options?.config ?? createGameConfig4P();
@@ -207,7 +208,7 @@ export class LiveViewer {
             scaleWrapper.style.height = `${Math.floor(baseH * scale)}px`;
         });
 
-        this.update();
+        this.updateImmediate();
     }
 
     /**
@@ -229,6 +230,15 @@ export class LiveViewer {
     }
 
     update(): void {
+        if (!this.gameState || !this.renderer) return;
+        if (this._rafId) cancelAnimationFrame(this._rafId);
+        this._rafId = requestAnimationFrame(() => {
+            this._rafId = 0;
+            this.updateImmediate();
+        });
+    }
+
+    updateImmediate(): void {
         if (!this.gameState || !this.renderer) return;
         const state = this.gameState.getState();
         this.renderer.render(state, this.debugPanel);
