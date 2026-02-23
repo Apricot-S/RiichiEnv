@@ -10,7 +10,7 @@ from typing import Any
 
 from IPython.display import HTML
 
-from riichienv import Conditions, HandEvaluator, Meld, MeldType, WinResult, Wind
+from riichienv import Conditions, HandEvaluator, Meld, MeldType, Wind, WinResult
 from riichienv import convert as cvt
 
 
