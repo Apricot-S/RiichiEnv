@@ -585,7 +585,7 @@ export class Renderer3D implements IRenderer {
         // Determine visible side faces based on relIndex
         const oppFaces: { [key: number]: { front?: boolean; back?: boolean; left?: boolean; right?: boolean } } = {
             1: { back: true, left: true },
-            2: { back: true },
+            2: { back: true, right: true, left: true },
             3: { right: true, back: true },
         };
         const faces = oppFaces[relIndex] || { front: true, right: true };
