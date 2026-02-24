@@ -957,7 +957,16 @@ impl GameState3P {
 
                         if res.yakuman {
                             let mut has_pao = false;
+                            let mut total_yakuman_val = 0i32;
                             for &yid in &res.yaku {
+                                let val: i32 = match yid {
+                                    47 if self.rule.is_junsei_chuurenpoutou_double => 2,
+                                    48 if self.rule.is_suuankou_tanki_double => 2,
+                                    49 if self.rule.is_kokushi_musou_13machi_double => 2,
+                                    50 if self.rule.is_daisuushii_double => 2,
+                                    _ => 1,
+                                };
+                                total_yakuman_val += val;
                                 if let Some(liable) =
                                     self.players[w_pid as usize].pao.get(&(yid as u8))
                                 {
@@ -966,8 +975,12 @@ impl GameState3P {
                                 }
                             }
                             if has_pao {
-                                // Ron with pao: pao player and discarder split total 50/50
-                                pao_amt = score as usize / 2;
+                                // Ron with PAO: base yakuman split 50/50, honba to PAO player
+                                let is_oya = w_pid == self.oya;
+                                let unit: i32 = if is_oya { 48000 } else { 32000 };
+                                let honba_ron = ron_honba as i32 * (NP as i32 - 1) * 100;
+                                let total_base = total_yakuman_val * unit;
+                                pao_amt = (total_base / 2 + honba_ron) as usize;
                             }
                         }
 

@@ -159,24 +159,15 @@ class TestPaoCompositeYakuman:
 
         # Expected: Triple Yakuman (Daisuushi 2x + Tsuuiisou 1x) = 144000.
 
-        # Majsoul Rule:
-        # Pao Part (Daisuushi 2x = 96000): Split 50/50.
-        # Pao pays 48000. Deal-in pays 48000.
-
-        # Normal Part (Tsuuiisou 1x = 48000): Paid by Deal-in.
-        # Deal-in pays 48000.
-
-        # Total:
-        # Pao (P2) pays: 48000.
-        # Deal-in (P1) pays: 48000 + 48000 = 96000.
-
-        # Difference from Tenhou:
-        # Tenhou Composite (3x = 144000) -> Split 50/50 -> Each pays 72000.
-        # Majsoul -> P2: 48000, P1: 96000. (Distinct).
+        # Ron PAO: total score split 50/50 between PAO player and discarder.
+        # (liability_only only affects tsumo PAO, not ron PAO)
+        # 144000 / 2 = 72000 each.
+        # Pao (P2) pays: 72000.
+        # Deal-in (P1) pays: 72000.
 
         assert env.score_deltas[0] == 144000
-        assert env.score_deltas[1] == -96000  # Deal-in (48k split + 48k normal)
-        assert env.score_deltas[2] == -48000  # Pao (48k split)
+        assert env.score_deltas[1] == -72000  # Deal-in (total / 2)
+        assert env.score_deltas[2] == -72000  # Pao (total / 2)
         assert env.score_deltas[3] == 0
 
     def test_majsoul_pao_ron_single(self) -> None:

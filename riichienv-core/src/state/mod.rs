@@ -996,7 +996,6 @@ impl GameState {
 
                         if res.yakuman {
                             let mut has_pao = false;
-                            let mut pao_yakuman_val = 0i32;
                             let mut total_yakuman_val = 0i32;
 
                             for &yid in &res.yaku {
@@ -1013,7 +1012,6 @@ impl GameState {
                                 {
                                     has_pao = true;
                                     pao_payer = *liable;
-                                    pao_yakuman_val += val;
                                 }
                             }
 
@@ -1022,15 +1020,10 @@ impl GameState {
                                 let unit: i32 = if is_oya { 48000 } else { 32000 };
                                 let honba_ron = ron_honba as i32 * (np as i32 - 1) * 100;
 
-                                if self.rule.yakuman_pao_is_liability_only {
-                                    // MjSoul: PAO payer pays full PAO yakuman portion,
-                                    // discarder pays non-PAO portion + honba
-                                    pao_amt = pao_yakuman_val * unit;
-                                } else {
-                                    // Tenhou: total score split 50/50 between PAO and discarder
-                                    let total_base = total_yakuman_val * unit;
-                                    pao_amt = total_base / 2 + honba_ron;
-                                }
+                                // Ron with PAO: total score split 50/50 between PAO player and discarder
+                                // (yakuman_pao_is_liability_only only affects tsumo PAO, not ron)
+                                let total_base = total_yakuman_val * unit;
+                                pao_amt = total_base / 2 + honba_ron;
                             }
                         }
 
