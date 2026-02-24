@@ -29,7 +29,7 @@ pub struct GameRule {
 
 impl Default for GameRule {
     fn default() -> Self {
-        Self::default_mjsoul()
+        Self::default_tenhou()
     }
 }
 
