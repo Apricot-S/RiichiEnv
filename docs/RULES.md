@@ -69,15 +69,16 @@ Ankan (closed kan) always reveals dora immediately before the rinshan tsumo, reg
 
 | Flag | Description |
 |------|-------------|
-| `.open_kan_dora_after_discard` | Whether open kan (Daiminkan/Kakan) dora is revealed after the discard. When `True` (Mahjong Soul style), dora is revealed after the discard. When `False` (Tenhou style), dora is revealed before the discard. |
+| `.open_kan_dora_after_discard` | Whether open kan (Daiminkan/Kakan) dora is revealed after the discard. When `True` (Tenhou / Mahjong Soul style), dora is revealed after the discard. When `False` (Mortal mjai protocol style), dora is revealed before the discard. |
 
 ### Event Order
 
-**Ankan (Closed Kan)** - always the same:
+When `open_kan_dora_after_discard = True` (Tenhou / Mahjong Soul):
+
+**Ankan (Closed Kan)**:
 ```
 ankan → dora → tsumo (rinshan) → dahai
 ```
-Note: Rinshan kaihou (winning on rinshan draw) includes the kan dora.
 
 **Kakan/Daiminkan (Open/Added Kan)**:
 ```
@@ -85,45 +86,97 @@ kakan → tsumo (rinshan) → dahai → dora
 daiminkan → tsumo (rinshan) → dahai → dora
 ```
 
+When `open_kan_dora_after_discard = False` (Mortal):
+
+**Ankan (Closed Kan)** - same as above:
+```
+ankan → dora → tsumo (rinshan) → dahai
+```
+
+**Kakan/Daiminkan (Open/Added Kan)**:
+```
+kakan → tsumo (rinshan) → dora → dahai
+daiminkan → tsumo (rinshan) → dora → dahai
+```
+
+Note: Rinshan kaihou (winning on rinshan draw) always includes the kan dora.
+
 ### Usage
 
 ```python
 from riichienv import RiichiEnv, GameRule
 
-# Tenhou style: open kan dora before discard (default for default_tenhou())
+# Mortal style: open kan dora before discard (default for default_mortal())
 rule = GameRule(open_kan_dora_after_discard=False)
 env = RiichiEnv(rule=rule)
 
-# Mahjong Soul style: open kan dora after discard (default for default_mjsoul())
+# Tenhou / Mahjong Soul style: open kan dora after discard
 rule = GameRule(open_kan_dora_after_discard=True)
 env = RiichiEnv(rule=rule)
 ```
 
+## Mortal Preset and Kan Dora Timing
+
+The `default_mortal()` preset is designed for compatibility with Mortal's mjai protocol implementation. It uses the same rule flags as `default_tenhou()` except for `open_kan_dora_after_discard`.
+
+In Tenhou's actual game rules, open kan (Kakan/Daiminkan) dora is revealed **after** the player's discard. However, Mortal's mjai protocol implementation (`libriichi/src/arena/board.rs`) encodes the dora event **before** the dahai event for open kans:
+
+```rust
+// Mortal board.rs — Kakan/Daiminkan handler
+Event::Daiminkan { actor, .. } | Event::Kakan { actor, .. } => {
+    // ...
+    self.need_new_dora_at_discard = Some(());
+    // ...
+}
+
+// Mortal board.rs — Dahai handler
+Event::Dahai { actor, pai, .. } => {
+    if self.need_new_dora_at_discard.take().is_some() {
+        self.add_new_dora()?;   // dora event emitted BEFORE dahai
+    }
+    self.broadcast(&ev.event);  // then dahai
+    self.add_log(ev.clone());
+}
+```
+
+This produces the mjai event sequence `kakan → tsumo → dora → dahai`, where the dora event appears before the dahai in the protocol log. For ankan, Mortal reveals dora immediately after the kan declaration (before rinshan tsumo), which is the same as Tenhou:
+
+```rust
+// Mortal board.rs — Ankan handler
+Event::Ankan { actor, .. } => {
+    // ...
+    self.add_new_dora()?;  // "Immediately add new dora"
+    // ...
+}
+```
+
+The `default_mortal()` preset (`open_kan_dora_after_discard = false`) matches this protocol behavior, enabling compatibility with Mortal for agent evaluation and validation.
+
 ## Platform-Specific Rule Presets
 
-Differences in standard ranked match rules across major platforms.
+Differences in standard ranked match rules across major platforms and Mortal.
 
 ### 4-Player Presets
 
-| Flag | `default_tenhou()` | `default_mjsoul()` |
-|------|--------|--------------|
-| `.allows_ron_on_ankan_for_kokushi_musou` | `False` | `True` |
-| `.is_kokushi_musou_13machi_double` | `False` | `True` |
-| `.is_suuankou_tanki_double` | `False` | `True` |
-| `.is_junsei_chuurenpoutou_double` | `False` | `True` |
-| `.is_daisuushii_double` | `False` | `True` |
-| `.yakuman_pao_is_liability_only` | `False` | `True` |
-| `.sanchaho_is_draw` | `True` | `False` |
-| `.open_kan_dora_after_discard` | `False` | `True` |
+| Flag | `default_tenhou()` | `default_mjsoul()` | `default_mortal()` |
+|------|--------|--------------|--------------|
+| `.allows_ron_on_ankan_for_kokushi_musou` | `False` | `True` | `False` |
+| `.is_kokushi_musou_13machi_double` | `False` | `True` | `False` |
+| `.is_suuankou_tanki_double` | `False` | `True` | `False` |
+| `.is_junsei_chuurenpoutou_double` | `False` | `True` | `False` |
+| `.is_daisuushii_double` | `False` | `True` | `False` |
+| `.yakuman_pao_is_liability_only` | `False` | `True` | `False` |
+| `.sanchaho_is_draw` | `True` | `False` | `True` |
+| `.open_kan_dora_after_discard` | `True` | `True` | `False` |
 
 ### 3-Player (Sanma) Presets
 
-| Flag | `default_tenhou_sanma()` | `default_mjsoul_sanma()` |
-|------|--------|--------------|
-| `.allows_ron_on_ankan_for_kokushi_musou` | `False` | `True` |
-| `.is_kokushi_musou_13machi_double` | `False` | `True` |
-| `.is_suuankou_tanki_double` | `False` | `True` |
-| `.is_junsei_chuurenpoutou_double` | `False` | `True` |
-| `.is_daisuushii_double` | `False` | `True` |
-| `.yakuman_pao_is_liability_only` | `False` | `True` |
-| `.open_kan_dora_after_discard` | `False` | `True` |
+| Flag | `default_tenhou_sanma()` | `default_mjsoul_sanma()` | `default_mortal_sanma()` |
+|------|--------|--------------|--------------|
+| `.allows_ron_on_ankan_for_kokushi_musou` | `False` | `True` | `False` |
+| `.is_kokushi_musou_13machi_double` | `False` | `True` | `False` |
+| `.is_suuankou_tanki_double` | `False` | `True` | `False` |
+| `.is_junsei_chuurenpoutou_double` | `False` | `True` | `False` |
+| `.is_daisuushii_double` | `False` | `True` | `False` |
+| `.yakuman_pao_is_liability_only` | `False` | `True` | `False` |
+| `.open_kan_dora_after_discard` | `True` | `True` | `False` |

@@ -11,12 +11,12 @@ from riichienv import (
 
 
 class TestKanDoraTimingEvents:
-    def test_tenhou_ankan_dora_before_rinshan(self):
+    def test_mortal_ankan_dora_before_rinshan(self):
         """
         Ankan reveals dora before rinshan tsumo (common to all modes).
         Expected order: ankan → dora → tsumo
         """
-        rule = GameRule.default_tenhou()
+        rule = GameRule.default_mortal()
         assert rule.open_kan_dora_after_discard is False
 
         env = RiichiEnv(seed=42, game_mode=0, rule=rule)
@@ -63,12 +63,12 @@ class TestKanDoraTimingEvents:
             f"tsumo@{tsumo_after_ankan[0]}"
         )
 
-    def test_tenhou_kakan_dora_before_discard(self):
+    def test_mortal_kakan_dora_before_discard(self):
         """
-        Tenhou: Kakan reveals dora before discard.
+        Mortal: Kakan reveals dora before discard.
         Expected order: kakan → tsumo → dora → dahai
         """
-        rule = GameRule.default_tenhou()
+        rule = GameRule.default_mortal()
         assert rule.open_kan_dora_after_discard is False
 
         env = RiichiEnv(seed=42, game_mode=0, rule=rule)
@@ -123,7 +123,7 @@ class TestKanDoraTimingEvents:
         assert len(tsumo_after_kakan) > 0, "Should have tsumo event after kakan"
         assert len(dahai_after_kakan) > 0, "Should have dahai event after kakan"
 
-        # Tenhou: Verify order: kakan → tsumo → dora → dahai
+        # Mortal: Verify order: kakan → tsumo → dora → dahai
         assert tsumo_after_kakan[0] < dora_after_kakan[0], (
             f"Tsumo should come before dora. "
             f"Order: kakan@{kakan_idx}, tsumo@{tsumo_after_kakan[0]}, "

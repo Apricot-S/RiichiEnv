@@ -19,8 +19,8 @@ pub struct GameRule {
     pub kuikae_forbidden: bool,
 
     /// Whether open kan (Daiminkan/Kakan) dora is revealed after the discard.
-    /// - `true`: dora revealed after discard (Mahjong Soul style)
-    /// - `false`: dora revealed before discard (Tenhou style)
+    /// - `true`: dora revealed after discard (Tenhou / Mahjong Soul style)
+    /// - `false`: dora revealed before discard (Mortal mjai protocol style)
     ///
     /// Note: Ankan (closed kan) always reveals dora immediately (before rinshan tsumo),
     /// regardless of this flag.
@@ -29,7 +29,7 @@ pub struct GameRule {
 
 impl Default for GameRule {
     fn default() -> Self {
-        Self::default_tenhou()
+        Self::default_mortal()
     }
 }
 
@@ -46,7 +46,7 @@ impl GameRule {
             sanchaho_is_draw: true,
 
             kuikae_forbidden: true,
-            open_kan_dora_after_discard: false,
+            open_kan_dora_after_discard: true,
         }
     }
 
@@ -63,6 +63,22 @@ impl GameRule {
 
             kuikae_forbidden: true,
             open_kan_dora_after_discard: true,
+        }
+    }
+
+    pub fn default_mortal() -> Self {
+        Self {
+            allows_ron_on_ankan_for_kokushi_musou: false,
+            is_kokushi_musou_13machi_double: false,
+            is_suuankou_tanki_double: false,
+            is_junsei_chuurenpoutou_double: false,
+            is_daisuushii_double: false,
+            yakuman_pao_is_liability_only: false,
+
+            sanchaho_is_draw: true,
+
+            kuikae_forbidden: true,
+            open_kan_dora_after_discard: false,
         }
     }
 
@@ -83,6 +99,22 @@ impl GameRule {
     }
 
     pub fn default_tenhou_sanma() -> Self {
+        Self {
+            allows_ron_on_ankan_for_kokushi_musou: false,
+            is_kokushi_musou_13machi_double: false,
+            is_suuankou_tanki_double: false,
+            is_junsei_chuurenpoutou_double: false,
+            is_daisuushii_double: false,
+            yakuman_pao_is_liability_only: false,
+
+            sanchaho_is_draw: false,
+
+            kuikae_forbidden: true,
+            open_kan_dora_after_discard: true,
+        }
+    }
+
+    pub fn default_mortal_sanma() -> Self {
         Self {
             allows_ron_on_ankan_for_kokushi_musou: false,
             is_kokushi_musou_13machi_double: false,
@@ -142,9 +174,21 @@ impl GameRule {
     }
 
     #[staticmethod]
+    #[pyo3(name = "default_mortal")]
+    pub fn py_default_mortal() -> Self {
+        Self::default_mortal()
+    }
+
+    #[staticmethod]
     #[pyo3(name = "default_tenhou_sanma")]
     pub fn py_default_tenhou_sanma() -> Self {
         Self::default_tenhou_sanma()
+    }
+
+    #[staticmethod]
+    #[pyo3(name = "default_mortal_sanma")]
+    pub fn py_default_mortal_sanma() -> Self {
+        Self::default_mortal_sanma()
     }
 
     fn __repr__(&self) -> String {
