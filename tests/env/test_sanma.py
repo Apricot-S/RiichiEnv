@@ -14,8 +14,8 @@ from riichienv import (
     calculate_score,
 )
 from riichienv._riichienv import Observation3P
-from riichienv.convert import tid_to_mjai
 from riichienv.consts import N_TILE_TYPES_3P
+from riichienv.convert import tid_to_mjai
 
 # ---------------------------------------------------------------------------
 # Helpers
