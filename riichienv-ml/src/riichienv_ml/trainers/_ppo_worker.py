@@ -4,7 +4,6 @@ import time
 import ray
 import torch
 import numpy as np
-from loguru import logger
 from riichienv import RiichiEnv
 
 from riichienv_ml.config import import_class, GAME_PARAMS
@@ -356,6 +355,7 @@ class PPOWorker:
         t_end = time.time()
         episode_time = t_end - t_start
         if n_transitions > 0:
+            from loguru import logger
             logger.info(f"Worker {self.worker_id}: {self.num_envs} hanchan, "
                         f"{len(kyoku_lengths)} kyokus took {episode_time:.3f}s, "
                         f"{n_transitions} transitions, {n_transitions/episode_time:.1f} trans/s")

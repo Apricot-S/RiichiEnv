@@ -236,8 +236,11 @@ class HandPredConfig(WandbConfig):
     model: ModelConfig = ModelConfig()
     model_class: str = "riichienv_ml.models.hand_pred.HandPredCNN"
     encoder_class: str = "riichienv_ml.features.feat_v1.ObservationEncoder"
-    loss_type: str = "smooth_l1"  # or "mse"
-    sum_constraint_weight: float = 0.1  # auxiliary loss weight for total tile count
+    dataset_class: str = "riichienv_ml.datasets.hand_pred.HandPredDataset"
+    loss_type: str = "cross_entropy"  # "cross_entropy", "smooth_l1", or "mse"
+    label_smoothing: float = 0.1
+    sum_constraint_weight: float = 0.1  # auxiliary loss weight (regression only)
+    val_step_interval: int = 20000  # run validation & save checkpoint every N steps
 
 
 class Config(BaseModel):
