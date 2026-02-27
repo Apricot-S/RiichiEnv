@@ -182,6 +182,7 @@ struct KyokuBuilder {
 
 #[cfg(feature = "python")]
 impl KyokuBuilder {
+    #[allow(clippy::too_many_arguments)]
     fn new(
         bakaze: String,
         kyoku: u8,

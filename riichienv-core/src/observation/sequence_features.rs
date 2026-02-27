@@ -13,19 +13,26 @@ use crate::parser::mjai_to_tid;
 use super::Observation;
 
 // ── Constants ────────────────────────────────────────────────────────────────
-
+// These constants are `pub` for Python-side consumption (see riichienv-ml).
+#[allow(dead_code)]
 pub const SPARSE_VOCAB_SIZE: usize = 442;
+#[allow(dead_code)]
 pub const SPARSE_PAD: u16 = 441;
 pub const MAX_SPARSE_LEN: usize = 25;
 
 /// Progression tuple dimensions: (actor, type, moqie, liqi, from)
+#[allow(dead_code)]
 pub const PROG_DIMS: [u16; 5] = [5, 277, 3, 3, 5];
 pub const MAX_PROG_LEN: usize = 512;
+#[allow(dead_code)]
 pub const PROG_PAD: [u16; 5] = [4, 276, 2, 2, 4];
 
 /// Candidate tuple dimensions: (type, moqie, liqi, from)
+#[allow(dead_code)]
 pub const CAND_DIMS: [u16; 4] = [280, 3, 3, 4];
+#[allow(dead_code)]
 pub const MAX_CAND_LEN: usize = 64;
+#[allow(dead_code)]
 pub const CAND_PAD: [u16; 4] = [279, 2, 2, 3];
 
 pub const NUM_NUMERIC: usize = 12;
@@ -66,6 +73,7 @@ fn tile_type_to_kan37(tile_type: u8) -> u8 {
 
 /// Convert a tile type (0-33) to kan34 (identity).
 #[inline]
+#[allow(dead_code)]
 pub fn tile_type_to_kan34(tile_type: u8) -> u8 {
     tile_type
 }
@@ -136,7 +144,7 @@ pub fn encode_chi(consumed: &[u8], called_tile: u8) -> u16 {
 /// 40 patterns = 3 suits × 11 per suit + 7 honors.
 /// Per suit: 8 non-five tiles (3 each = too many; actually 1 pattern each)
 ///   + 3 five-variants (normal, red-in-hand, red-called) = 11.
-/// Honors: 7 × 1 = 7.
+///     Honors: 7 × 1 = 7.
 ///
 /// `consumed` = sorted tile IDs of the 2 tiles from hand.
 /// `called_tile` = tile ID claimed from discard.
@@ -344,7 +352,7 @@ impl Observation {
 
         // 5. Tiles remaining (offset 13-82)
         let tiles_remaining = self.count_tiles_remaining();
-        tokens.push(13 + (tiles_remaining.min(69)) as u16);
+        tokens.push(13 + tiles_remaining.min(69));
 
         // 6. Dora indicators (offset 83-267, 5 slots × 37)
         for (i, &dora_tid) in self.dora_indicators.iter().enumerate() {
@@ -946,26 +954,28 @@ mod tests {
     #[test]
     fn test_progression_type_bounds() {
         // Verify type indices stay within PROG_DIMS[1] = 277
-        assert!(1 + 36 <= 276); // dahai max: 1 + 36 = 37
-        assert!(38 + 89 <= 276); // chi max: 38 + 89 = 127
-        assert!(128 + 39 <= 276); // pon max: 128 + 39 = 167
-        assert!(168 + 36 <= 276); // daiminkan max: 168 + 36 = 204
-        assert!(205 + 33 <= 276); // ankan max: 205 + 33 = 238
-        assert!(239 + 36 <= 276); // kakan max: 239 + 36 = 275
+        let prog_type_max: u16 = 277;
+        assert!(37 <= prog_type_max); // dahai max: 1 + 36 = 37
+        assert!(38 + 89 <= prog_type_max); // chi max: 38 + 89 = 127
+        assert!(128 + 39 <= prog_type_max); // pon max: 128 + 39 = 167
+        assert!(168 + 36 <= prog_type_max); // daiminkan max: 168 + 36 = 204
+        assert!(205 + 33 <= prog_type_max); // ankan max: 205 + 33 = 238
+        assert!(239 + 36 <= prog_type_max); // kakan max: 239 + 36 = 275
     }
 
     #[test]
     fn test_candidate_type_bounds() {
         // Verify type indices stay within CAND_DIMS[0] = 280
-        assert!(36 < 280); // discard max: 36
-        assert!(37 + 33 < 280); // ankan max: 70
-        assert!(71 + 36 < 280); // kakan max: 107
-        assert!(108 < 280); // tsumo
-        assert!(109 < 280); // kyushu
-        assert!(110 < 280); // pass
-        assert!(111 + 89 < 280); // chi max: 200
-        assert!(201 + 39 < 280); // pon max: 240
-        assert!(241 + 36 < 280); // daiminkan max: 277
-        assert!(278 < 280); // ron
+        let cand_type_max: u16 = 280;
+        assert!(36 < cand_type_max); // discard max: 36
+        assert!(37 + 33 < cand_type_max); // ankan max: 70
+        assert!(71 + 36 < cand_type_max); // kakan max: 107
+        assert!(108 < cand_type_max); // tsumo
+        assert!(109 < cand_type_max); // kyushu
+        assert!(110 < cand_type_max); // pass
+        assert!(111 + 89 < cand_type_max); // chi max: 200
+        assert!(201 + 39 < cand_type_max); // pon max: 240
+        assert!(241 + 36 < cand_type_max); // daiminkan max: 277
+        assert!(278 < cand_type_max); // ron
     }
 }

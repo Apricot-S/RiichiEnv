@@ -361,7 +361,7 @@ impl GameStateEventHandler for GameState {
                             .filter(|(_, &f)| f == *seat)
                             .map(|(&t, _)| t)
                             .collect();
-                        let pai_str = called_tile.map(|t| tid_to_mjai(t)).unwrap_or_default();
+                        let pai_str = called_tile.map(tid_to_mjai).unwrap_or_default();
                         let consumed_strs: Vec<String> =
                             consumed_tiles.iter().map(|&t| tid_to_mjai(t)).collect();
                         let ev = serde_json::json!({
@@ -473,7 +473,7 @@ impl GameStateEventHandler for GameState {
                     let ev = if *meld_type == MeldType::Ankan {
                         let t_val = tiles[0] / 4;
                         let consumed_tids =
-                            vec![t_val * 4, t_val * 4 + 1, t_val * 4 + 2, t_val * 4 + 3];
+                            [t_val * 4, t_val * 4 + 1, t_val * 4 + 2, t_val * 4 + 3];
                         let consumed_strs: Vec<String> =
                             consumed_tids.iter().map(|&t| tid_to_mjai(t)).collect();
                         serde_json::json!({
