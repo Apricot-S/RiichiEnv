@@ -287,7 +287,8 @@ fn test_negative_data_integrity() {
 #[test]
 fn test_calculate_score_correctness() {
     // (han, fu, is_oya, is_tsumo, honba, num_players, expected_pay_ron, expected_tsumo_oya, expected_tsumo_ko)
-    let cases: Vec<(u8, u8, bool, bool, u32, u8, u32, u32, u32)> = vec![
+    type ScoreCase = (u8, u8, bool, bool, u32, u8, u32, u32, u32);
+    let cases: Vec<ScoreCase> = vec![
         // Basic scoring tiers
         (1, 30, false, false, 0, 4, 1000, 0, 0),
         (1, 30, false, true, 0, 4, 0, 500, 300),

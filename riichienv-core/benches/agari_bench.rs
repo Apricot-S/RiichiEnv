@@ -255,7 +255,8 @@ fn bench_hand_evaluator_calc_4p(c: &mut Criterion) {
     let data = load_agari_data("benches/data/agari_4p.json");
 
     // Pre-build evaluator inputs
-    let inputs: Vec<(HandEvaluator, u8, Vec<u8>, Vec<u8>, Conditions)> = data
+    type CalcInput4P = (HandEvaluator, u8, Vec<u8>, Vec<u8>, Conditions);
+    let inputs: Vec<CalcInput4P> = data
         .cases
         .iter()
         .map(|case| {
@@ -288,7 +289,8 @@ fn bench_hand_evaluator_calc_3p(c: &mut Criterion) {
     }
     let data = load_agari_data(path);
 
-    let inputs: Vec<(HandEvaluator3P, u8, Vec<u8>, Vec<u8>, Conditions)> = data
+    type CalcInput3P = (HandEvaluator3P, u8, Vec<u8>, Vec<u8>, Conditions);
+    let inputs: Vec<CalcInput3P> = data
         .cases
         .iter()
         .map(|case| {
