@@ -75,6 +75,8 @@ class Trainer:
         return max(total_samples // self.batch_size, 1)
 
     def train(self, output_path: str, n_epochs: int = 10) -> None:
+        if not hasattr(self, "train_dataloader"):
+            raise ValueError("data_glob is required for training (got empty string)")
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)
         model = RankPredictor(input_dim=self.input_dim, n_players=self.n_players).to(self.device)
         optimizer = optim.Adam(model.parameters(), lr=self.lr)
@@ -85,16 +87,18 @@ class Trainer:
         criterion = nn.CrossEntropyLoss()
         for epoch in range(n_epochs):
             train_loss, train_acc = self._train_epoch(epoch, model, optimizer, scheduler, criterion)
-            val_loss, val_acc = self._val_epoch(epoch, model, criterion)
-            torch.save(model.state_dict(), output_path)
-            wandb.log({
+            metrics = {
                 "epoch": epoch,
                 "train/loss": train_loss,
                 "train/acc": train_acc,
-                "val/loss": val_loss,
-                "val/acc": val_acc,
                 "lr": optimizer.param_groups[0]["lr"],
-            })
+            }
+            if hasattr(self, "val_dataloader"):
+                val_loss, val_acc = self._val_epoch(epoch, model, criterion)
+                metrics["val/loss"] = val_loss
+                metrics["val/acc"] = val_acc
+            torch.save(model.state_dict(), output_path)
+            wandb.log(metrics)
 
     def _train_epoch(self, epoch: int, model: nn.Module, optimizer: optim.Optimizer, scheduler: optim.lr_scheduler._LRScheduler, criterion: nn.Module) -> tuple[float, float]:
         loss_meter = AverageMeter("loss", ":.4e")

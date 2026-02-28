@@ -114,9 +114,12 @@ def init_wandb(
         run.log_artifact(art_config)
         logger.info(f"Uploaded config artifact: {config_path}")
 
-    # Upload git diff as artifact if there are uncommitted changes
+    # Upload git diff as artifact if there are uncommitted changes.
+    # NOTE: This may include sensitive data from uncommitted changes.
     diff = _git_diff()
     if diff:
+        logger.warning("Uploading uncommitted git diff to W&B. "
+                       "Ensure no secrets/credentials are in your working tree.")
         art_diff = wandb.Artifact("code-diff", type="code")
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".diff", prefix="git_diff_", delete=False,

@@ -51,7 +51,7 @@ class BaseDataset(IterableDataset):
         if isinstance(self.data_sources, list):
             return self.data_sources
         elif isinstance(self.data_sources, str):
-            return glob.glob(self.data_sources)
+            return glob.glob(self.data_sources, recursive=True)
         return []
 
 
