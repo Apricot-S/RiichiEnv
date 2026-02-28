@@ -103,7 +103,6 @@ root_packages = ["riichienv"]
 [tool.uv.workspace]
 members = [
     "riichienv-ml",
-    "riichienv-ml-xt",
 ]
 
 [tool.ty.environment]
