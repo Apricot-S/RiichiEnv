@@ -245,7 +245,7 @@ impl Observation3P {
 
         let actions_py = pyo3::types::PyList::empty(py);
         for a in &self._legal_actions {
-            actions_py.append(a.0.to_dict_py(py)?)?;
+            actions_py.append(a.to_dict_py(py)?)?;
         }
         dict.set_item("legal_actions", actions_py)?;
 

@@ -1,9 +1,12 @@
 import glob
+import logging
 import random
 
 import numpy as np
 import torch
 from torch.utils.data import IterableDataset
+
+logger = logging.getLogger(__name__)
 
 from riichienv import MjaiReplay
 
@@ -72,11 +75,15 @@ class MCDataset(BaseDataset):
         if worker_info is not None:
             files = files[worker_info.id::worker_info.num_workers]
 
+        skipped = 0
+        total = len(files)
+
         for file_path in files:
             try:
                 replay = MjaiReplay.from_jsonl(file_path, rule=self.replay_rule)
             except (RuntimeError, ValueError) as e:
-                print(f"Skipping unparseable replay: {file_path}: {e}")
+                logger.warning("Skipping unparseable replay: %s: %s", file_path, e)
+                skipped += 1
                 continue
 
             buffer = []
@@ -110,13 +117,17 @@ class MCDataset(BaseDataset):
                             decayed = final_reward * (self.gamma ** (T - t - 1))
                             buffer.append((feat, act, decayed, mask, rank))
             except (RuntimeError, ValueError) as e:
-                print(f"Skipping replay due to error: {file_path}: {e}")
+                logger.warning("Skipping replay due to error: %s: %s", file_path, e)
+                skipped += 1
                 continue
 
             if self.is_train:
                 random.shuffle(buffer)
 
             yield from buffer
+
+        if skipped > 0:
+            logger.warning("Skipped %d / %d replay files due to errors", skipped, total)
 
 
 class DiscardHistoryDataset(MCDataset):

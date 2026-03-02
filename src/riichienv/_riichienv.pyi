@@ -84,10 +84,17 @@ class Action:
 
 class Action3P:
     action_type: ActionType
-    tile: int
+    tile: int | None
     consume_tiles: list[int]
+    actor: int | None
 
-    def __init__(self, action_type: ActionType, tile: int = 0, consume_tiles: list[int] = []): ...
+    def __init__(
+        self,
+        type: ActionType = ActionType.Pass,  # noqa: A002
+        tile: int | None = None,
+        consume_tiles: list[int] = [],
+        actor: int | None = None,
+    ): ...
     def to_dict(self) -> dict[str, Any]: ...
     def to_mjai(self) -> str: ...
     def encode(self) -> int: ...
