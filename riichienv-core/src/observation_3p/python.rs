@@ -121,6 +121,12 @@ impl Observation3P {
         self.find_action(action_id)
     }
 
+    /// Encode an action into a 3P action_id (0..59).
+    #[pyo3(name = "encode_action", signature = (action))]
+    pub fn encode_action_py(&self, action: &Action) -> PyResult<i32> {
+        ActionEncoder::ThreePlayer.encode(action).map_err(Into::into)
+    }
+
     #[pyo3(signature = (mjai_data))]
     pub fn select_action_from_mjai(&self, mjai_data: &Bound<'_, PyAny>) -> Option<Action> {
         let (atype, tile_str) = if let Ok(s) = mjai_data.extract::<String>() {

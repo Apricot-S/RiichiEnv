@@ -92,7 +92,10 @@ class MCDataset(BaseDataset):
 
                         for obs, action in kyoku.steps(player_id):
                             features = self.encoder.encode(obs)
-                            action_id = action.encode()
+                            if self.n_players == 3:
+                                action_id = obs.encode_action(action)
+                            else:
+                                action_id = action.encode()
 
                             mask_bytes = obs.mask()
                             mask = np.frombuffer(mask_bytes, dtype=np.uint8).copy()
