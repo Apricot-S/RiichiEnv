@@ -61,6 +61,22 @@ Controls whether specific Yakuman pattern variants are treated as Double Yakuman
 |------|-------------|
 | `.sanchaho_is_draw` | Whether triple ron (三家和, all non-discarders declaring Ron simultaneously) causes an abortive draw. When enabled (Tenhou), no scoring occurs and the round ends as a draw with renchan. When disabled (Mahjong Soul), all three Ron declarations are processed normally. |
 
+## Kan Dora Reveal Timing
+
+The timing of kan dora revelation is fixed and defines an invariant event order in the mjai event stream. The behavior differs between closed kan (ankan) and open kan (daiminkan/kakan):
+
+**Ankan (closed kan):**
+
+Event order: `ankan` → `dora` → `tsumo`
+
+The kan dora indicator is revealed immediately after the ankan declaration, before the rinshan tsumo draw. This means the new kan dora **applies** to a rinshan tsumo win.
+
+**Daiminkan / Kakan (open kan):**
+
+Event order: `daiminkan`/`kakan` → `tsumo` → `dora` → `dahai`
+
+The rinshan draw occurs first, then the kan dora indicator is revealed before the next discard. This means the new kan dora does **not** apply to a rinshan tsumo win from an open kan.
+
 ## Platform-Specific Rule Presets
 
 Differences in standard ranked match rules across major platforms and Mortal.
