@@ -124,7 +124,9 @@ impl Observation3P {
     /// Encode an action into a 3P action_id (0..59).
     #[pyo3(name = "encode_action", signature = (action))]
     pub fn encode_action_py(&self, action: &Action) -> PyResult<i32> {
-        ActionEncoder::ThreePlayer.encode(action).map_err(Into::into)
+        ActionEncoder::ThreePlayer
+            .encode(action)
+            .map_err(Into::into)
     }
 
     #[pyo3(signature = (mjai_data))]
