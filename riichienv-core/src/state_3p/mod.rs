@@ -1419,7 +1419,7 @@ impl GameState3P {
             }
 
             // Ankan: always reveal dora immediately (before rinshan tsumo)
-            // Daiminkan/Kakan: defer dora reveal to after discard
+            // Daiminkan/Kakan: defer dora reveal until discard (dora event before dahai)
             if action.action_type == ActionType::Ankan {
                 self._reveal_kan_dora();
             } else {
