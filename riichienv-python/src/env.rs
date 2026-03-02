@@ -14,7 +14,7 @@ impl<'a, 'py> FromPyObject<'a, 'py> for AnyAction {
         if let Ok(a) = obj.extract::<Action>() {
             Ok(AnyAction(a))
         } else if let Ok(a3p) = obj.extract::<Action3P>() {
-            Ok(AnyAction(a3p.0))
+            Ok(AnyAction(Action::from(a3p)))
         } else {
             Err(pyo3::exceptions::PyTypeError::new_err(
                 "expected Action or Action3P",

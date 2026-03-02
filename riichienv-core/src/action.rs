@@ -425,6 +425,12 @@ impl Action {
 #[serde(transparent)]
 pub struct Action3P(pub Action);
 
+impl From<Action3P> for Action {
+    fn from(a: Action3P) -> Self {
+        a.0
+    }
+}
+
 impl std::ops::Deref for Action3P {
     type Target = Action;
     fn deref(&self) -> &Action {
