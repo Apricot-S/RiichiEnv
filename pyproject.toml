@@ -49,10 +49,10 @@ exclude = [
     ".pytest_cache",
     ".ruff_cache",
     ".venv",
-    "demos",
+    "riichienv-ui/demos",
     "riichienv-ml",
     "riichienv-ml-xt",
-    "tools",
+    "riichienv-validation",
 ]
 
 line-length = 120
@@ -95,7 +95,7 @@ testpaths = ["tests"]
 norecursedirs = ["trunk"]
 
 [tool.ty.src]
-exclude = ["scripts", "tests", "demos", "riichienv-ml"]
+exclude = ["scripts", "tests", "demos", "riichienv-ml", "riichienv-ml-xt", "riichienv-validation", "riichienv-ui/demos"]
 
 [tool.importlinter]
 root_packages = ["riichienv"]

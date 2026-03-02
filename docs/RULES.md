@@ -61,96 +61,21 @@ Controls whether specific Yakuman pattern variants are treated as Double Yakuman
 |------|-------------|
 | `.sanchaho_is_draw` | Whether triple ron (三家和, all non-discarders declaring Ron simultaneously) causes an abortive draw. When enabled (Tenhou), no scoring occurs and the round ends as a draw with renchan. When disabled (Mahjong Soul), all three Ron declarations are processed normally. |
 
-## Open Kan Dora Reveal Timing
+## Kan Dora Reveal Timing
 
-Controls when dora indicators are revealed after an open kan (Daiminkan/Kakan) declaration.
+The timing of kan dora revelation is fixed and defines an invariant event order in the mjai event stream. The behavior differs between closed kan (ankan) and open kan (daiminkan/kakan):
 
-Ankan (closed kan) always reveals dora immediately before the rinshan tsumo, regardless of this flag.
+**Ankan (closed kan):**
 
-| Flag | Description |
-|------|-------------|
-| `.open_kan_dora_after_discard` | Whether open kan (Daiminkan/Kakan) dora is revealed after the discard. When `True` (Tenhou / Mahjong Soul style), dora is revealed after the discard. When `False` (Mortal mjai protocol style), dora is revealed before the discard. |
+Event order: `ankan` → `dora` → `tsumo`
 
-### Event Order
+The kan dora indicator is revealed immediately after the ankan declaration, before the rinshan tsumo draw. This means the new kan dora **applies** to a rinshan tsumo win.
 
-When `open_kan_dora_after_discard = True` (Tenhou / Mahjong Soul):
+**Daiminkan / Kakan (open kan):**
 
-**Ankan (Closed Kan)**:
-```
-ankan → dora → tsumo (rinshan) → dahai
-```
+Event order: `daiminkan`/`kakan` → `tsumo` → `dora` → `dahai`
 
-**Kakan/Daiminkan (Open/Added Kan)**:
-```
-kakan → tsumo (rinshan) → dahai → dora
-daiminkan → tsumo (rinshan) → dahai → dora
-```
-
-When `open_kan_dora_after_discard = False` (Mortal):
-
-**Ankan (Closed Kan)** - same as above:
-```
-ankan → dora → tsumo (rinshan) → dahai
-```
-
-**Kakan/Daiminkan (Open/Added Kan)**:
-```
-kakan → tsumo (rinshan) → dora → dahai
-daiminkan → tsumo (rinshan) → dora → dahai
-```
-
-Note: Rinshan kaihou (winning on rinshan draw) always includes the kan dora.
-
-### Usage
-
-```python
-from riichienv import RiichiEnv, GameRule
-
-# Mortal style: open kan dora before discard (default for default_mortal())
-rule = GameRule(open_kan_dora_after_discard=False)
-env = RiichiEnv(rule=rule)
-
-# Tenhou / Mahjong Soul style: open kan dora after discard
-rule = GameRule(open_kan_dora_after_discard=True)
-env = RiichiEnv(rule=rule)
-```
-
-## Mortal Preset and Kan Dora Timing
-
-The `default_mortal()` preset is designed for compatibility with Mortal's mjai protocol implementation. It uses the same rule flags as `default_tenhou()` except for `open_kan_dora_after_discard`.
-
-In Tenhou's actual game rules, open kan (Kakan/Daiminkan) dora is revealed **after** the player's discard. However, Mortal's mjai protocol implementation (`libriichi/src/arena/board.rs`) encodes the dora event **before** the dahai event for open kans:
-
-```rust
-// Mortal board.rs — Kakan/Daiminkan handler
-Event::Daiminkan { actor, .. } | Event::Kakan { actor, .. } => {
-    // ...
-    self.need_new_dora_at_discard = Some(());
-    // ...
-}
-
-// Mortal board.rs — Dahai handler
-Event::Dahai { actor, pai, .. } => {
-    if self.need_new_dora_at_discard.take().is_some() {
-        self.add_new_dora()?;   // dora event emitted BEFORE dahai
-    }
-    self.broadcast(&ev.event);  // then dahai
-    self.add_log(ev.clone());
-}
-```
-
-This produces the mjai event sequence `kakan → tsumo → dora → dahai`, where the dora event appears before the dahai in the protocol log. For ankan, Mortal reveals dora immediately after the kan declaration (before rinshan tsumo), which is the same as Tenhou:
-
-```rust
-// Mortal board.rs — Ankan handler
-Event::Ankan { actor, .. } => {
-    // ...
-    self.add_new_dora()?;  // "Immediately add new dora"
-    // ...
-}
-```
-
-The `default_mortal()` preset (`open_kan_dora_after_discard = false`) matches this protocol behavior, enabling compatibility with Mortal for agent evaluation and validation.
+The rinshan draw occurs first, then the kan dora indicator is revealed before the next discard. This means the new kan dora does **not** apply to a rinshan tsumo win from an open kan.
 
 ## Platform-Specific Rule Presets
 
@@ -167,7 +92,6 @@ Differences in standard ranked match rules across major platforms and Mortal.
 | `.is_daisuushii_double` | `False` | `True` | `False` |
 | `.yakuman_pao_is_liability_only` | `False` | `True` | `False` |
 | `.sanchaho_is_draw` | `True` | `False` | `True` |
-| `.open_kan_dora_after_discard` | `True` | `True` | `False` |
 
 ### 3-Player (Sanma) Presets
 
@@ -179,4 +103,3 @@ Differences in standard ranked match rules across major platforms and Mortal.
 | `.is_junsei_chuurenpoutou_double` | `False` | `True` | `False` |
 | `.is_daisuushii_double` | `False` | `True` | `False` |
 | `.yakuman_pao_is_liability_only` | `False` | `True` | `False` |
-| `.open_kan_dora_after_discard` | `True` | `True` | `False` |
