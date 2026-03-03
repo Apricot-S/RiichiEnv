@@ -223,7 +223,12 @@ impl Observation3P {
             }
         }
         for (ch_idx, &abs_idx) in self.rel_order().iter().enumerate() {
-            broadcast_scalar(buf, ch_offset, 55 + ch_idx, (dora_counts[abs_idx] as f32) / 12.0);
+            broadcast_scalar(
+                buf,
+                ch_offset,
+                55 + ch_idx,
+                (dora_counts[abs_idx] as f32) / 12.0,
+            );
         }
 
         // Melds Count (ch 59-61 for 3 players, relative order)
