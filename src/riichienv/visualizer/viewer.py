@@ -141,6 +141,7 @@ class MetadataInjector:
                 self.hands = {i: [] for i in range(pc)}
                 self.melds = {i: [] for i in range(pc)}
                 self.kita_count = {i: 0 for i in range(pc)}
+                self.kyoku_results = []
                 self.ippatsu_eligible = [False] * pc
                 self.just_reached = [False] * pc  # Track declaration discard
                 self.is_rinshan = False
@@ -289,7 +290,10 @@ class MetadataInjector:
                 tid = self._get_matching_tid(self.hands[actor], "N")
                 if tid in self.hands[actor]:
                     self.hands[actor].remove(tid)
-                self.kita_count[actor] += 1
+                    self.kita_count[actor] += 1
+                else:
+                    import warnings
+                    warnings.warn(f"kita: N tile not found in player {actor} hand", stacklevel=2)
                 self.is_rinshan = True
                 self.ippatsu_eligible = [False] * self.player_count
 

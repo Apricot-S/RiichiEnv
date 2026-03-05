@@ -1,3 +1,4 @@
+import dataclasses
 from dataclasses import dataclass
 
 from . import _riichienv as rust_core  # type: ignore
@@ -326,7 +327,10 @@ class HandEvaluator3P:
         conditions: Conditions | None = None,
         ura_indicators: list[int] | None = None,
     ) -> WinResult:
-        conditions = conditions or Conditions(is_sanma=True, num_players=3)
+        if conditions is None:
+            conditions = Conditions(is_sanma=True, num_players=3)
+        else:
+            conditions = dataclasses.replace(conditions, is_sanma=True, num_players=3)
         if dora_indicators is None:
             dora_indicators = []
         if ura_indicators is None:

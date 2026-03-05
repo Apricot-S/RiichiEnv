@@ -172,6 +172,7 @@ export class Renderer2D implements IRenderer {
                     label = type.charAt(0).toUpperCase() + type.slice(1);
                     if (type === 'daiminkan') label = 'Kan';
                     if (type === 'reach') label = 'Reach';
+                    if (type === 'kita') label = 'Pei';
                     showOverlay = true;
                 } else if (type === 'hora') {
                     label = (state.lastEvent.target === state.lastEvent.actor) ? 'Tsumo' : 'Ron';
