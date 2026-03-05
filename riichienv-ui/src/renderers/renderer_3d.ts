@@ -310,9 +310,9 @@ export class Renderer3D implements IRenderer {
 
             let rotation: string;
             if (pc === 3) {
-                // 3P: 0=bottom, 1=right, 2=left (120° increments)
-                if (relPos === 1) rotation = '-120deg';
-                else if (relPos === 2) rotation = '120deg';
+                // 3P: 0=bottom, 1=right, 2=opposite (top)
+                if (relPos === 1) rotation = '-90deg';
+                else if (relPos === 2) rotation = '180deg';
                 else rotation = '0deg';
             } else {
                 if (relPos === 1) rotation = '-90deg';
@@ -326,7 +326,7 @@ export class Renderer3D implements IRenderer {
             if (pc === 3) {
                 if (relPos === 0) { icon.style.bottom = '6px'; icon.style.left = '6px'; }
                 else if (relPos === 1) { icon.style.right = '6px'; icon.style.bottom = '6px'; }
-                else if (relPos === 2) { icon.style.left = '6px'; icon.style.top = '6px'; }
+                else if (relPos === 2) { icon.style.top = '6px'; icon.style.right = '6px'; }
             } else {
                 if (relPos === 0) { icon.style.bottom = '6px'; icon.style.left = '6px'; }
                 else if (relPos === 1) { icon.style.right = '6px'; icon.style.bottom = '6px'; }
@@ -410,7 +410,7 @@ export class Renderer3D implements IRenderer {
             const nearEdge = Math.round(ts / 2 + centerHalf - inset);
             const farEdge = Math.round(ts / 2 - centerHalf + inset);
             if (pc === 3) {
-                // 3P: 0=bottom, 1=right, 2=left
+                // 3P: 0=bottom, 1=right, 2=opposite (top)
                 if (relPos === 0) {
                     Object.assign(stick.style, {
                         left: '50%', top: `${nearEdge - 15}px`,
@@ -423,8 +423,8 @@ export class Renderer3D implements IRenderer {
                     });
                 } else if (relPos === 2) {
                     Object.assign(stick.style, {
-                        left: `${farEdge}px`, top: '50%',
-                        transform: 'translate(-50%, -50%) rotate(90deg)',
+                        left: '50%', top: `${farEdge}px`,
+                        transform: 'translateX(-50%)',
                     });
                 }
             } else {
@@ -475,7 +475,7 @@ export class Renderer3D implements IRenderer {
             const farEdge = Math.round(ts / 2 - centerHalf + 5);
 
             if (pc === 3) {
-                // 3P: 0=bottom, 1=right, 2=left
+                // 3P: 0=bottom, 1=right, 2=opposite (top)
                 if (relPos === 0) {
                     Object.assign(el.style, {
                         left: '50%', top: `${nearEdge - 15 - offset - 10}px`,
@@ -488,8 +488,8 @@ export class Renderer3D implements IRenderer {
                     });
                 } else if (relPos === 2) {
                     Object.assign(el.style, {
-                        left: `${farEdge + offset - 15}px`, top: '50%',
-                        transform: 'translate(-50%, -50%) rotate(90deg)',
+                        left: '50%', top: `${farEdge + offset - 10}px`,
+                        transform: 'translateX(-50%) rotate(180deg)',
                     });
                 }
             } else {
@@ -561,7 +561,7 @@ export class Renderer3D implements IRenderer {
         const positions3P: { [key: number]: { left: string; top: string; transform: string } } = {
             0: { left: '50%', top: `${Math.round(ts * 0.70)}px`, transform: `translate(-50%, -50%) scale(${riverScale})` },
             1: { left: `${Math.round(ts * 0.73 - th)}px`, top: '50%', transform: `translate(-50%, -50%) rotate(-90deg) scale(${riverScale})` },
-            2: { left: `${Math.round(ts * 0.27 + th)}px`, top: '50%', transform: `translate(-50%, -50%) rotate(90deg) scale(${riverScale})` },
+            2: { left: '50%', top: `${Math.round(ts * 0.30)}px`, transform: `translate(-50%, -50%) rotate(180deg) scale(${riverScale})` },
         };
         const positions = state.playerCount === 3 ? positions3P : positions4P;
         const pos = positions[relIndex] || positions[0];
@@ -583,7 +583,7 @@ export class Renderer3D implements IRenderer {
         const riverFaces3P: { [key: number]: { front?: boolean; back?: boolean; left?: boolean; right?: boolean } } = {
             0: { front: true },
             1: { back: true, left: true },
-            2: { right: true, back: true },
+            2: { back: true },
         };
         const riverFaces = state.playerCount === 3 ? riverFaces3P : riverFaces4P;
         const faces = riverFaces[relIndex] || { front: true, right: true };
@@ -689,9 +689,9 @@ export class Renderer3D implements IRenderer {
                 transform: 'translate(-50%, -50%) rotate(-90deg)',
             },
             2: {
-                left: `${Math.round((ts * 0.255 + rth - halfRiverExtent) / 2)}px`,
-                top: '50%',
-                transform: 'translate(-50%, -50%) rotate(90deg)',
+                left: '50%',
+                top: `${Math.round((ts * 0.28 - halfRiverExtent) / 2)}px`,
+                transform: 'translate(-50%, -50%) rotate(180deg)',
             },
         };
         const positions = pc === 3 ? positions3P : positions4P;
@@ -706,7 +706,7 @@ export class Renderer3D implements IRenderer {
         };
         const oppFaces3P: { [key: number]: { front?: boolean; back?: boolean; left?: boolean; right?: boolean } } = {
             1: { back: true, left: true },
-            2: { right: true, back: true },
+            2: { back: true, right: true, left: true },
         };
         const oppFaces = pc === 3 ? oppFaces3P : oppFaces4P;
         const faces = oppFaces[relIndex] || { front: true, right: true };
@@ -1010,7 +1010,7 @@ export class Renderer3D implements IRenderer {
         const panelPositions3P: { [key: number]: { [k: string]: string } } = {
             0: { bottom: '130px', left: '25%', transform: 'translateX(-50%)' },
             1: { right: '50px', top: '45%', transform: 'translateY(-50%)' },
-            2: { left: '100px', top: '120px' },
+            2: { top: '100px', right: '380px' },
         };
         const panelPositions = pc === 3 ? panelPositions3P : panelPositions4P;
         const pos = panelPositions[relIndex] || panelPositions[0];
@@ -1114,7 +1114,7 @@ export class Renderer3D implements IRenderer {
                 const callPositions3P: { [key: number]: { [k: string]: string } } = {
                     0: { bottom: '180px', left: '25%', top: 'auto', right: 'auto', transform: 'translateX(-50%)' },
                     1: { right: '120px', top: '45%', bottom: 'auto', left: 'auto', transform: 'translateY(-50%)' },
-                    2: { left: '170px', top: '115px', bottom: 'auto', right: 'auto', transform: 'none' },
+                    2: { top: '95px', right: '470px', bottom: 'auto', left: 'auto', transform: 'none' },
                 };
                 const callPositions = pc === 3 ? callPositions3P : callPositions4P;
                 const pos = callPositions[relIndex];
@@ -1143,7 +1143,7 @@ export class Renderer3D implements IRenderer {
         const waitPositions3P: { [key: number]: { [k: string]: string } } = {
             0: { bottom: '110px', left: '40%' },
             1: { right: '50px', top: '55%' },
-            2: { left: '70px', top: '30%' },
+            2: { top: '55px', right: '380px' },
         };
         const waitPositions = pc === 3 ? waitPositions3P : waitPositions4P;
         Object.assign(el.style, waitPositions[relIndex] || waitPositions[0]);

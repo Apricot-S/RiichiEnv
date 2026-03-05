@@ -73,7 +73,7 @@ export function createGameConfig3P(): GameConfig {
 export function createLayoutConfig3P(): LayoutConfig {
     return {
         boardSize: 800,
-        playerAngles: [0, -120, 120],
+        playerAngles: [0, -90, 180],
         contentWidth: 970,
         contentHeight: 900,
         viewAreaSize: 880,
@@ -160,15 +160,15 @@ export function createLayout3DConfig3P(): LayoutConfig3D {
         viewAreaHeight: 720,
         contentWidth: 1280,
         contentHeight: 720,
-        tableSize: 880,
-        perspective: 1500,
+        tableSize: 1100,
+        perspective: 1800,
         tiltAngle: 48,
         handLayerHeight: 120,
         tileSizes: {
             riverTile: [26, 36],
             opponentTile: [30, 42],
             ownTile: [50, 70],
-            doraTile: [18, 25],
+            doraTile: [28, 39],
             meldTileTable: [20, 28],
             meldTileOwn: [40, 56],
         },
