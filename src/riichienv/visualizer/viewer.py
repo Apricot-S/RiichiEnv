@@ -390,7 +390,10 @@ class MetadataInjector:
         hand = self.hands[pid]
         melds = self.melds[pid]
 
-        calc = HandEvaluator(hand, melds)
+        if self.player_count == 3:
+            calc = HandEvaluator3P(hand, melds)
+        else:
+            calc = HandEvaluator(hand, melds)
 
         # get_waits returns list of u32 (0-33)
         wait_tids = calc.get_waits()
@@ -522,7 +525,7 @@ class GameViewer:
             }};
 
             if (window.RiichiEnv3DViewer && window.RiichiEnvViewerHash === expectedHash) {{
-                runViewer("");
+                requestAnimationFrame(() => runViewer(""));
             }} else {{
                 const b64Data = "{viewer_js_b64}";
                 const compressed = Uint8Array.from(atob(b64Data), c => c.charCodeAt(0));

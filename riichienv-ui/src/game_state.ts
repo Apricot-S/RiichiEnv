@@ -230,7 +230,7 @@ export class GameState {
             const expectedLen = 13 - meldInputs.length * 3;
             if (tileIds.length === expectedLen) {
                 const waits34 = calculateWaits(tileIds, meldInputs);
-                if (waits34 && waits34.length > 0) {
+                if (Array.isArray(waits34) && waits34.length > 0) {
                     p.waits = waits34
                         .map(t34 => tileIdToMjai(t34 * 4))
                         .filter((s): s is string => s !== null);
@@ -419,7 +419,8 @@ export class GameState {
                 this.current.wallRemaining = this.config.initialWallRemaining;
                 this.current.conditions = initialConditions(this.config.playerCount);
                 this.current.players.forEach((p, i) => {
-                    p.hand = sortHand(e.tehais[i].map((t: string) => t)); // Clone and sort
+                    const tehai = e.tehais?.[i];
+                    p.hand = tehai ? sortHand(tehai.map((t: string) => t)) : []; // Clone and sort
                     p.discards = [];
                     p.melds = [];
                     p.riichi = false;
@@ -515,7 +516,7 @@ export class GameState {
                             const expectedLen = 13 - meldInputs.length * 3;
                             if (tileIds.length === expectedLen) {
                                 const waits34 = calculateWaits(tileIds, meldInputs);
-                                if (waits34 && waits34.length > 0) {
+                                if (Array.isArray(waits34) && waits34.length > 0) {
                                     p.waits = waits34
                                         .map(t34 => tileIdToMjai(t34 * 4))
                                         .filter((s): s is string => s !== null);

@@ -1039,7 +1039,7 @@ export class Renderer3D implements IRenderer {
                 borderRadius: '4px', padding: '1px 5px', marginTop: '2px',
                 fontWeight: 'bold', textAlign: 'center',
             });
-            kitaBadge.textContent = `Kita ×${player.kitaCount}`;
+            kitaBadge.textContent = `Pei ×${player.kitaCount}`;
             panel.appendChild(kitaBadge);
         }
 

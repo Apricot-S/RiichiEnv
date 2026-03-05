@@ -44,5 +44,5 @@ export const CALL_TYPES: { [key: string]: { label: string; cssClass?: string } }
     daiminkan: { label: 'Kan',   cssClass: 'call-kan' },
     kakan:     { label: 'Kan',   cssClass: 'call-kan' },
     reach:     { label: 'Riichi', cssClass: 'call-reach' },
-    kita:      { label: 'Kita',   cssClass: 'call-kan' },
+    kita:      { label: 'Pei',    cssClass: 'call-kan' },
 };

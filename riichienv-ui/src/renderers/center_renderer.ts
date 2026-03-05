@@ -103,9 +103,9 @@ export class CenterRenderer {
 
             let rotation: string;
             if (pc === 3) {
-                // 3P: 0=bottom, 1=right, 2=left (120° increments)
-                if (relPos === 1) rotation = '-120deg';
-                else if (relPos === 2) rotation = '120deg';
+                // 3P: 0=bottom, 1=right, 2=top (opposite)
+                if (relPos === 1) rotation = '-90deg';
+                else if (relPos === 2) rotation = '180deg';
                 else rotation = '0deg';
             } else {
                 if (relPos === 1) rotation = '-90deg';
@@ -120,7 +120,7 @@ export class CenterRenderer {
             if (pc === 3) {
                 if (relPos === 0) { icon.style.bottom = '8px'; icon.style.left = '8px'; }
                 else if (relPos === 1) { icon.style.right = '8px'; icon.style.bottom = '8px'; }
-                else if (relPos === 2) { icon.style.left = '8px'; icon.style.top = '8px'; }
+                else if (relPos === 2) { icon.style.top = '8px'; icon.style.right = '8px'; }
             } else {
                 if (relPos === 0) { icon.style.bottom = '8px'; icon.style.left = '8px'; }
                 else if (relPos === 1) { icon.style.right = '8px'; icon.style.bottom = '8px'; }
@@ -156,7 +156,7 @@ export class CenterRenderer {
             });
 
             if (pc === 3) {
-                // 3P: 0=bottom, 1=right, 2=left
+                // 3P: 0=bottom, 1=right, 2=top (opposite)
                 if (relPos === 0) {
                     scoreRow.style.bottom = '20px';
                     scoreRow.style.left = '50%';
@@ -167,9 +167,9 @@ export class CenterRenderer {
                     scoreRow.style.transform = 'translate(50%, -50%) rotate(-90deg)';
                     scoreRow.style.transformOrigin = 'center center';
                 } else if (relPos === 2) {
-                    scoreRow.style.left = '26px';
-                    scoreRow.style.top = '50%';
-                    scoreRow.style.transform = 'translate(-50%, -50%) rotate(90deg)';
+                    scoreRow.style.top = '20px';
+                    scoreRow.style.left = '50%';
+                    scoreRow.style.transform = 'translate(-50%, 0) rotate(180deg)';
                 }
             } else {
                 if (relPos === 0) {
@@ -223,7 +223,7 @@ export class CenterRenderer {
                 const offset = '10px'; // pushes it out by 10px
 
                 if (pc === 3) {
-                    // 3P: 0=bottom, 1=right, 2=left
+                    // 3P: 0=bottom, 1=right, 2=top (opposite)
                     if (relPos === 0) {
                         stick.style.bottom = offset;
                         stick.style.left = '50%';
@@ -233,9 +233,9 @@ export class CenterRenderer {
                         stick.style.top = '50%';
                         stick.style.transform = 'translate(50%, -50%) rotate(90deg)';
                     } else if (relPos === 2) {
-                        stick.style.left = offset;
-                        stick.style.top = '50%';
-                        stick.style.transform = 'translate(-50%, -50%) rotate(90deg)';
+                        stick.style.top = offset;
+                        stick.style.left = '50%';
+                        stick.style.transform = 'translate(-50%, 0)';
                     }
                 } else {
                     if (relPos === 0) {
