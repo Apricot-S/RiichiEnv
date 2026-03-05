@@ -169,12 +169,8 @@ impl KyokuStepIterator {
                 }
                 Action::BaBei { seat, .. } => {
                     let pid = *seat as u8;
-                    let env_action = EnvAction::new(
-                        crate::action::ActionType::Kita,
-                        None,
-                        Vec::new(),
-                        None,
-                    );
+                    let env_action =
+                        EnvAction::new(crate::action::ActionType::Kita, None, Vec::new(), None);
 
                     let obs = slf.state.get_observation_for_replay(
                         pid,
@@ -191,9 +187,7 @@ impl KyokuStepIterator {
                                 continue;
                             }
                             let py = slf.py();
-                            return Ok(Some(
-                                (obs, env_action).into_pyobject(py)?.unbind().into(),
-                            ));
+                            return Ok(Some((obs, env_action).into_pyobject(py)?.unbind().into()));
                         }
                     } else {
                         let py = slf.py();
@@ -486,12 +480,8 @@ impl KyokuStepIterator3P {
                 }
                 Action::BaBei { seat, .. } => {
                     let pid = *seat as u8;
-                    let env_action = EnvAction::new(
-                        crate::action::ActionType::Kita,
-                        None,
-                        Vec::new(),
-                        None,
-                    );
+                    let env_action =
+                        EnvAction::new(crate::action::ActionType::Kita, None, Vec::new(), None);
 
                     let obs = slf.state.get_observation_for_replay(
                         pid,
