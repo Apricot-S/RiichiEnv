@@ -7,8 +7,8 @@ use crate::shanten;
 use crate::types::{Meld, MeldType};
 use crate::yaku_checker;
 
-use super::helpers::{get_next_tile_sanma, tile34_to_compact, TILE_DIM_3P};
 use super::Observation3P;
+use super::helpers::{TILE_DIM_3P, get_next_tile_sanma, tile34_to_compact};
 
 const NP: usize = 3;
 const TOTAL_TILES: u32 = 108;

@@ -7,8 +7,8 @@ use crate::shanten;
 use crate::types::{Meld, MeldType};
 use crate::yaku_checker;
 
-use super::helpers::get_next_tile;
 use super::Observation;
+use super::helpers::get_next_tile;
 
 #[pymethods]
 impl Observation {

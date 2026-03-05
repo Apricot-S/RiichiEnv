@@ -692,7 +692,7 @@ impl KyokuStepIterator3P {
 
 #[cfg_attr(
     feature = "python",
-    pyclass(name = "Kyoku", module = "riichienv._riichienv")
+    pyclass(name = "Kyoku", module = "riichienv._riichienv", from_py_object)
 )]
 #[derive(Clone)]
 pub struct LogKyoku {
@@ -1522,7 +1522,7 @@ impl WinResultContextIterator {
                     let ct = tiles
                         .iter()
                         .zip(froms.iter())
-                        .find(|(_, &f)| f != *seat)
+                        .find(|&(_, &f)| f != *seat)
                         .map(|(&t, _)| t);
                     self.melds[*seat].push(Meld {
                         meld_type: *meld_type,

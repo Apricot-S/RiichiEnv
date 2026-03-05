@@ -2,8 +2,8 @@ use crate::action::ActionType;
 use crate::shanten;
 use crate::types::MeldType;
 
-use super::helpers::{add_val, broadcast_scalar, get_next_tile, set_val};
 use super::Observation;
+use super::helpers::{add_val, broadcast_scalar, get_next_tile, set_val};
 
 /// Internal (non-PyO3) methods that write features directly into a flat f32 buffer.
 /// Buffer layout: channel-major, buf[(ch_offset + ch) * 34 + tile] = value.

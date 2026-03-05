@@ -2,10 +2,10 @@ use crate::action::ActionType;
 use crate::shanten;
 use crate::types::MeldType;
 
-use super::helpers::{
-    add_val, broadcast_scalar, get_next_tile_sanma, set_val, tile34_to_compact, TILE_DIM_3P,
-};
 use super::Observation3P;
+use super::helpers::{
+    TILE_DIM_3P, add_val, broadcast_scalar, get_next_tile_sanma, set_val, tile34_to_compact,
+};
 
 const NP: usize = 3;
 const TOTAL_TILES: u32 = 108;
