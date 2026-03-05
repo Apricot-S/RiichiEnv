@@ -24,7 +24,7 @@ Homepage = "https://github.com/smly/RiichiEnv"
 Issues = "https://github.com/smly/RiichiEnv/issues"
 
 [build-system]
-requires = ["maturin>=1.8.7,<2.0"]
+requires = ["maturin >= 1.9.4,<2.0"]
 build-backend = "maturin"
 
 [tool.maturin]
@@ -34,7 +34,7 @@ module-name = "riichienv._riichienv"
 
 [dependency-groups]
 dev = [
-    "maturin>=1.8.7,<2.0",
+    "maturin>=1.9.4,<2.0",
     "pre-commit>=4.5.1",
     "pytest>=9.0",
     "ruff>=0.8.0",
