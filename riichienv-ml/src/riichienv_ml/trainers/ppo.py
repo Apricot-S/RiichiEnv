@@ -167,6 +167,11 @@ def run_ppo_training(cfg):
     if cfg.baseline_model:
         logger.info(f"Loading fixed baseline opponent from {cfg.baseline_model}")
         _bl_state = torch.load(cfg.baseline_model, map_location="cpu", weights_only=True)
+        # Unwrap wrapped checkpoints (e.g. {'state_dict': ...})
+        if isinstance(_bl_state, dict) and "state_dict" in _bl_state:
+            _bl_state = _bl_state["state_dict"]
+        elif isinstance(_bl_state, dict) and "model_state_dict" in _bl_state:
+            _bl_state = _bl_state["model_state_dict"]
         # Auto-convert QNetwork keys to ActorCriticNetwork format
         _has_a = any(k.startswith("a_head.") for k in _bl_state)
         _has_v = any(k.startswith("v_head.") for k in _bl_state)

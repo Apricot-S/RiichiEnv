@@ -124,6 +124,8 @@ class Agent:
             for k, v in state.items():
                 if k.startswith("head."):
                     new_state[k.replace("head.", "actor_head.")] = v
+                elif k.startswith("aux_head."):
+                    continue
                 else:
                     new_state[k] = v
             result = self.model.load_state_dict(new_state, strict=False)
