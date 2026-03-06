@@ -1,11 +1,11 @@
-import { GameState } from './game_state';
-import { GameConfig, LayoutConfig, createGameConfig4P, createLayoutConfig4P } from './config';
+import { createGameConfig4P, createLayoutConfig4P, type GameConfig, type LayoutConfig } from './config';
 import { COLORS } from './constants';
-import { Renderer2D } from './renderers/renderer_2d';
-import { IRenderer } from './renderers/renderer_interface';
-import { MjaiEvent } from './types';
-import { LiveController } from './live_controller';
+import { GameState } from './game_state';
 import { ICON_EYE } from './icons';
+import { LiveController } from './live_controller';
+import { Renderer2D } from './renderers/renderer_2d';
+import type { IRenderer } from './renderers/renderer_interface';
+import type { MjaiEvent } from './types';
 import { initWasm } from './wasm/loader';
 
 /**
@@ -24,7 +24,7 @@ export class LiveViewer {
     debugPanel: HTMLElement;
     private _rafId: number = 0;
 
-    constructor(containerId: string, options?: { perspective?: number, config?: GameConfig, layout?: LayoutConfig }) {
+    constructor(containerId: string, options?: { perspective?: number; config?: GameConfig; layout?: LayoutConfig }) {
         const gc = options?.config ?? createGameConfig4P();
         const lc = options?.layout ?? createLayoutConfig4P();
 
@@ -44,7 +44,7 @@ export class LiveViewer {
             margin: '0',
             padding: '0',
             border: 'none',
-            boxSizing: 'border-box'
+            boxSizing: 'border-box',
         });
 
         // Scrollable/Centering Container
@@ -57,7 +57,7 @@ export class LiveViewer {
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'flex-start',
-            backgroundColor: '#000'
+            backgroundColor: '#000',
         });
         this.container.appendChild(scrollContainer);
 
@@ -65,7 +65,7 @@ export class LiveViewer {
         const scaleWrapper = document.createElement('div');
         Object.assign(scaleWrapper.style, {
             position: 'relative',
-            overflow: 'hidden'
+            overflow: 'hidden',
         });
         scrollContainer.appendChild(scaleWrapper);
 
@@ -81,7 +81,7 @@ export class LiveViewer {
             width: `${lc.contentWidth}px`,
             height: `${lc.contentHeight}px`,
             flexShrink: '0',
-            transformOrigin: 'top left'
+            transformOrigin: 'top left',
         });
         scaleWrapper.appendChild(contentWrapper);
 
@@ -94,7 +94,7 @@ export class LiveViewer {
             position: 'relative',
             backgroundColor: COLORS.boardBackground,
             boxShadow: '0 0 20px rgba(0,0,0,0.5)',
-            flexShrink: '0'
+            flexShrink: '0',
         });
         contentWrapper.appendChild(viewArea);
 
@@ -114,7 +114,7 @@ export class LiveViewer {
             zIndex: '500',
             height: 'auto',
             borderRadius: '0 12px 12px 0',
-            marginLeft: '0px'
+            marginLeft: '0px',
         });
         contentWrapper.appendChild(rightSidebar);
 
@@ -127,7 +127,7 @@ export class LiveViewer {
             top: '0',
             left: '0',
             width: '100%',
-            zIndex: '1000'
+            zIndex: '1000',
         });
         viewArea.appendChild(this.debugPanel);
 
@@ -160,7 +160,7 @@ export class LiveViewer {
         }
 
         // Log toggle button
-        const btnLog = createBtn('btn-log', ICON_EYE, "Debug");
+        const btnLog = createBtn('btn-log', ICON_EYE, 'Debug');
         btnLog.onclick = () => this.controller.toggleLog(btnLog, this.debugPanel);
         rightSidebar.appendChild(btnLog);
 

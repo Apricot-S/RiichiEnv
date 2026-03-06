@@ -1,11 +1,8 @@
-import {
-    GameConfig, LayoutConfig3D,
-    createLayout3DConfig4P, createLayout3DConfig3P,
-} from './config';
-import { Renderer3D } from './renderers/renderer_3d';
-import { IRenderer } from './renderers/renderer_interface';
-import { MjaiEvent } from './types';
 import { BaseViewer } from './base_viewer';
+import { createLayout3DConfig3P, createLayout3DConfig4P, type GameConfig, type LayoutConfig3D } from './config';
+import { Renderer3D } from './renderers/renderer_3d';
+import type { IRenderer } from './renderers/renderer_interface';
+import type { MjaiEvent } from './types';
 
 export class Viewer3D extends BaseViewer {
     /** Create a Viewer3D from an HTMLElement directly (no URL parsing, no containerId). */
@@ -16,7 +13,7 @@ export class Viewer3D extends BaseViewer {
         perspective?: number,
         freeze: boolean = false,
         config?: GameConfig,
-        layout?: LayoutConfig3D
+        layout?: LayoutConfig3D,
     ): Viewer3D {
         Viewer3D._pendingLayout = layout;
         Viewer3D._pendingElement = el;
@@ -35,7 +32,7 @@ export class Viewer3D extends BaseViewer {
         perspective?: number,
         freeze: boolean = false,
         config?: GameConfig,
-        layout?: LayoutConfig3D
+        layout?: LayoutConfig3D,
     ) {
         let el: HTMLElement;
         let effectiveInitialStep = initialStep;
@@ -52,7 +49,7 @@ export class Viewer3D extends BaseViewer {
                 const eventStepParam = urlParams.get('eventStep');
                 if (eventStepParam) {
                     const parsed = parseInt(eventStepParam, 10);
-                    if (!isNaN(parsed)) effectiveInitialStep = parsed;
+                    if (!Number.isNaN(parsed)) effectiveInitialStep = parsed;
                 }
             }
         }
@@ -71,8 +68,9 @@ export class Viewer3D extends BaseViewer {
         Viewer3D._pendingLayout = undefined;
     }
 
-    protected getLayoutInfo(gc: GameConfig, log: MjaiEvent[]) {
-        const lc = Viewer3D._pendingLayout ?? (gc.playerCount === 3 ? createLayout3DConfig3P() : createLayout3DConfig4P());
+    protected getLayoutInfo(gc: GameConfig, _log: MjaiEvent[]) {
+        const lc =
+            Viewer3D._pendingLayout ?? (gc.playerCount === 3 ? createLayout3DConfig3P() : createLayout3DConfig4P());
         return {
             contentWidth: lc.contentWidth,
             contentHeight: lc.contentHeight,
@@ -82,8 +80,9 @@ export class Viewer3D extends BaseViewer {
         };
     }
 
-    protected createRenderer(viewArea: HTMLElement, gc: GameConfig, log: MjaiEvent[]): IRenderer {
-        const lc = Viewer3D._pendingLayout ?? (gc.playerCount === 3 ? createLayout3DConfig3P() : createLayout3DConfig4P());
+    protected createRenderer(viewArea: HTMLElement, gc: GameConfig, _log: MjaiEvent[]): IRenderer {
+        const lc =
+            Viewer3D._pendingLayout ?? (gc.playerCount === 3 ? createLayout3DConfig3P() : createLayout3DConfig4P());
         return new Renderer3D(viewArea, lc);
     }
 }

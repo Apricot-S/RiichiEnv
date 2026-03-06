@@ -1,19 +1,18 @@
+import { createGameConfig3P, createGameConfig4P, detectPlayerCount, type GameConfig } from './config';
+import { COLORS } from './constants';
+import { ReplayController } from './controller';
 import { GameState } from './game_state';
 import {
-    GameConfig,
-    createGameConfig4P,
-    createGameConfig3P,
-    detectPlayerCount
-} from './config';
-import { COLORS } from './constants';
-import { IRenderer } from './renderers/renderer_interface';
-import { MjaiEvent } from './types';
-import { ReplayController } from './controller';
-import { initWasm } from './wasm/loader';
-import {
-    ICON_EYE, ICON_ARROW_LEFT, ICON_ARROW_RIGHT,
-    ICON_CHEVRON_LEFT, ICON_CHEVRON_RIGHT, ICON_PLAY_PAUSE
+    ICON_ARROW_LEFT,
+    ICON_ARROW_RIGHT,
+    ICON_CHEVRON_LEFT,
+    ICON_CHEVRON_RIGHT,
+    ICON_EYE,
+    ICON_PLAY_PAUSE,
 } from './icons';
+import type { IRenderer } from './renderers/renderer_interface';
+import type { MjaiEvent } from './types';
+import { initWasm } from './wasm/loader';
 
 export interface BaseViewerInit {
     container: HTMLElement;
@@ -78,7 +77,7 @@ export abstract class BaseViewer {
             margin: '0',
             padding: '0',
             border: 'none',
-            boxSizing: 'border-box'
+            boxSizing: 'border-box',
         });
 
         const scrollContainer = document.createElement('div');
@@ -88,14 +87,14 @@ export abstract class BaseViewer {
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'flex-start',
-            backgroundColor: '#000'
+            backgroundColor: '#000',
         });
         container.appendChild(scrollContainer);
 
         const scaleWrapper = document.createElement('div');
         Object.assign(scaleWrapper.style, {
             position: 'relative',
-            overflow: 'hidden'
+            overflow: 'hidden',
         });
         scrollContainer.appendChild(scaleWrapper);
 
@@ -113,7 +112,7 @@ export abstract class BaseViewer {
             width: `${layoutInfo.contentWidth}px`,
             height: `${layoutInfo.contentHeight}px`,
             flexShrink: '0',
-            transformOrigin: 'top left'
+            transformOrigin: 'top left',
         });
         scaleWrapper.appendChild(contentWrapper);
 
@@ -126,7 +125,7 @@ export abstract class BaseViewer {
             backgroundColor: layoutInfo.sidebarStyle === 'grid' ? '#000' : COLORS.boardBackground,
             flexShrink: '0',
             overflow: layoutInfo.sidebarStyle === 'grid' ? 'hidden' : undefined,
-            outline: 'none'
+            outline: 'none',
         });
         if (layoutInfo.sidebarStyle === 'column') {
             viewArea.style.boxShadow = '0 0 20px rgba(0,0,0,0.5)';
@@ -152,7 +151,7 @@ export abstract class BaseViewer {
                 flexShrink: '0',
                 zIndex: '500',
                 borderRadius: '10px',
-                backdropFilter: 'blur(4px)'
+                backdropFilter: 'blur(4px)',
             });
             viewArea.appendChild(rightSidebar);
         } else {
@@ -169,7 +168,7 @@ export abstract class BaseViewer {
                 zIndex: '500',
                 height: 'auto',
                 borderRadius: '0 12px 12px 0',
-                marginLeft: '0px'
+                marginLeft: '0px',
             });
             contentWrapper.appendChild(rightSidebar);
         }
@@ -182,7 +181,7 @@ export abstract class BaseViewer {
             top: '0',
             left: '0',
             width: '100%',
-            zIndex: '1000'
+            zIndex: '1000',
         });
         viewArea.appendChild(this.debugPanel);
 
@@ -205,14 +204,16 @@ export abstract class BaseViewer {
     protected abstract getLayoutInfo(
         gc: GameConfig,
         log: MjaiEvent[],
-    ): { contentWidth: number; contentHeight: number; viewAreaWidth: number; viewAreaHeight: number; sidebarStyle: 'column' | 'grid' };
+    ): {
+        contentWidth: number;
+        contentHeight: number;
+        viewAreaWidth: number;
+        viewAreaHeight: number;
+        sidebarStyle: 'column' | 'grid';
+    };
 
     /** Create and return the renderer, attached to the given viewArea. */
-    protected abstract createRenderer(
-        viewArea: HTMLElement,
-        gc: GameConfig,
-        log: MjaiEvent[],
-    ): IRenderer;
+    protected abstract createRenderer(viewArea: HTMLElement, gc: GameConfig, log: MjaiEvent[]): IRenderer;
 
     private resolveGameConfig(init: BaseViewerInit): GameConfig {
         if (init.config) return init.config;
@@ -287,10 +288,7 @@ export abstract class BaseViewer {
         }
     }
 
-    private setupResize(
-        baseW: number, baseH: number,
-        scaleWrapper: HTMLElement, contentWrapper: HTMLElement
-    ) {
+    private setupResize(baseW: number, baseH: number, scaleWrapper: HTMLElement, contentWrapper: HTMLElement) {
         const doResize = (availableW: number) => {
             const availableH = window.innerHeight;
             if (availableW === 0) return;

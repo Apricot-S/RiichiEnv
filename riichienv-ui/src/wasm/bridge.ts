@@ -20,7 +20,7 @@ export interface ScoreResult {
 
 export interface MeldInput {
     meld_type: string; // 'chi' | 'pon' | 'daiminkan' | 'ankan' | 'kakan'
-    tiles: number[];   // tile IDs in 136-encoding
+    tiles: number[]; // tile IDs in 136-encoding
 }
 
 export interface ConditionsInput {
@@ -48,10 +48,7 @@ export function calculateWaits(tiles136: number[], melds: MeldInput[] = []): num
     if (!isWasmReady()) return null;
     const wasm = getWasm()!;
     try {
-        return wasm.calc_waits(
-            JSON.stringify(tiles136),
-            JSON.stringify(melds)
-        );
+        return wasm.calc_waits(JSON.stringify(tiles136), JSON.stringify(melds));
     } catch (e) {
         console.warn('[WASM] calculateWaits failed:', e);
         return null;
@@ -82,7 +79,7 @@ export function calculateScore(
     winTile: number,
     doraIndicators: number[],
     uraIndicators: number[],
-    conditions: ConditionsInput
+    conditions: ConditionsInput,
 ): ScoreResult | null {
     if (!isWasmReady()) return null;
     const wasm = getWasm()!;
@@ -93,7 +90,7 @@ export function calculateScore(
             winTile,
             JSON.stringify(doraIndicators),
             JSON.stringify(uraIndicators),
-            JSON.stringify(conditions)
+            JSON.stringify(conditions),
         );
     } catch (e) {
         console.warn('[WASM] calculateScore failed:', e);
@@ -110,7 +107,7 @@ export function mjaiToTileId(mjai: string): number | null {
     try {
         const result = wasm.mjai_to_tile_id(mjai);
         return result !== undefined ? result : null;
-    } catch (e) {
+    } catch (_e) {
         return null;
     }
 }
@@ -123,7 +120,7 @@ export function tileIdToMjai(tid: number): string | null {
     const wasm = getWasm()!;
     try {
         return wasm.tile_id_to_mjai(tid);
-    } catch (e) {
+    } catch (_e) {
         return null;
     }
 }
@@ -135,10 +132,7 @@ export function checkTenpai(tiles136: number[], melds: MeldInput[] = []): boolea
     if (!isWasmReady()) return null;
     const wasm = getWasm()!;
     try {
-        return wasm.is_tenpai(
-            JSON.stringify(tiles136),
-            JSON.stringify(melds)
-        );
+        return wasm.is_tenpai(JSON.stringify(tiles136), JSON.stringify(melds));
     } catch (e) {
         console.warn('[WASM] checkTenpai failed:', e);
         return null;

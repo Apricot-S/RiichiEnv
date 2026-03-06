@@ -1,21 +1,17 @@
-import { BoardState, PlayerState } from '../types';
-import { TILES } from '../tiles';
+import { createLayoutConfig4P, type LayoutConfig } from '../config';
 import { VIEWER_CSS } from '../styles';
-import { LayoutConfig, createLayoutConfig4P } from '../config';
-import { IRenderer } from './renderer_interface';
-import { TileRenderer } from './tile_renderer';
-import { RiverRenderer } from './river_renderer';
+import type { BoardState } from '../types';
+import { CenterRenderer } from './center_renderer';
 import { HandRenderer } from './hand_renderer';
 import { InfoRenderer } from './info_renderer';
-import { CenterRenderer } from './center_renderer';
+import type { IRenderer } from './renderer_interface';
 import { ResultRenderer } from './result_renderer';
-
-
+import { RiverRenderer } from './river_renderer';
+import { TileRenderer } from './tile_renderer';
 
 export class Renderer2D implements IRenderer {
     container: HTMLElement;
     private boardElement: HTMLElement | null = null;
-    private styleElement: HTMLStyleElement | null = null;
     private layout: LayoutConfig;
     viewpoint: number = 0;
 
@@ -56,8 +52,11 @@ export class Renderer2D implements IRenderer {
 
         // Player count changed — tear down existing slots before rebuilding
         if (this.boardElement && this.playerWrappers.length > 0 && this.playerWrappers.length !== pc) {
-            if (this.centerSlot) { this.centerSlot.remove(); this.centerSlot = null; }
-            this.playerWrappers.forEach(w => w.remove());
+            if (this.centerSlot) {
+                this.centerSlot.remove();
+                this.centerSlot = null;
+            }
+            this.playerWrappers.forEach((w) => w.remove());
             this.playerWrappers = [];
             this.playerDivs = [];
         }
@@ -72,7 +71,7 @@ export class Renderer2D implements IRenderer {
                 top: '50%',
                 left: '50%',
                 transform: 'translate(-50%, -50%)',
-                transformOrigin: 'center center'
+                transformOrigin: 'center center',
             });
             this.container.appendChild(this.boardElement);
         }
@@ -133,7 +132,7 @@ export class Renderer2D implements IRenderer {
         // Clear modals only if we had one previously
         if (this.hadModal) {
             const oldModals = this.container.querySelectorAll('.re-modal-overlay');
-            oldModals.forEach(el => el.remove());
+            oldModals.forEach((el) => el.remove());
             this.hadModal = false;
         }
 
@@ -146,9 +145,9 @@ export class Renderer2D implements IRenderer {
         // Collect active waits once (shared across all players)
         const activeWaits = new Set<string>();
         const normalize = (t: string) => t.replace('0', '5').replace('r', '');
-        state.players.forEach(pl => {
+        state.players.forEach((pl) => {
             if (pl.waits && pl.waits.length > 0) {
-                pl.waits.forEach(w => activeWaits.add(normalize(w)));
+                pl.waits.forEach((w) => activeWaits.add(normalize(w)));
             }
         });
 
@@ -175,7 +174,7 @@ export class Renderer2D implements IRenderer {
                     if (type === 'kita') label = 'Pei';
                     showOverlay = true;
                 } else if (type === 'hora') {
-                    label = (state.lastEvent.target === state.lastEvent.actor) ? 'Tsumo' : 'Ron';
+                    label = state.lastEvent.target === state.lastEvent.actor ? 'Tsumo' : 'Ron';
                     showOverlay = true;
                 }
             }
@@ -198,10 +197,19 @@ export class Renderer2D implements IRenderer {
                 const wDiv = document.createElement('div');
                 Object.assign(wDiv.style, {
                     position: 'absolute',
-                    top: '130px', left: '50%', transform: 'translateX(140px)',
-                    background: 'rgba(0,0,0,0.8)', color: '#fff', padding: '5px 10px',
-                    borderRadius: '4px', fontSize: '14px', zIndex: '50',
-                    display: 'flex', gap: '4px', alignItems: 'center', pointerEvents: 'none'
+                    top: '130px',
+                    left: '50%',
+                    transform: 'translateX(140px)',
+                    background: 'rgba(0,0,0,0.8)',
+                    color: '#fff',
+                    padding: '5px 10px',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    zIndex: '50',
+                    display: 'flex',
+                    gap: '4px',
+                    alignItems: 'center',
+                    pointerEvents: 'none',
                 });
                 const waitLabel = document.createElement('span');
                 waitLabel.style.marginRight = '4px';
@@ -227,10 +235,10 @@ export class Renderer2D implements IRenderer {
                 top: '10px',
                 left: '50%',
                 transform: 'translateX(-50%)',
-                zIndex: '5'
+                zIndex: '5',
             });
 
-            let riverDAnim = undefined;
+            let riverDAnim;
             if (state.dahaiAnim && state.currentActor === i) {
                 riverDAnim = state.dahaiAnim;
             }
@@ -239,7 +247,13 @@ export class Renderer2D implements IRenderer {
             children.push(riverRow);
 
             // Info Box
-            const infoBox = InfoRenderer.renderPlayerInfo(p, i, this.viewpoint, state.currentActor, this.onViewpointChange || (() => { }));
+            const infoBox = InfoRenderer.renderPlayerInfo(
+                p,
+                i,
+                this.viewpoint,
+                state.currentActor,
+                this.onViewpointChange || (() => {}),
+            );
             children.push(infoBox);
 
             // Hand
@@ -258,12 +272,21 @@ export class Renderer2D implements IRenderer {
             }
 
             const playerState = state.players[i];
-            let dAnim = undefined;
+            let dAnim;
             if (state.dahaiAnim && state.currentActor === i) {
                 dAnim = state.dahaiAnim;
             }
 
-            const hand = HandRenderer.renderHand(playerState.hand, playerState.melds, i, activeWaits, hasDraw, dAnim, shouldAnimate, pc);
+            const hand = HandRenderer.renderHand(
+                playerState.hand,
+                playerState.melds,
+                i,
+                activeWaits,
+                hasDraw,
+                dAnim,
+                shouldAnimate,
+                pc,
+            );
             children.push(hand);
 
             // Replace player div content via DocumentFragment (single reflow)

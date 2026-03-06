@@ -6,7 +6,7 @@
  * so no separate .wasm file fetch is needed at runtime.
  */
 
-// @ts-ignore - esbuild binary loader provides Uint8Array
+// @ts-expect-error - esbuild binary loader provides Uint8Array
 import wasmBinary from './pkg/riichienv_wasm_bg.wasm';
 
 type WasmModule = typeof import('./pkg/riichienv_wasm');

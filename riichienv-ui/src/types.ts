@@ -37,14 +37,14 @@ export interface PlayerState {
 }
 
 export interface ConditionTracker {
-    ippatsu: boolean[];              // [p0, p1, p2, p3]
-    afterKan: boolean;               // Post-kan flag (for rinshan)
-    pendingChankan: boolean;         // Kakan pending flag (for chankan)
-    chankanTarget?: number;          // Actor who declared kakan
-    callsMade: boolean;              // Any call made in this kyoku
-    firstTurnCompleted: boolean[];   // Per-player first dahai completed
-    turnCount: number;               // Total dahai count in kyoku
-    doubleRiichi: boolean[];         // Per-player double riichi declared
+    ippatsu: boolean[]; // [p0, p1, p2, p3]
+    afterKan: boolean; // Post-kan flag (for rinshan)
+    pendingChankan: boolean; // Kakan pending flag (for chankan)
+    chankanTarget?: number; // Actor who declared kakan
+    callsMade: boolean; // Any call made in this kyoku
+    firstTurnCompleted: boolean[]; // Per-player first dahai completed
+    turnCount: number; // Total dahai count in kyoku
+    doubleRiichi: boolean[]; // Per-player double riichi declared
 }
 
 // --- Public API types ---

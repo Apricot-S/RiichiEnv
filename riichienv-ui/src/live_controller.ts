@@ -1,4 +1,4 @@
-import { LiveViewer } from './live_viewer';
+import type { LiveViewer } from './live_viewer';
 
 /**
  * Controller for live game mode.
@@ -8,7 +8,6 @@ import { LiveViewer } from './live_viewer';
  */
 export class LiveController {
     viewer: LiveViewer;
-    private logBtn: HTMLElement | null = null;
 
     constructor(viewer: LiveViewer) {
         this.viewer = viewer;

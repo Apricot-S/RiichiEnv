@@ -1,7 +1,7 @@
+import type { BaseViewer } from './base_viewer';
+import type { KyokuInfo, ViewerEventMap, ViewerOptions, ViewerPosition } from './types';
 import { Viewer } from './viewer';
 import { Viewer3D } from './viewer_3d';
-import { BaseViewer } from './base_viewer';
-import { ViewerOptions, ViewerPosition, KyokuInfo, ViewerEventMap } from './types';
 
 type EventHandler<T> = (data: T) => void;
 
@@ -41,9 +41,7 @@ export class RiichiViewer {
     }
 
     static mount(container: HTMLElement | string, options: ViewerOptions): RiichiViewer {
-        const el = typeof container === 'string'
-            ? document.getElementById(container)
-            : container;
+        const el = typeof container === 'string' ? document.getElementById(container) : container;
         if (!el) throw new Error(`Container ${container} not found`);
 
         const rendererType = options.renderer ?? '3d';

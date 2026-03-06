@@ -1,12 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
-    createGameConfig4P,
     createGameConfig3P,
-    createLayoutConfig4P,
+    createGameConfig4P,
     createLayoutConfig3P,
+    createLayoutConfig4P,
     detectPlayerCount,
-    GameConfig,
-    LayoutConfig,
+    type GameConfig,
+    type LayoutConfig,
 } from '../config';
 
 describe('GameConfig', () => {
@@ -91,23 +91,17 @@ describe('GameConfig', () => {
 
 describe('detectPlayerCount', () => {
     it('should detect 4 players from start_kyoku with 4 tehais', () => {
-        const events = [
-            { type: 'start_kyoku', tehais: [[], [], [], []] },
-        ];
+        const events = [{ type: 'start_kyoku', tehais: [[], [], [], []] }];
         expect(detectPlayerCount(events)).toBe(4);
     });
 
     it('should detect 3 players from start_kyoku with 3 tehais', () => {
-        const events = [
-            { type: 'start_kyoku', tehais: [[], [], []] },
-        ];
+        const events = [{ type: 'start_kyoku', tehais: [[], [], []] }];
         expect(detectPlayerCount(events)).toBe(3);
     });
 
     it('should detect from start_game names', () => {
-        const events = [
-            { type: 'start_game', names: ['P0', 'P1', 'P2'] },
-        ];
+        const events = [{ type: 'start_game', names: ['P0', 'P1', 'P2'] }];
         expect(detectPlayerCount(events)).toBe(3);
     });
 
@@ -121,9 +115,7 @@ describe('detectPlayerCount', () => {
     });
 
     it('should default to 4 when no relevant events', () => {
-        const events = [
-            { type: 'tsumo', actor: 0, pai: '1m' },
-        ];
+        const events = [{ type: 'tsumo', actor: 0, pai: '1m' }];
         expect(detectPlayerCount(events)).toBe(4);
     });
 

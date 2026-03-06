@@ -1,13 +1,9 @@
-import { TileRenderer } from './tile_renderer';
+import { CHAR_MAP, CHAR_SPRITE_BASE64 } from '../char_assets';
 import { COLORS } from '../constants';
-import { CHAR_SPRITE_BASE64, CHAR_MAP } from '../char_assets';
+import { TileRenderer } from './tile_renderer';
 
 export class CenterRenderer {
-    static renderCenter(
-        state: any,
-        onCenterClick: (() => void) | null,
-        viewpoint: number = 0
-    ): HTMLElement {
+    static renderCenter(state: any, onCenterClick: (() => void) | null, viewpoint: number = 0): HTMLElement {
         const center = document.createElement('div');
         center.className = 'center-info';
         Object.assign(center.style, {
@@ -27,7 +23,7 @@ export class CenterRenderer {
             width: '200px',
             height: '200px',
             boxSizing: 'border-box',
-            cursor: 'pointer' // Added cursor pointer
+            cursor: 'pointer', // Added cursor pointer
         });
 
         center.onclick = (e) => {
@@ -54,7 +50,7 @@ export class CenterRenderer {
                 backgroundPosition: `-${asset.x}px -${asset.y}px`,
                 backgroundRepeat: 'no-repeat',
                 backgroundColor: 'transparent',
-                transformOrigin: 'center center'
+                transformOrigin: 'center center',
             });
             d.style.transform = `scale(${scale})`;
 
@@ -67,7 +63,7 @@ export class CenterRenderer {
                 alignItems: 'center',
                 justifyContent: 'center',
                 overflow: 'visible',
-                marginRight: '-8px'
+                marginRight: '-8px',
             });
             w.appendChild(d);
             return w;
@@ -94,7 +90,7 @@ export class CenterRenderer {
                 backgroundImage: `url(${CHAR_SPRITE_BASE64})`,
                 backgroundPosition: `-${asset.x}px -${asset.y}px`,
                 backgroundRepeat: 'no-repeat',
-                transformOrigin: 'center center'
+                transformOrigin: 'center center',
             });
 
             const targetSize = 26;
@@ -118,14 +114,30 @@ export class CenterRenderer {
 
             // Positioning Logic
             if (pc === 3) {
-                if (relPos === 0) { icon.style.bottom = '8px'; icon.style.left = '8px'; }
-                else if (relPos === 1) { icon.style.right = '8px'; icon.style.bottom = '8px'; }
-                else if (relPos === 2) { icon.style.top = '8px'; icon.style.right = '8px'; }
+                if (relPos === 0) {
+                    icon.style.bottom = '8px';
+                    icon.style.left = '8px';
+                } else if (relPos === 1) {
+                    icon.style.right = '8px';
+                    icon.style.bottom = '8px';
+                } else if (relPos === 2) {
+                    icon.style.top = '8px';
+                    icon.style.right = '8px';
+                }
             } else {
-                if (relPos === 0) { icon.style.bottom = '8px'; icon.style.left = '8px'; }
-                else if (relPos === 1) { icon.style.right = '8px'; icon.style.bottom = '8px'; }
-                else if (relPos === 2) { icon.style.top = '8px'; icon.style.right = '8px'; }
-                else if (relPos === 3) { icon.style.left = '8px'; icon.style.top = '8px'; }
+                if (relPos === 0) {
+                    icon.style.bottom = '8px';
+                    icon.style.left = '8px';
+                } else if (relPos === 1) {
+                    icon.style.right = '8px';
+                    icon.style.bottom = '8px';
+                } else if (relPos === 2) {
+                    icon.style.top = '8px';
+                    icon.style.right = '8px';
+                } else if (relPos === 3) {
+                    icon.style.left = '8px';
+                    icon.style.top = '8px';
+                }
             }
             center.appendChild(icon);
         });
@@ -140,7 +152,7 @@ export class CenterRenderer {
                 fontWeight: 'bold',
                 color: '#ffdd00', // Yellow text
                 textAlign: 'center',
-                whiteSpace: 'nowrap'
+                whiteSpace: 'nowrap',
             });
             return row;
         };
@@ -152,7 +164,7 @@ export class CenterRenderer {
 
             Object.assign(scoreRow.style, {
                 position: 'absolute',
-                zIndex: '11'
+                zIndex: '11',
             });
 
             if (pc === 3) {
@@ -206,7 +218,7 @@ export class CenterRenderer {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    zIndex: '12'
+                    zIndex: '12',
                 });
 
                 const dot = document.createElement('div');
@@ -214,7 +226,7 @@ export class CenterRenderer {
                     width: '6px',
                     height: '6px',
                     backgroundColor: '#d00',
-                    borderRadius: '50%'
+                    borderRadius: '50%',
                 });
                 stick.appendChild(dot);
 
@@ -267,7 +279,7 @@ export class CenterRenderer {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '2px'
+            gap: '2px',
         });
 
         // Row 1: [RoundWind] [RoundNum] [Kyoku] (Images)
@@ -277,7 +289,7 @@ export class CenterRenderer {
             alignItems: 'center',
             justifyContent: 'center',
             gap: '0px',
-            marginBottom: '4px'
+            marginBottom: '4px',
         });
 
         // Round Wind (0-3 -> E S W N)
@@ -303,7 +315,7 @@ export class CenterRenderer {
             fontWeight: 'bold',
             color: 'white',
             marginBottom: '8px',
-            fontFamily: 'monospace'
+            fontFamily: 'monospace',
         });
         contentContainer.appendChild(row2);
 
@@ -311,7 +323,7 @@ export class CenterRenderer {
         const row3 = document.createElement('div');
         Object.assign(row3.style, {
             display: 'flex',
-            gap: '2px'
+            gap: '2px',
         });
 
         const doraTiles = [...state.doraMarkers];

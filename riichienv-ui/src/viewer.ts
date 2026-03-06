@@ -1,11 +1,8 @@
-import {
-    GameConfig, LayoutConfig,
-    createLayoutConfig4P, createLayoutConfig3P,
-} from './config';
-import { Renderer2D } from './renderers/renderer_2d';
-import { IRenderer } from './renderers/renderer_interface';
-import { MjaiEvent } from './types';
 import { BaseViewer } from './base_viewer';
+import { createLayoutConfig3P, createLayoutConfig4P, type GameConfig, type LayoutConfig } from './config';
+import { Renderer2D } from './renderers/renderer_2d';
+import type { IRenderer } from './renderers/renderer_interface';
+import type { MjaiEvent } from './types';
 
 export class Viewer extends BaseViewer {
     /** Create a Viewer from an HTMLElement directly (no URL parsing, no containerId). */
@@ -16,7 +13,7 @@ export class Viewer extends BaseViewer {
         perspective?: number,
         freeze: boolean = false,
         config?: GameConfig,
-        layout?: LayoutConfig
+        layout?: LayoutConfig,
     ): Viewer {
         Viewer._pendingLayout = layout;
         Viewer._pendingElement = el;
@@ -35,7 +32,7 @@ export class Viewer extends BaseViewer {
         perspective?: number,
         freeze: boolean = false,
         config?: GameConfig,
-        layout?: LayoutConfig
+        layout?: LayoutConfig,
     ) {
         let el: HTMLElement;
         let effectiveInitialStep = initialStep;
@@ -52,7 +49,7 @@ export class Viewer extends BaseViewer {
                 const eventStepParam = urlParams.get('eventStep');
                 if (eventStepParam) {
                     const parsed = parseInt(eventStepParam, 10);
-                    if (!isNaN(parsed)) effectiveInitialStep = parsed;
+                    if (!Number.isNaN(parsed)) effectiveInitialStep = parsed;
                 }
             }
         }
@@ -71,7 +68,7 @@ export class Viewer extends BaseViewer {
         Viewer._pendingLayout = undefined;
     }
 
-    protected getLayoutInfo(gc: GameConfig, log: MjaiEvent[]) {
+    protected getLayoutInfo(gc: GameConfig, _log: MjaiEvent[]) {
         const lc = Viewer._pendingLayout ?? (gc.playerCount === 3 ? createLayoutConfig3P() : createLayoutConfig4P());
         return {
             contentWidth: lc.contentWidth,
@@ -82,7 +79,7 @@ export class Viewer extends BaseViewer {
         };
     }
 
-    protected createRenderer(viewArea: HTMLElement, gc: GameConfig, log: MjaiEvent[]): IRenderer {
+    protected createRenderer(viewArea: HTMLElement, gc: GameConfig, _log: MjaiEvent[]): IRenderer {
         const lc = Viewer._pendingLayout ?? (gc.playerCount === 3 ? createLayoutConfig3P() : createLayoutConfig4P());
         return new Renderer2D(viewArea, lc);
     }

@@ -1,5 +1,5 @@
-import { GameState } from './game_state';
-import { IRenderer } from './renderers/renderer_interface';
+import type { GameState } from './game_state';
+import type { IRenderer } from './renderers/renderer_interface';
 
 /** Common interface for Viewer and Viewer3D, consumed by ReplayController. */
 export interface ViewerLike {
@@ -14,7 +14,6 @@ export interface ViewerLike {
 export class ReplayController {
     viewer: ViewerLike;
     autoPlayTimer: number | null = null;
-    private logBtn: HTMLElement | null = null;
     private autoBtn: HTMLElement | null = null;
     private lastActionTime: number = 0;
     private static readonly ACTION_THROTTLE_MS = 80;
@@ -43,21 +42,25 @@ export class ReplayController {
         let lastWheelTime = 0;
         const WHEEL_THROTTLE_MS = 100;
 
-        target.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
+        target.addEventListener(
+            'wheel',
+            (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
 
-            const now = Date.now();
-            if (now - lastWheelTime < WHEEL_THROTTLE_MS) return;
-            lastWheelTime = now;
+                const now = Date.now();
+                if (now - lastWheelTime < WHEEL_THROTTLE_MS) return;
+                lastWheelTime = now;
 
-            if (e.deltaY > 0) {
-                this.nextTurn();
-            } else {
-                this.prevTurn();
-            }
-        }, { passive: false });
+                if (e.deltaY > 0) {
+                    this.nextTurn();
+                } else {
+                    this.prevTurn();
+                }
+            },
+            { passive: false },
+        );
     }
 
     private notifyPositionChange() {
@@ -123,7 +126,19 @@ export class ReplayController {
                 if (evt) {
                     if (evt.type === 'end_kyoku') {
                         delay = 3000;
-                    } else if (['pon', 'chi', 'kan', 'ankan', 'daiminkan', 'kakan', 'reach', 'reach_accepted', 'hora'].includes(evt.type)) {
+                    } else if (
+                        [
+                            'pon',
+                            'chi',
+                            'kan',
+                            'ankan',
+                            'daiminkan',
+                            'kakan',
+                            'reach',
+                            'reach_accepted',
+                            'hora',
+                        ].includes(evt.type)
+                    ) {
                         delay = 1200; // 1s + 200ms standard
                     }
                 }

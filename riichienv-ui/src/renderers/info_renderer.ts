@@ -1,10 +1,10 @@
 export class InfoRenderer {
     static renderPlayerInfo(
-        player: any,
+        _player: any,
         index: number,
         viewpoint: number,
         currentActor: number,
-        onViewpointChange: (idx: number) => void
+        onViewpointChange: (idx: number) => void,
     ): HTMLElement {
         const infoBox = document.createElement('div');
         infoBox.className = 'player-info-box';
@@ -18,7 +18,7 @@ export class InfoRenderer {
             top: '30px',
             left: '50%',
             transform: 'translateX(140px)',
-            marginLeft: '0'
+            marginLeft: '0',
         });
 
         infoBox.innerHTML = `

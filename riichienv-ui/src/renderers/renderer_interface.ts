@@ -1,4 +1,4 @@
-import { BoardState } from '../types';
+import type { BoardState } from '../types';
 
 /**
  * Common interface for all renderer implementations (2D, 3D, etc.).

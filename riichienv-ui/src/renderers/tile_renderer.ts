@@ -6,14 +6,14 @@ export class TileRenderer {
 
     static getTileHtml(tileStr: string): string {
         if (tileStr === 'back') {
-            const svg = TILES['back'] || TILES['blank'];
+            const svg = TILES.back || TILES.blank;
             return `<div class="tile-layer"><div class="tile-bg">${svg}</div></div>`;
         }
 
-        const frontSvg = TILES['front'] || '';
+        const frontSvg = TILES.front || '';
         let fgSvg = TILES[tileStr];
         if (!fgSvg) {
-            fgSvg = TILES['blank'] || '';
+            fgSvg = TILES.blank || '';
         }
 
         return `
@@ -30,12 +30,12 @@ export class TileRenderer {
      * subsequent calls return a deep clone (no HTML parsing).
      */
     static getTileElement(tileStr: string): HTMLElement {
-        let template = this._elementCache.get(tileStr);
+        let template = TileRenderer._elementCache.get(tileStr);
         if (!template) {
             const container = document.createElement('div');
-            container.innerHTML = this.getTileHtml(tileStr);
+            container.innerHTML = TileRenderer.getTileHtml(tileStr);
             template = container.firstElementChild as HTMLElement;
-            this._elementCache.set(tileStr, template);
+            TileRenderer._elementCache.set(tileStr, template);
         }
         return template.cloneNode(true) as HTMLElement;
     }
