@@ -1,5 +1,10 @@
+from __future__ import annotations
+
 from enum import IntEnum
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from riichienv.visualizer import GameViewer
 
 class GameRule:
     allows_ron_on_ankan_for_kokushi_musou: bool
@@ -120,6 +125,9 @@ class Conditions:
     round_wind: Wind
     riichi_sticks: int
     honba: int
+    kita_count: int
+    is_sanma: bool
+    num_players: int
     def __init__(
         self,
         tsumo: bool = False,
@@ -135,6 +143,9 @@ class Conditions:
         round_wind: Wind | int = 0,
         riichi_sticks: int = 0,
         honba: int = 0,
+        kita_count: int = 0,
+        is_sanma: bool = False,
+        num_players: int = 4,
     ): ...
 
 class Yaku:
@@ -335,6 +346,7 @@ class RiichiEnv:
     def _get_ura_markers_u8(self) -> list[int]: ...
     def _get_waits(self, player_id: int) -> list[int]: ...
     def _is_furiten(self, player_id: int) -> bool: ...
+    def get_viewer(self) -> GameViewer: ...
     def _reveal_kan_dora(self) -> None: ...
 
 class Score:

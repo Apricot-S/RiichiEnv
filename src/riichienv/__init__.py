@@ -1,7 +1,6 @@
 from . import consts, convert
 from ._riichienv import (  # type: ignore
     GameRule,
-    HandEvaluator3P,
     Kyoku,
     Meld,
     MeldType,
@@ -26,12 +25,22 @@ from ._riichienv import (  # type: ignore
 )
 from .action import Action, Action3P, ActionType
 from .game_mode import GameType
-from .hand import Conditions, HandEvaluator
+from .hand import Conditions, HandEvaluator, HandEvaluator3P
 
 EAST = Wind.East
 SOUTH = Wind.South
 WEST = Wind.West
 NORTH = Wind.North
+
+
+def _get_viewer(self):  # type: ignore[no-untyped-def]
+    # Lazy import to avoid circular dependency: visualizer imports from riichienv
+    from riichienv.visualizer import GameViewer  # noqa: PLC0415
+
+    return GameViewer(self.mjai_log)
+
+
+RiichiEnv.get_viewer = _get_viewer  # type: ignore[attr-defined]
 
 
 __all__ = [

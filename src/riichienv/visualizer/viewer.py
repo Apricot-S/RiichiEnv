@@ -6,11 +6,12 @@ import json
 import os
 import traceback
 import uuid
+import warnings
 from typing import Any
 
 from IPython.display import HTML
 
-from riichienv import Conditions, HandEvaluator, Meld, MeldType, Wind, WinResult
+from riichienv import Conditions, HandEvaluator, HandEvaluator3P, Meld, MeldType, Wind, WinResult
 from riichienv import convert as cvt
 
 
@@ -42,20 +43,25 @@ def _get_viewer_js_compressed_base64() -> tuple[str, str]:
 class MetadataInjector:
     def __init__(self, events: list[dict[str, Any]]):
         self.events = copy.deepcopy(events)
-        self.hands: dict[int, list[int]] = {0: [], 1: [], 2: [], 3: []}
-        self.melds: dict[int, list[Meld]] = {0: [], 1: [], 2: [], 3: []}  # List of Meld objects
+
+        # Auto-detect player count from events
+        self.player_count = self._detect_player_count(events)
+        pc = self.player_count
+
+        self.hands: dict[int, list[int]] = {i: [] for i in range(pc)}
+        self.melds: dict[int, list[Meld]] = {i: [] for i in range(pc)}
         self.dora_markers: list[int] = []
         self.round_wind = 0  # 0: East, 1: South, etc.
         self.bakaze_map = {"E": 0, "S": 1, "W": 2, "N": 3}
         self.oya = 0
-        self.riichi_declared = [False] * 4
+        self.riichi_declared = [False] * pc
         self.tile_counts = {}  # To track unique IDs for string tiles
         self.kyoku_results = []
         self.last_tile: str | None = None
         self.last_tid: int | None = None
 
         # State for Conditions
-        self.ippatsu_eligible = [False] * 4
+        self.ippatsu_eligible = [False] * pc
         self.is_rinshan = False
         self.is_chankan = False
         self.is_haitei = False
@@ -64,10 +70,21 @@ class MetadataInjector:
         self.turn_count = 0
         self.kyoku_num = 0
         self.honba = 0
+        self.kita_count: dict[int, int] = {i: 0 for i in range(pc)}
 
         # Per-round WinResult storage
         self.round_win_results: list[list[WinResult]] = []
         self._current_round_results: list[WinResult] = []
+
+    @staticmethod
+    def _detect_player_count(events: list[dict[str, Any]]) -> int:
+        """Detect player count from events (3P or 4P)."""
+        for e in events:
+            if e.get("type") == "start_kyoku" and "tehais" in e:
+                return len(e["tehais"])
+            if e.get("type") == "start_game" and "names" in e:
+                return len(e["names"])
+        return 4
 
     def _get_tid(self, tile_str: str) -> int:
         """Get a unique 136-ID for a tile string to maintain valid state."""
@@ -114,19 +131,20 @@ class MetadataInjector:
                 ev["meta"] = {}
 
             if etype == "start_kyoku":
+                pc = self.player_count
                 self.tile_counts = {}  # Reset for new kyoku
                 self.dora_markers = [self._get_tid(ev["dora_marker"])]
                 self.round_wind = self.bakaze_map.get(ev.get("bakaze", "E"), 0)
                 self.oya = ev.get("oya", 0)
                 self.kyoku_num = ev.get("kyoku", 1)  # Default to 1
                 self.honba = ev.get("honba", 0)
-                self.riichi_declared = [False] * 4
-                self.hands = {0: [], 1: [], 2: [], 3: []}
-                self.melds = {0: [], 1: [], 2: [], 3: []}
+                self.riichi_declared = [False] * pc
+                self.hands = {i: [] for i in range(pc)}
+                self.melds = {i: [] for i in range(pc)}
+                self.kita_count = {i: 0 for i in range(pc)}
                 self.kyoku_results = []
-                self.kyoku_results = []
-                self.ippatsu_eligible = [False] * 4
-                self.just_reached = [False] * 4  # Track declaration discard
+                self.ippatsu_eligible = [False] * pc
+                self.just_reached = [False] * pc  # Track declaration discard
                 self.is_rinshan = False
                 self.is_chankan = False
                 self.is_haitei = False
@@ -168,8 +186,8 @@ class MetadataInjector:
                     self.riichi_declared[actor] = True
                     self.ippatsu_eligible[actor] = True
 
-                # If anyone discards, first round might be over
-                if actor == 3:  # End of round
+                # First round ends when every player has discarded at least once
+                if self.is_first_round_of_kyoku and self.turn_count + 1 >= self.player_count:
                     self.is_first_round_of_kyoku = False
 
                 # Any discard clears ippatsu if it's not the riichi-er's first discard
@@ -224,7 +242,7 @@ class MetadataInjector:
                 self.melds[actor].append(Meld(m_type, m_tiles, True, actor))
                 self.any_melds_in_kyoku = True
                 # Clear all ippatsu on any call
-                self.ippatsu_eligible = [False] * 4
+                self.ippatsu_eligible = [False] * self.player_count
 
             elif etype == "kakan":
                 assert actor is not None
@@ -248,7 +266,7 @@ class MetadataInjector:
                     self.is_chankan = True  # Eligible for Chankan
 
                 self.any_melds_in_kyoku = True
-                self.ippatsu_eligible = [False] * 4
+                self.ippatsu_eligible = [False] * self.player_count
 
             elif etype == "ankan":
                 assert actor is not None
@@ -265,7 +283,19 @@ class MetadataInjector:
                 m_tiles.sort()
                 self.melds[actor].append(Meld(MeldType.Ankan, m_tiles, False, actor))
                 self.is_rinshan = True
-                self.ippatsu_eligible = [False] * 4
+                self.ippatsu_eligible = [False] * self.player_count
+
+            elif etype == "kita":
+                assert actor is not None
+                # Remove N tile from hand
+                tid = self._get_matching_tid(self.hands[actor], "N")
+                if tid in self.hands[actor]:
+                    self.hands[actor].remove(tid)
+                    self.kita_count[actor] += 1
+                else:
+                    warnings.warn(f"kita: N tile not found in player {actor} hand", stacklevel=2)
+                self.is_rinshan = True
+                self.ippatsu_eligible = [False] * self.player_count
 
             elif etype == "dora":
                 self.dora_markers.append(self._get_tid(ev["dora_marker"]))
@@ -318,8 +348,9 @@ class MetadataInjector:
                     chankan=self.is_chankan if not is_tsumo else False,
                     player_wind=get_wind(actor - self.oya),
                     round_wind=get_wind(self.round_wind),
-                    # haitei/houtei based on wall (if we had wall count)
-                    # double_riichi if first round and no calls
+                    kita_count=self.kita_count.get(actor, 0),
+                    is_sanma=self.player_count == 3,
+                    num_players=self.player_count,
                 )
 
                 # Ura markers
@@ -327,7 +358,10 @@ class MetadataInjector:
                 if "ura_markers" in ev:
                     ura_in = [self._get_tid(u) for u in ev["ura_markers"]]
 
-                calc = HandEvaluator(self.hands[actor], self.melds[actor])
+                if self.player_count == 3:
+                    calc = HandEvaluator3P(self.hands[actor], self.melds[actor])
+                else:
+                    calc = HandEvaluator(self.hands[actor], self.melds[actor])
                 res = calc.calc(pai_tid, dora_indicators=self.dora_markers, conditions=cond, ura_indicators=ura_in)
 
                 if res.is_win:
@@ -359,7 +393,10 @@ class MetadataInjector:
         hand = self.hands[pid]
         melds = self.melds[pid]
 
-        calc = HandEvaluator(hand, melds)
+        if self.player_count == 3:
+            calc = HandEvaluator3P(hand, melds)
+        else:
+            calc = HandEvaluator(hand, melds)
 
         # get_waits returns list of u32 (0-33)
         wait_tids = calc.get_waits()
@@ -373,13 +410,8 @@ class MetadataInjector:
 
 
 class GameViewer:
-    def __init__(
-        self, log: list[dict[str, Any]], step: int | None = None, perspective: int | None = None, freeze: bool = False
-    ):
+    def __init__(self, log: list[dict[str, Any]]):
         self.log = log
-        self.step = step
-        self.perspective = perspective
-        self.freeze = freeze
         self._enriched_log: list[dict[str, Any]] | None = None
         self._round_win_results: list[list[WinResult]] | None = None
 
@@ -397,24 +429,18 @@ class GameViewer:
             self._round_win_results = []
 
     @classmethod
-    def from_env(
-        cls, env: Any, step: int | None = None, perspective: int | None = None, freeze: bool = False
-    ) -> "GameViewer":
-        return cls(env.mjai_log, step=step, perspective=perspective, freeze=freeze)
+    def from_env(cls, env: Any) -> "GameViewer":
+        return cls(env.mjai_log)
 
     @classmethod
-    def from_jsonl(
-        cls, path: str, step: int | None = None, perspective: int | None = None, freeze: bool = False
-    ) -> "GameViewer":
+    def from_jsonl(cls, path: str) -> "GameViewer":
         with open(path, encoding="utf-8") as f:
             events = [json.loads(line) for line in f]
-        return cls(events, step=step, perspective=perspective, freeze=freeze)
+        return cls(events)
 
     @classmethod
-    def from_list(
-        cls, events: list[dict[str, Any]], step: int | None = None, perspective: int | None = None, freeze: bool = False
-    ) -> "GameViewer":
-        return cls(events, step=step, perspective=perspective, freeze=freeze)
+    def from_list(cls, events: list[dict[str, Any]]) -> "GameViewer":
+        return cls(events)
 
     def _repr_html_(self) -> str:
         html = self.show().data
@@ -446,7 +472,12 @@ class GameViewer:
             raise IndexError(f"round_idx {round_idx} out of range (0-{n_results - 1})")
         return self._round_win_results[round_idx]
 
-    def show(self) -> HTML:
+    def show(
+        self,
+        step: int | None = None,
+        perspective: int | None = None,
+        freeze: bool = False,
+    ) -> HTML:
         """Generates the HTML/JS viewer for the replay log."""
         self._ensure_processed()
         assert self._enriched_log is not None
@@ -456,8 +487,11 @@ class GameViewer:
         viewer_js_b64, viewer_js_hash = _get_viewer_js_compressed_base64()
 
         if not viewer_js_b64:
-            # Fallback if no assets found
             return HTML(f'<div id="{unique_id}">Error: Viewer assets not found.</div>')
+
+        step_js = str(step) if step is not None else "undefined"
+        perspective_js = str(perspective) if perspective is not None else "undefined"
+        freeze_js = "true" if freeze else "false"
 
         html_content = f"""
         <div id="{unique_id}" style="width: 100%; border: 1px solid #ddd; box-sizing: border-box;">
@@ -475,14 +509,13 @@ class GameViewer:
                         const script = document.createElement('script');
                         script.text = jsCode;
                         document.head.appendChild(script);
-                        // Store the hash after loading new code
                         window.RiichiEnvViewerHash = expectedHash;
                     }}
 
                     const logData = {log_json};
-                    const initialStep = {self.step if self.step is not None else "undefined"};
-                    const perspective = {self.perspective if self.perspective is not None else "undefined"};
-                    const freeze = {"true" if self.freeze else "false"};
+                    const initialStep = {step_js};
+                    const perspective = {perspective_js};
+                    const freeze = {freeze_js};
                     if (window.RiichiEnv3DViewer) {{
                         new window.RiichiEnv3DViewer("{unique_id}", logData, initialStep, perspective, freeze);
                     }} else {{
@@ -494,11 +527,9 @@ class GameViewer:
                 }}
             }};
 
-            // Check if global exists AND matches expected hash
             if (window.RiichiEnv3DViewer && window.RiichiEnvViewerHash === expectedHash) {{
-                runViewer("");
+                requestAnimationFrame(() => runViewer(""));
             }} else {{
-                // Decompress and load New Code
                 const b64Data = "{viewer_js_b64}";
                 const compressed = Uint8Array.from(atob(b64Data), c => c.charCodeAt(0));
 

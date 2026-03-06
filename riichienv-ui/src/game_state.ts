@@ -141,7 +141,8 @@ export class GameState {
                 score: this.config.defaultScores[i],
                 riichi: false,
                 pendingRiichi: false,
-                wind: 0
+                wind: 0,
+                kitaCount: 0,
             })),
             doraMarkers: [],
             round: 0,
@@ -229,7 +230,7 @@ export class GameState {
             const expectedLen = 13 - meldInputs.length * 3;
             if (tileIds.length === expectedLen) {
                 const waits34 = calculateWaits(tileIds, meldInputs);
-                if (waits34 && waits34.length > 0) {
+                if (Array.isArray(waits34) && waits34.length > 0) {
                     p.waits = waits34
                         .map(t34 => tileIdToMjai(t34 * 4))
                         .filter((s): s is string => s !== null);
@@ -366,6 +367,7 @@ export class GameState {
                 wind: p.wind,
                 waits: p.waits ? [...p.waits] : undefined,
                 lastDrawnTile: p.lastDrawnTile,
+                kitaCount: p.kitaCount,
             })),
             doraMarkers: [...state.doraMarkers],
             round: state.round,
@@ -417,13 +419,15 @@ export class GameState {
                 this.current.wallRemaining = this.config.initialWallRemaining;
                 this.current.conditions = initialConditions(this.config.playerCount);
                 this.current.players.forEach((p, i) => {
-                    p.hand = sortHand(e.tehais[i].map((t: string) => t)); // Clone and sort
+                    const tehai = e.tehais?.[i];
+                    p.hand = tehai ? sortHand(tehai.map((t: string) => t)) : []; // Clone and sort
                     p.discards = [];
                     p.melds = [];
                     p.riichi = false;
                     p.pendingRiichi = false;
                     p.score = e.scores[i];
                     p.waits = undefined;
+                    p.kitaCount = 0;
                     // Assign wind based on oya
                     p.wind = (i - e.oya + this.config.playerCount) % this.config.playerCount;
                     p.lastDrawnTile = undefined;
@@ -512,7 +516,7 @@ export class GameState {
                             const expectedLen = 13 - meldInputs.length * 3;
                             if (tileIds.length === expectedLen) {
                                 const waits34 = calculateWaits(tileIds, meldInputs);
-                                if (waits34 && waits34.length > 0) {
+                                if (Array.isArray(waits34) && waits34.length > 0) {
                                     p.waits = waits34
                                         .map(t34 => tileIdToMjai(t34 * 4))
                                         .filter((s): s is string => s !== null);
@@ -630,6 +634,25 @@ export class GameState {
                     cond.chankanTarget = e.actor;
 
                     p.waits = undefined;
+                }
+                break;
+
+            case 'kita':
+                if (e.actor !== undefined) {
+                    const p = this.current.players[e.actor];
+                    // Remove 'N' tile from hand
+                    const idx = p.hand.indexOf('N');
+                    if (idx >= 0) {
+                        p.hand.splice(idx, 1);
+                        p.kitaCount++;
+                    } else {
+                        console.warn('[GameState] Kita: Could not find N tile in hand for player', e.actor);
+                    }
+
+                    // Condition tracking: kita triggers rinshan draw, clears ippatsu
+                    const cond = this.current.conditions;
+                    cond.afterKan = true;
+                    cond.ippatsu = Array(this.config.playerCount).fill(false);
                 }
                 break;
 
@@ -850,6 +873,7 @@ export class GameState {
             const horaC = res._horaConditions || {};
             const roundWind = Math.floor(this.current.round / this.config.playerCount); // 0=E, 1=S, 2=W, 3=N
 
+            const pc = this.config.playerCount;
             const conditions: ConditionsInput = {
                 tsumo: isTsumo,
                 riichi: player.riichi,
@@ -863,6 +887,8 @@ export class GameState {
                 player_wind: player.wind,
                 round_wind: roundWind,
                 honba: this.current.honba,
+                kita_count: player.kitaCount,
+                is_sanma: pc === 3,
             };
 
             const wasmResult = calculateScore(
@@ -877,14 +903,15 @@ export class GameState {
             if (wasmResult && wasmResult.is_win) {
                 // Convert WASM result to renderer format
                 let points: number;
+                const koCount = this.config.playerCount - 2;
                 if (!isTsumo) {
                     points = wasmResult.ron_agari;
                 } else if (player.wind === 0) {
                     // Dealer tsumo
-                    points = wasmResult.tsumo_agari_ko * 3;
+                    points = wasmResult.tsumo_agari_ko * (this.config.playerCount - 1);
                 } else {
                     // Non-dealer tsumo
-                    points = wasmResult.tsumo_agari_oya + wasmResult.tsumo_agari_ko * 2;
+                    points = wasmResult.tsumo_agari_oya + wasmResult.tsumo_agari_ko * koCount;
                 }
 
                 res.score = {

@@ -31,6 +31,7 @@ build-backend = "maturin"
 python-source = "src"
 manifest-path = "riichienv-python/Cargo.toml"
 module-name = "riichienv._riichienv"
+include = ["src/riichienv/visualizer/assets/**"]
 
 [dependency-groups]
 dev = [

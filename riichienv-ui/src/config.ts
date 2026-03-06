@@ -73,11 +73,32 @@ export function createGameConfig3P(): GameConfig {
 export function createLayoutConfig3P(): LayoutConfig {
     return {
         boardSize: 800,
-        playerAngles: [0, -120, 120],
+        playerAngles: [0, -90, 180],
         contentWidth: 970,
         contentHeight: 900,
         viewAreaSize: 880,
     };
+}
+
+// ---------------------------------------------------------------------------
+// Auto-detection of player count from log events
+// ---------------------------------------------------------------------------
+
+/**
+ * Detect whether a log represents a 3-player or 4-player game.
+ * Checks start_kyoku.tehais.length or start_game.names.length.
+ * Falls back to 4 if detection fails.
+ */
+export function detectPlayerCount(events: { type: string; tehais?: any[]; names?: any[];[key: string]: any }[]): number {
+    for (const e of events) {
+        if (e.type === 'start_kyoku' && Array.isArray(e.tehais)) {
+            return e.tehais.length;
+        }
+        if (e.type === 'start_game' && Array.isArray(e.names)) {
+            return e.names.length;
+        }
+    }
+    return 4;
 }
 
 // ---------------------------------------------------------------------------
@@ -139,15 +160,15 @@ export function createLayout3DConfig3P(): LayoutConfig3D {
         viewAreaHeight: 720,
         contentWidth: 1280,
         contentHeight: 720,
-        tableSize: 880,
-        perspective: 1500,
+        tableSize: 1100,
+        perspective: 1800,
         tiltAngle: 48,
         handLayerHeight: 120,
         tileSizes: {
             riverTile: [26, 36],
             opponentTile: [30, 42],
             ownTile: [50, 70],
-            doraTile: [18, 25],
+            doraTile: [28, 39],
             meldTileTable: [20, 28],
             meldTileOwn: [40, 56],
         },

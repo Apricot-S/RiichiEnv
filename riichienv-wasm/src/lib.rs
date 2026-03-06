@@ -48,6 +48,8 @@ struct ConditionsInput {
     player_wind: u8,
     round_wind: u8,
     honba: u32,
+    kita_count: u8,
+    is_sanma: bool,
 }
 
 impl ConditionsInput {
@@ -66,9 +68,9 @@ impl ConditionsInput {
             round_wind: Wind::from(self.round_wind),
             riichi_sticks: 0,
             honba: self.honba,
-            kita_count: 0,
-            is_sanma: false,
-            num_players: 4,
+            kita_count: self.kita_count,
+            is_sanma: self.is_sanma,
+            num_players: if self.is_sanma { 3 } else { 4 },
         }
     }
 }

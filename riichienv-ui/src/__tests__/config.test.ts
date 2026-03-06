@@ -4,6 +4,7 @@ import {
     createGameConfig3P,
     createLayoutConfig4P,
     createLayoutConfig3P,
+    detectPlayerCount,
     GameConfig,
     LayoutConfig,
 } from '../config';
@@ -85,6 +86,49 @@ describe('GameConfig', () => {
             expect(config.winds.length).toBe(config.playerCount);
             expect(config.windCharKeys.length).toBe(config.playerCount);
         });
+    });
+});
+
+describe('detectPlayerCount', () => {
+    it('should detect 4 players from start_kyoku with 4 tehais', () => {
+        const events = [
+            { type: 'start_kyoku', tehais: [[], [], [], []] },
+        ];
+        expect(detectPlayerCount(events)).toBe(4);
+    });
+
+    it('should detect 3 players from start_kyoku with 3 tehais', () => {
+        const events = [
+            { type: 'start_kyoku', tehais: [[], [], []] },
+        ];
+        expect(detectPlayerCount(events)).toBe(3);
+    });
+
+    it('should detect from start_game names', () => {
+        const events = [
+            { type: 'start_game', names: ['P0', 'P1', 'P2'] },
+        ];
+        expect(detectPlayerCount(events)).toBe(3);
+    });
+
+    it('should return the count from whichever matching event comes first', () => {
+        const events = [
+            { type: 'start_game', names: ['P0', 'P1', 'P2', 'P3'] },
+            { type: 'start_kyoku', tehais: [[], [], []] },
+        ];
+        // start_game appears first in the array, so its names.length (4) wins
+        expect(detectPlayerCount(events)).toBe(4);
+    });
+
+    it('should default to 4 when no relevant events', () => {
+        const events = [
+            { type: 'tsumo', actor: 0, pai: '1m' },
+        ];
+        expect(detectPlayerCount(events)).toBe(4);
+    });
+
+    it('should default to 4 for empty events', () => {
+        expect(detectPlayerCount([])).toBe(4);
     });
 });
 

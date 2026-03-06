@@ -168,10 +168,11 @@ export class Renderer2D implements IRenderer {
             // Standard Checks (Actor-based)
             if (state.lastEvent && state.lastEvent.actor === i) {
                 const type = state.lastEvent.type;
-                if (['chi', 'pon', 'kan', 'ankan', 'daiminkan', 'kakan', 'reach'].includes(type)) {
+                if (['chi', 'pon', 'kan', 'ankan', 'daiminkan', 'kakan', 'reach', 'kita'].includes(type)) {
                     label = type.charAt(0).toUpperCase() + type.slice(1);
                     if (type === 'daiminkan') label = 'Kan';
                     if (type === 'reach') label = 'Reach';
+                    if (type === 'kita') label = 'Pei';
                     showOverlay = true;
                 } else if (type === 'hora') {
                     label = (state.lastEvent.target === state.lastEvent.actor) ? 'Tsumo' : 'Ron';

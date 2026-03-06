@@ -1,3 +1,4 @@
+import dataclasses
 from dataclasses import dataclass
 
 from . import _riichienv as rust_core  # type: ignore
@@ -27,6 +28,10 @@ class Conditions:
 
     riichi_sticks: int = 0
     honba: int = 0
+
+    kita_count: int = 0
+    is_sanma: bool = False
+    num_players: int = 4
 
 
 class HandEvaluator:
@@ -255,41 +260,96 @@ class HandEvaluator:
             dora_indicators = []
         if ura_indicators is None:
             ura_indicators = []
-        # Convert winds to Rust Wind enum if they are integers
-        p_wind = conditions.player_wind
-        if isinstance(p_wind, int):
-            p_wind = WINDS[p_wind % 4]
 
-        r_wind = conditions.round_wind
-        if isinstance(r_wind, int):
-            r_wind = WINDS[r_wind % 4]
-
-        rust_conditions = rust_core.Conditions(
-            tsumo=conditions.tsumo,
-            riichi=conditions.riichi,
-            double_riichi=conditions.double_riichi,
-            ippatsu=conditions.ippatsu,
-            haitei=conditions.haitei,
-            houtei=conditions.houtei,
-            rinshan=conditions.rinshan,
-            chankan=conditions.chankan,
-            tsumo_first_turn=conditions.tsumo_first_turn,
-            player_wind=p_wind,
-            round_wind=r_wind,
-            riichi_sticks=conditions.riichi_sticks,
-            honba=conditions.honba,
-        )
+        rust_conditions = _to_rust_conditions(conditions)
 
         dora_inds_136 = dora_indicators if dora_indicators else []
         ura_inds_136 = ura_indicators if ura_indicators else []
 
         rust_melds = self._rust_melds
-        total_tiles = len(self.tiles_136) + len(rust_melds) * 3
+        meld_tiles = sum(len(m.tiles) for m in self.melds)
+        total_tiles = len(self.tiles_136) + meld_tiles
 
         calc_obj = self.calc_rust
         if total_tiles % 3 == 1:
             temp_tiles = sorted(self.tiles_136 + [win_tile])
             calc_obj = rust_core.HandEvaluator(temp_tiles, rust_melds)
+
+        return calc_obj.calc(win_tile, dora_inds_136, ura_inds_136, rust_conditions)
+
+    def is_tenpai(self) -> bool:
+        return self.calc_rust.is_tenpai()
+
+    def get_waits(self) -> list[int]:
+        return self.calc_rust.get_waits()
+
+
+def _to_rust_conditions(conditions: Conditions) -> "rust_core.Conditions":
+    """Convert a Python Conditions dataclass to the Rust Conditions object."""
+    p_wind = conditions.player_wind
+    if isinstance(p_wind, int):
+        p_wind = WINDS[p_wind % 4]
+
+    r_wind = conditions.round_wind
+    if isinstance(r_wind, int):
+        r_wind = WINDS[r_wind % 4]
+
+    return rust_core.Conditions(
+        tsumo=conditions.tsumo,
+        riichi=conditions.riichi,
+        double_riichi=conditions.double_riichi,
+        ippatsu=conditions.ippatsu,
+        haitei=conditions.haitei,
+        houtei=conditions.houtei,
+        rinshan=conditions.rinshan,
+        chankan=conditions.chankan,
+        tsumo_first_turn=conditions.tsumo_first_turn,
+        player_wind=p_wind,
+        round_wind=r_wind,
+        riichi_sticks=conditions.riichi_sticks,
+        honba=conditions.honba,
+        kita_count=conditions.kita_count,
+        is_sanma=conditions.is_sanma,
+        num_players=conditions.num_players,
+    )
+
+
+class HandEvaluator3P:
+    def __init__(self, tiles: list[int], melds: list[Meld] | None = None) -> None:
+        self.tiles_136 = tiles
+        self.melds = melds or []
+        self._rust_melds = self.melds
+        self.calc_rust = rust_core.HandEvaluator3P(self.tiles_136, self._rust_melds)
+
+    def calc(
+        self,
+        win_tile: int,
+        dora_indicators: list[int] | None = None,
+        conditions: Conditions | None = None,
+        ura_indicators: list[int] | None = None,
+    ) -> WinResult:
+        if conditions is None:
+            conditions = Conditions(is_sanma=True, num_players=3)
+        else:
+            conditions = dataclasses.replace(conditions, is_sanma=True, num_players=3)
+        if dora_indicators is None:
+            dora_indicators = []
+        if ura_indicators is None:
+            ura_indicators = []
+
+        rust_conditions = _to_rust_conditions(conditions)
+
+        dora_inds_136 = dora_indicators if dora_indicators else []
+        ura_inds_136 = ura_indicators if ura_indicators else []
+
+        rust_melds = self._rust_melds
+        meld_tiles = sum(len(m.tiles) for m in self.melds)
+        total_tiles = len(self.tiles_136) + meld_tiles
+
+        calc_obj = self.calc_rust
+        if total_tiles % 3 == 1:
+            temp_tiles = sorted(self.tiles_136 + [win_tile])
+            calc_obj = rust_core.HandEvaluator3P(temp_tiles, rust_melds)
 
         return calc_obj.calc(win_tile, dora_inds_136, ura_inds_136, rust_conditions)
 
