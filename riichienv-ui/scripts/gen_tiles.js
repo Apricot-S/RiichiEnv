@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const { optimize } = require('svgo');
 
 const TILES_DIR = path.join(__dirname, '..', 'riichienv-mahjong-tiles-regular');
 const OUTPUT_FILE = path.join(__dirname, '..', 'src', 'tiles.ts');

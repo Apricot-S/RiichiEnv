@@ -30,11 +30,11 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.6",
-    "esbuild": "^0.19.0",
+    "esbuild": "^0.27.3",
     "sharp": "^0.34.5",
-    "svgo": "^2.8.0",
+    "svgo": "^4.0.1",
     "text-to-svg": "^3.1.5",
-    "typescript": "^5.3.0",
+    "typescript": "^5.9.3",
     "vitest": "^4.0.18"
   },
   "author": "",

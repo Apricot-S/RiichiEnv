@@ -46,6 +46,6 @@
     }
   },
   "files": {
-    "includes": ["src/**", "!src/wasm/pkg/**"]
+    "includes": ["src/**", "!src/wasm/pkg/**", "!src/tiles.ts"]
   }
 }
