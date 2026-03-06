@@ -267,7 +267,8 @@ class HandEvaluator:
         ura_inds_136 = ura_indicators if ura_indicators else []
 
         rust_melds = self._rust_melds
-        total_tiles = len(self.tiles_136) + len(rust_melds) * 3
+        meld_tiles = sum(len(m.tiles) for m in self.melds)
+        total_tiles = len(self.tiles_136) + meld_tiles
 
         calc_obj = self.calc_rust
         if total_tiles % 3 == 1:
@@ -342,7 +343,8 @@ class HandEvaluator3P:
         ura_inds_136 = ura_indicators if ura_indicators else []
 
         rust_melds = self._rust_melds
-        total_tiles = len(self.tiles_136) + len(rust_melds) * 3
+        meld_tiles = sum(len(m.tiles) for m in self.melds)
+        total_tiles = len(self.tiles_136) + meld_tiles
 
         calc_obj = self.calc_rust
         if total_tiles % 3 == 1:

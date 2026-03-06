@@ -186,8 +186,8 @@ class MetadataInjector:
                     self.riichi_declared[actor] = True
                     self.ippatsu_eligible[actor] = True
 
-                # If anyone discards, first round might be over
-                if actor == self.player_count - 1:  # End of round
+                # First round ends when every player has discarded at least once
+                if self.is_first_round_of_kyoku and self.turn_count + 1 >= self.player_count:
                     self.is_first_round_of_kyoku = False
 
                 # Any discard clears ippatsu if it's not the riichi-er's first discard

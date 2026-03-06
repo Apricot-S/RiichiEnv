@@ -642,8 +642,12 @@ export class GameState {
                     const p = this.current.players[e.actor];
                     // Remove 'N' tile from hand
                     const idx = p.hand.indexOf('N');
-                    if (idx >= 0) p.hand.splice(idx, 1);
-                    p.kitaCount++;
+                    if (idx >= 0) {
+                        p.hand.splice(idx, 1);
+                        p.kitaCount++;
+                    } else {
+                        console.warn('[GameState] Kita: Could not find N tile in hand for player', e.actor);
+                    }
 
                     // Condition tracking: kita triggers rinshan draw, clears ippatsu
                     const cond = this.current.conditions;
