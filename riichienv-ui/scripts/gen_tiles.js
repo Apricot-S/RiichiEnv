@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const { optimize } = require('svgo');
 
 const TILES_DIR = path.join(__dirname, '..', 'riichienv-mahjong-tiles-regular');
 const OUTPUT_FILE = path.join(__dirname, '..', 'src', 'tiles.ts');
@@ -12,10 +11,6 @@ if (!fs.existsSync(TILES_DIR)) {
 }
 
 const mapFileNameToId = (filename) => {
-    // Map FluffyStuff filenames to our IDs (or MJAI style strings)
-    // MJAI: 1m, 2m... 5mr (red 5), 1p... 1s... 1z..7z
-    // FluffyStuff: Man1.svg... Man5-Dora.svg... Pin1... Sou1... Ton, Nan, Shaa, Pei, Haku, Hatsu, Chun
-
     const name = path.basename(filename, '.svg');
 
     if (name === 'Back') return 'back';
@@ -26,7 +21,7 @@ const mapFileNameToId = (filename) => {
 
     for (const [prefix, suffix] of Object.entries(suits)) {
         if (name.startsWith(prefix)) {
-            const rest = name.slice(prefix.length); // "1", "5", "5-Dora"
+            const rest = name.slice(prefix.length);
             if (rest.includes('-Dora')) {
                 return '5' + suffix + 'r';
             }
@@ -46,60 +41,109 @@ const mapFileNameToId = (filename) => {
     return null;
 };
 
+/**
+ * Clean SVG content for embedding.
+ * Removes Inkscape/Sodipodi editor artifacts while preserving
+ * browser-renderable elements (gradients, clip paths, masks, etc.).
+ */
+const cleanSvg = (content) => {
+    // Ensure xlink namespace if needed
+    if (content.includes('xlink:href') && !content.includes('xmlns:xlink')) {
+        content = content.replace('<svg', '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+    }
+
+    // 1. Remove XML declaration and comments
+    content = content.replace(/<\?xml.*?\?>/gs, '');
+    content = content.replace(/<!--.*?-->/gs, '');
+
+    // 2. Remove metadata, namedview, RDF
+    content = content.replace(/<metadata.*?>.*?<\/metadata>/gs, '');
+    content = content.replace(/<sodipodi:namedview.*?>.*?<\/sodipodi:namedview>/gs, '');
+    content = content.replace(/<rdf:RDF.*?>.*?<\/rdf:RDF>/gs, '');
+
+    // 3. Remove inkscape:path-effect elements (not rendered by browsers)
+    content = content.replace(/<inkscape:path-effect[^>]*\/?>/g, '');
+
+    // 4. Remove namespaced attributes (Inkscape, Sodipodi, etc.) but keep xlink:href, xmlns:xlink, and viewBox
+    content = content.replace(/\s\w+:[^=]+="[^"]*"/g, (match) => {
+        if (match.includes('xlink:href')) return match;
+        if (match.includes('xmlns:xlink')) return match;
+        if (match.includes('viewBox')) return match;
+        return '';
+    });
+
+    // 5. Remove explicit width/height to allow CSS scaling
+    content = content.replace(/<svg\s+([^>]*?)width="[^"]*"/g, '<svg $1');
+    content = content.replace(/<svg\s+([^>]*?)height="[^"]*"/g, '<svg $1');
+
+    // 6. Remove unreferenced id attributes
+    //    Collect all ids and all references (url(#...) and xlink:href="#...")
+    const idMatches = [...content.matchAll(/\sid="([^"]+)"/g)];
+    const urlRefs = [...content.matchAll(/url\(#([^)]+)\)/g)].map(m => m[1]);
+    const xlinkRefs = [...content.matchAll(/xlink:href="#([^"]+)"/g)].map(m => m[1]);
+    const refSet = new Set([...urlRefs, ...xlinkRefs]);
+
+    for (const m of idMatches) {
+        if (!refSet.has(m[1])) {
+            content = content.replace(m[0], '');
+        }
+    }
+
+    // 7. Remove xmlns:inkscape and xmlns:sodipodi namespace declarations
+    content = content.replace(/\s*xmlns:inkscape="[^"]*"/g, '');
+    content = content.replace(/\s*xmlns:sodipodi="[^"]*"/g, '');
+    content = content.replace(/\s*xmlns:rdf="[^"]*"/g, '');
+    content = content.replace(/\s*xmlns:cc="[^"]*"/g, '');
+    content = content.replace(/\s*xmlns:dc="[^"]*"/g, '');
+
+    // 8. Remove version attribute from <svg>
+    content = content.replace(/(<svg[^>]*?)\s+version="[^"]*"/g, '$1');
+
+    // 9. Collapse whitespace
+    content = content.replace(/\s+/g, ' ').trim();
+
+    return content;
+};
+
 const main = () => {
     const files = fs.readdirSync(TILES_DIR).filter(f => f.endsWith('.svg'));
     const tileMap = {};
 
+    let originalSize = 0;
+    let cleanedSize = 0;
+
     files.forEach(file => {
         const id = mapFileNameToId(file);
         if (id) {
-            let content = fs.readFileSync(path.join(TILES_DIR, file), 'utf8');
+            const raw = fs.readFileSync(path.join(TILES_DIR, file), 'utf8');
+            originalSize += raw.length;
 
-            // SVGO might fail if it finds xlink:href without the namespace declaration
-            if (content.includes('xlink:href') && !content.includes('xmlns:xlink')) {
-                content = content.replace('<svg', '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
-            }
-
-            // Manual cleaning instead of SVGO to avoid breaking complex Inkscape transforms
-            // 1. Remove XML declaration and comments
-            content = content.replace(/<\?xml.*?\?>/gs, '');
-            content = content.replace(/<!--.*?-->/gs, '');
-
-            // 2. Remove metadata and namedview
-            content = content.replace(/<metadata.*?>.*?<\/metadata>/gs, '');
-            content = content.replace(/<sodipodi:namedview.*?>.*?<\/sodipodi:namedview>/gs, '');
-            content = content.replace(/<rdf:RDF.*?>.*?<\/rdf:RDF>/gs, '');
-
-            // 3. Remove namespaced attributes (Inkscape, Sodipodi, etc.) but keep xmlns and viewBox
-            content = content.replace(/\s\w+:[^=]+="[^"]*"/g, (match) => {
-                if (match.includes('xlink:href')) return match;
-                if (match.includes('viewBox')) return match;
-                return '';
-            });
-
-            // 4. Remove explicit width/height to allow CSS scaling
-            content = content.replace(/<svg\s+([^>]*?)width="[^"]*"/g, '<svg $1');
-            content = content.replace(/<svg\s+([^>]*?)height="[^"]*"/g, '<svg $1');
-
-            // Extra cleaning to ensure it's as flat as possible
+            const content = cleanSvg(raw);
             if (content) {
-                content = content.replace(/\s+/g, ' ').trim();
                 tileMap[id] = content;
+                cleanedSize += content.length;
             }
         }
     });
 
-    // Alias 0m/0p/0s to red tiles if they exist
-    if (tileMap['5mr']) tileMap['0m'] = tileMap['5mr'];
-    if (tileMap['5pr']) tileMap['0p'] = tileMap['5pr'];
-    if (tileMap['5sr']) tileMap['0s'] = tileMap['5sr'];
+    // Alias 0m/0p/0s to red tiles — emit as runtime references, not data copies
+    const aliases = [];
+    if (tileMap['5mr']) aliases.push(['0m', '5mr']);
+    if (tileMap['5pr']) aliases.push(['0p', '5pr']);
+    if (tileMap['5sr']) aliases.push(['0s', '5sr']);
 
-    const outputContent = `// Auto-generated by scripts/gen_tiles.js
-export const TILES: Record<string, string> = ${JSON.stringify(tileMap)};
-`;
+    // Build output: base tile data + alias assignments
+    let outputContent = `// Auto-generated by scripts/gen_tiles.js\n`;
+    outputContent += `export const TILES: Record<string, string> = ${JSON.stringify(tileMap)};\n`;
+    for (const [alias, target] of aliases) {
+        outputContent += `TILES['${alias}'] = TILES['${target}'];\n`;
+    }
 
     fs.writeFileSync(OUTPUT_FILE, outputContent);
-    console.log(`Generated ${OUTPUT_FILE} with ${Object.keys(tileMap).length} tiles.`);
+
+    const savings = originalSize - cleanedSize;
+    console.log(`Generated ${OUTPUT_FILE} with ${Object.keys(tileMap).length} tiles (+${aliases.length} aliases).`);
+    console.log(`SVG data: ${(cleanedSize / 1024).toFixed(1)} KB (saved ${(savings / 1024).toFixed(1)} KB from source)`);
 };
 
 main();

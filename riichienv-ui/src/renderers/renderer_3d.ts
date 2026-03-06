@@ -1,13 +1,13 @@
-import { BoardState, PlayerState, Tile } from '../types';
+import { CHAR_MAP, CHAR_SPRITE_BASE64 } from '../char_assets';
+import { createLayout3DConfig4P, type LayoutConfig3D } from '../config';
+import { CALL_TYPES } from '../constants';
+import { AVATAR_PLACEHOLDER } from '../icons';
 import { VIEWER_CSS } from '../styles';
 import { VIEWER_3D_CSS } from '../styles_3d';
-import { LayoutConfig3D, createLayout3DConfig4P } from '../config';
-import { IRenderer } from './renderer_interface';
-import { TileRenderer } from './tile_renderer';
+import type { BoardState, PlayerState, Tile } from '../types';
+import type { IRenderer } from './renderer_interface';
 import { ResultRenderer } from './result_renderer';
-import { COLORS, CALL_TYPES } from '../constants';
-import { CHAR_SPRITE_BASE64, CHAR_MAP } from '../char_assets';
-import { AVATAR_PLACEHOLDER } from '../icons';
+import { TileRenderer } from './tile_renderer';
 
 export class Renderer3D implements IRenderer {
     container: HTMLElement;
@@ -58,7 +58,9 @@ export class Renderer3D implements IRenderer {
      *   - relIndex 3 (left):     { right: true, back: true }
      */
     private setTile3D(
-        el: HTMLElement, tileId: string, depth: number,
+        el: HTMLElement,
+        tileId: string,
+        depth: number,
         faces: { front?: boolean; back?: boolean; left?: boolean; right?: boolean } = { front: true, right: true },
     ): HTMLElement {
         el.style.transformStyle = 'preserve-3d';
@@ -118,7 +120,7 @@ export class Renderer3D implements IRenderer {
         // 2. Clear old modals
         if (this._hadModal) {
             const oldModals = this.container.querySelectorAll('.re-modal-overlay');
-            oldModals.forEach(el => el.remove());
+            oldModals.forEach((el) => el.remove());
             this._hadModal = false;
         }
 
@@ -161,9 +163,9 @@ export class Renderer3D implements IRenderer {
         // Collect active waits for highlighting
         const activeWaits = new Set<string>();
         const normalize = (t: string) => t.replace('0', '5').replace('r', '');
-        state.players.forEach(pl => {
+        state.players.forEach((pl) => {
             if (pl.waits && pl.waits.length > 0) {
-                pl.waits.forEach(w => activeWaits.add(normalize(w)));
+                pl.waits.forEach((w) => activeWaits.add(normalize(w)));
             }
         });
 
@@ -324,14 +326,30 @@ export class Renderer3D implements IRenderer {
             icon.style.transform = `rotate(${rotation}) scale(${scale})`;
 
             if (pc === 3) {
-                if (relPos === 0) { icon.style.bottom = '6px'; icon.style.left = '6px'; }
-                else if (relPos === 1) { icon.style.right = '6px'; icon.style.bottom = '6px'; }
-                else if (relPos === 2) { icon.style.top = '6px'; icon.style.right = '6px'; }
+                if (relPos === 0) {
+                    icon.style.bottom = '6px';
+                    icon.style.left = '6px';
+                } else if (relPos === 1) {
+                    icon.style.right = '6px';
+                    icon.style.bottom = '6px';
+                } else if (relPos === 2) {
+                    icon.style.top = '6px';
+                    icon.style.right = '6px';
+                }
             } else {
-                if (relPos === 0) { icon.style.bottom = '6px'; icon.style.left = '6px'; }
-                else if (relPos === 1) { icon.style.right = '6px'; icon.style.bottom = '6px'; }
-                else if (relPos === 2) { icon.style.top = '6px'; icon.style.right = '6px'; }
-                else if (relPos === 3) { icon.style.left = '6px'; icon.style.top = '6px'; }
+                if (relPos === 0) {
+                    icon.style.bottom = '6px';
+                    icon.style.left = '6px';
+                } else if (relPos === 1) {
+                    icon.style.right = '6px';
+                    icon.style.bottom = '6px';
+                } else if (relPos === 2) {
+                    icon.style.top = '6px';
+                    icon.style.right = '6px';
+                } else if (relPos === 3) {
+                    icon.style.left = '6px';
+                    icon.style.top = '6px';
+                }
             }
 
             center.appendChild(icon);
@@ -355,8 +373,11 @@ export class Renderer3D implements IRenderer {
 
         const row1 = document.createElement('div');
         Object.assign(row1.style, {
-            fontSize: '26px', fontWeight: 'bold', color: 'white',
-            fontFamily: 'sans-serif', marginBottom: '2px',
+            fontSize: '26px',
+            fontWeight: 'bold',
+            color: 'white',
+            fontFamily: 'sans-serif',
+            marginBottom: '2px',
         });
         row1.textContent = roundText;
         contentDiv.appendChild(row1);
@@ -365,8 +386,11 @@ export class Renderer3D implements IRenderer {
         const row2 = document.createElement('div');
         row2.textContent = `Depo: ${state.kyotaku}, Honba: ${state.honba}`;
         Object.assign(row2.style, {
-            fontSize: '16px', fontWeight: 'bold', color: 'white',
-            fontFamily: 'sans-serif', marginBottom: '6px',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            color: 'white',
+            fontFamily: 'sans-serif',
+            marginBottom: '6px',
         });
         contentDiv.appendChild(row2);
 
@@ -377,7 +401,7 @@ export class Renderer3D implements IRenderer {
         const doraTiles = [...state.doraMarkers];
         while (doraTiles.length < 5) doraTiles.push('back');
 
-        doraTiles.forEach(t => {
+        doraTiles.forEach((t) => {
             const d = document.createElement('div');
             d.className = 'dora-tile-3d';
             this.setTile3D(d, t, this.layout.tileSizes.doraTile[0]);
@@ -413,39 +437,46 @@ export class Renderer3D implements IRenderer {
                 // 3P: 0=bottom, 1=right, 2=opposite (top)
                 if (relPos === 0) {
                     Object.assign(stick.style, {
-                        left: '50%', top: `${nearEdge - 15}px`,
+                        left: '50%',
+                        top: `${nearEdge - 15}px`,
                         transform: 'translateX(-50%)',
                     });
                 } else if (relPos === 1) {
                     Object.assign(stick.style, {
-                        left: `${nearEdge}px`, top: '50%',
+                        left: `${nearEdge}px`,
+                        top: '50%',
                         transform: 'translate(-50%, -50%) rotate(90deg)',
                     });
                 } else if (relPos === 2) {
                     Object.assign(stick.style, {
-                        left: '50%', top: `${farEdge}px`,
+                        left: '50%',
+                        top: `${farEdge}px`,
                         transform: 'translateX(-50%)',
                     });
                 }
             } else {
                 if (relPos === 0) {
                     Object.assign(stick.style, {
-                        left: '50%', top: `${nearEdge - 15}px`,
+                        left: '50%',
+                        top: `${nearEdge - 15}px`,
                         transform: 'translateX(-50%)',
                     });
                 } else if (relPos === 1) {
                     Object.assign(stick.style, {
-                        left: `${nearEdge}px`, top: '50%',
+                        left: `${nearEdge}px`,
+                        top: '50%',
                         transform: 'translate(-50%, -50%) rotate(90deg)',
                     });
                 } else if (relPos === 2) {
                     Object.assign(stick.style, {
-                        left: '50%', top: `${farEdge}px`,
+                        left: '50%',
+                        top: `${farEdge}px`,
                         transform: 'translateX(-50%)',
                     });
                 } else if (relPos === 3) {
                     Object.assign(stick.style, {
-                        left: `${farEdge}px`, top: '50%',
+                        left: `${farEdge}px`,
+                        top: '50%',
                         transform: 'translate(-50%, -50%) rotate(90deg)',
                     });
                 }
@@ -478,39 +509,46 @@ export class Renderer3D implements IRenderer {
                 // 3P: 0=bottom, 1=right, 2=opposite (top)
                 if (relPos === 0) {
                     Object.assign(el.style, {
-                        left: '50%', top: `${nearEdge - 15 - offset - 10}px`,
+                        left: '50%',
+                        top: `${nearEdge - 15 - offset - 10}px`,
                         transform: 'translateX(-50%)',
                     });
                 } else if (relPos === 1) {
                     Object.assign(el.style, {
-                        left: `${nearEdge - offset + 15}px`, top: '50%',
+                        left: `${nearEdge - offset + 15}px`,
+                        top: '50%',
                         transform: 'translate(-50%, -50%) rotate(-90deg)',
                     });
                 } else if (relPos === 2) {
                     Object.assign(el.style, {
-                        left: '50%', top: `${farEdge + offset - 10}px`,
+                        left: '50%',
+                        top: `${farEdge + offset - 10}px`,
                         transform: 'translateX(-50%) rotate(180deg)',
                     });
                 }
             } else {
                 if (relPos === 0) {
                     Object.assign(el.style, {
-                        left: '50%', top: `${nearEdge - 15 - offset - 10}px`,
+                        left: '50%',
+                        top: `${nearEdge - 15 - offset - 10}px`,
                         transform: 'translateX(-50%)',
                     });
                 } else if (relPos === 1) {
                     Object.assign(el.style, {
-                        left: `${nearEdge - offset + 15}px`, top: '50%',
+                        left: `${nearEdge - offset + 15}px`,
+                        top: '50%',
                         transform: 'translate(-50%, -50%) rotate(-90deg)',
                     });
                 } else if (relPos === 2) {
                     Object.assign(el.style, {
-                        left: '50%', top: `${farEdge + offset - 10}px`,
+                        left: '50%',
+                        top: `${farEdge + offset - 10}px`,
                         transform: 'translateX(-50%) rotate(180deg)',
                     });
                 } else if (relPos === 3) {
                     Object.assign(el.style, {
-                        left: `${farEdge + offset - 15}px`, top: '50%',
+                        left: `${farEdge + offset - 15}px`,
+                        top: '50%',
                         transform: 'translate(-50%, -50%) rotate(90deg)',
                     });
                 }
@@ -530,8 +568,11 @@ export class Renderer3D implements IRenderer {
     // River (discards) on table
     // =========================================================================
     private renderRiver3D(
-        discards: Tile[], relIndex: number, state: BoardState,
-        playerIdx: number, activeWaits: Set<string>
+        discards: Tile[],
+        relIndex: number,
+        state: BoardState,
+        _playerIdx: number,
+        activeWaits: Set<string>,
     ): HTMLElement {
         const [tw, th] = this.layout.tileSizes.riverTile;
         const gap = 1;
@@ -553,15 +594,43 @@ export class Renderer3D implements IRenderer {
         const riverScale = 1.35;
         // Left/right rivers shifted toward center by one tile height
         const positions4P: { [key: number]: { left: string; top: string; transform: string } } = {
-            0: { left: '50%', top: `${Math.round(ts * 0.70)}px`, transform: `translate(-50%, -50%) scale(${riverScale})` },
-            1: { left: `${Math.round(ts * 0.73 - th)}px`, top: '50%', transform: `translate(-50%, -50%) rotate(-90deg) scale(${riverScale})` },
-            2: { left: '50%', top: `${Math.round(ts * 0.30)}px`, transform: `translate(-50%, -50%) rotate(180deg) scale(${riverScale})` },
-            3: { left: `${Math.round(ts * 0.27 + th)}px`, top: '50%', transform: `translate(-50%, -50%) rotate(90deg) scale(${riverScale})` },
+            0: {
+                left: '50%',
+                top: `${Math.round(ts * 0.7)}px`,
+                transform: `translate(-50%, -50%) scale(${riverScale})`,
+            },
+            1: {
+                left: `${Math.round(ts * 0.73 - th)}px`,
+                top: '50%',
+                transform: `translate(-50%, -50%) rotate(-90deg) scale(${riverScale})`,
+            },
+            2: {
+                left: '50%',
+                top: `${Math.round(ts * 0.3)}px`,
+                transform: `translate(-50%, -50%) rotate(180deg) scale(${riverScale})`,
+            },
+            3: {
+                left: `${Math.round(ts * 0.27 + th)}px`,
+                top: '50%',
+                transform: `translate(-50%, -50%) rotate(90deg) scale(${riverScale})`,
+            },
         };
         const positions3P: { [key: number]: { left: string; top: string; transform: string } } = {
-            0: { left: '50%', top: `${Math.round(ts * 0.70)}px`, transform: `translate(-50%, -50%) scale(${riverScale})` },
-            1: { left: `${Math.round(ts * 0.73 - th)}px`, top: '50%', transform: `translate(-50%, -50%) rotate(-90deg) scale(${riverScale})` },
-            2: { left: '50%', top: `${Math.round(ts * 0.30)}px`, transform: `translate(-50%, -50%) rotate(180deg) scale(${riverScale})` },
+            0: {
+                left: '50%',
+                top: `${Math.round(ts * 0.7)}px`,
+                transform: `translate(-50%, -50%) scale(${riverScale})`,
+            },
+            1: {
+                left: `${Math.round(ts * 0.73 - th)}px`,
+                top: '50%',
+                transform: `translate(-50%, -50%) rotate(-90deg) scale(${riverScale})`,
+            },
+            2: {
+                left: '50%',
+                top: `${Math.round(ts * 0.3)}px`,
+                transform: `translate(-50%, -50%) rotate(180deg) scale(${riverScale})`,
+            },
         };
         const positions = state.playerCount === 3 ? positions3P : positions4P;
         const pos = positions[relIndex] || positions[0];
@@ -596,11 +665,11 @@ export class Renderer3D implements IRenderer {
             else rows[2].push(d);
         });
 
-        rows.forEach(rowTiles => {
+        rows.forEach((rowTiles) => {
             const rowDiv = document.createElement('div');
             rowDiv.className = 'river-row-3d';
 
-            rowTiles.forEach(d => {
+            rowTiles.forEach((d) => {
                 const isRiichi = d.isRiichi;
                 const cell = document.createElement('div');
                 cell.className = isRiichi ? 'table-tile-rotated' : 'table-tile';
@@ -613,10 +682,14 @@ export class Renderer3D implements IRenderer {
                 if (d.isTsumogiri) {
                     const ov = document.createElement('div');
                     Object.assign(ov.style, {
-                        position: 'absolute', top: '0', left: '0',
-                        width: '100%', height: '100%',
+                        position: 'absolute',
+                        top: '0',
+                        left: '0',
+                        width: '100%',
+                        height: '100%',
                         backgroundColor: 'rgba(0, 0, 0, 0.35)',
-                        pointerEvents: 'none', borderRadius: '3px',
+                        pointerEvents: 'none',
+                        borderRadius: '3px',
                         zIndex: '5',
                     });
                     topFace.appendChild(ov);
@@ -628,10 +701,15 @@ export class Renderer3D implements IRenderer {
                     if (activeWaits.has(normT)) {
                         const overlay = document.createElement('div');
                         Object.assign(overlay.style, {
-                            position: 'absolute', top: '0', left: '0',
-                            width: '100%', height: '100%',
+                            position: 'absolute',
+                            top: '0',
+                            left: '0',
+                            width: '100%',
+                            height: '100%',
                             backgroundColor: 'rgba(255, 0, 0, 0.4)',
-                            zIndex: '10', pointerEvents: 'none', borderRadius: '3px',
+                            zIndex: '10',
+                            pointerEvents: 'none',
+                            borderRadius: '3px',
                         });
                         topFace.appendChild(overlay);
                     }
@@ -649,20 +727,23 @@ export class Renderer3D implements IRenderer {
     // Opponent hand + melds on table edge (combined on one line)
     // =========================================================================
     private renderOpponentHandArea(
-        player: PlayerState, playerIdx: number, relIndex: number, pc: number,
-        activeWaits: Set<string>
+        player: PlayerState,
+        playerIdx: number,
+        relIndex: number,
+        pc: number,
+        activeWaits: Set<string>,
     ): HTMLElement {
-        const [tw, th] = this.layout.tileSizes.opponentTile;
+        const [tw, _th] = this.layout.tileSizes.opponentTile;
 
         const wrapper = document.createElement('div');
         wrapper.className = 'opp-hand-3d';
 
         // Compute position: place hand between river outer edge and table edge
         const ts = this.layout.tableSize;
-        const [rtw, rth] = this.layout.tileSizes.riverTile;
+        const [_rtw, rth] = this.layout.tileSizes.riverTile;
         const riverH = 3 * rth + 2; // 3 rows + 2 gaps
         const riverScale = 1.35;
-        const halfRiverExtent = riverH * riverScale / 2;
+        const halfRiverExtent = (riverH * riverScale) / 2;
 
         // Perpendicular offset (distance from table edge)
         const positions4P: { [key: number]: { left: string; top: string; transform: string } } = {
@@ -715,17 +796,22 @@ export class Renderer3D implements IRenderer {
         // Hand tiles (left side from player's perspective)
         const handDiv = document.createElement('div');
         handDiv.className = 'opp-tiles-inner';
-        player.hand.forEach(t => {
+        player.hand.forEach((t) => {
             const tile = document.createElement('div');
             tile.className = 'opp-tile';
             const topFace = this.setTile3D(tile, t, tw, faces);
             if (activeWaits.size > 0 && activeWaits.has(normalize(t))) {
                 const ov = document.createElement('div');
                 Object.assign(ov.style, {
-                    position: 'absolute', top: '0', left: '0',
-                    width: '100%', height: '100%',
+                    position: 'absolute',
+                    top: '0',
+                    left: '0',
+                    width: '100%',
+                    height: '100%',
                     backgroundColor: 'rgba(255, 0, 0, 0.4)',
-                    zIndex: '10', pointerEvents: 'none', borderRadius: '3px',
+                    zIndex: '10',
+                    pointerEvents: 'none',
+                    borderRadius: '3px',
                 });
                 topFace.appendChild(ov);
             }
@@ -738,7 +824,7 @@ export class Renderer3D implements IRenderer {
             const meldsDiv = document.createElement('div');
             meldsDiv.className = 'opp-melds-inner';
 
-            player.melds.forEach(m => {
+            player.melds.forEach((m) => {
                 const mGroup = document.createElement('div');
                 mGroup.className = 'opp-meld-group';
 
@@ -749,10 +835,15 @@ export class Renderer3D implements IRenderer {
                     if (activeWaits.size > 0 && activeWaits.has(normalize(t))) {
                         const ov = document.createElement('div');
                         Object.assign(ov.style, {
-                            position: 'absolute', top: '0', left: '0',
-                            width: '100%', height: '100%',
+                            position: 'absolute',
+                            top: '0',
+                            left: '0',
+                            width: '100%',
+                            height: '100%',
                             backgroundColor: 'rgba(255, 0, 0, 0.4)',
-                            zIndex: '10', pointerEvents: 'none', borderRadius: '3px',
+                            zIndex: '10',
+                            pointerEvents: 'none',
+                            borderRadius: '3px',
                         });
                         topFace.appendChild(ov);
                     }
@@ -760,7 +851,7 @@ export class Renderer3D implements IRenderer {
 
                 if (m.type === 'ankan') {
                     tiles.forEach((t, i) => {
-                        const tileId = (i === 0 || i === 3) ? 'back' : t;
+                        const tileId = i === 0 || i === 3 ? 'back' : t;
                         const d = document.createElement('div');
                         d.className = 'opp-tile';
                         const topFace = this.setTile3D(d, tileId, tw, faces);
@@ -787,18 +878,18 @@ export class Renderer3D implements IRenderer {
                     };
 
                     if (rel === 1) {
-                        consumed.forEach(t => addUpright(t));
+                        consumed.forEach((t) => addUpright(t));
                         addRotated(stolen);
                     } else if (rel === 3) {
                         addRotated(stolen);
-                        consumed.forEach(t => addUpright(t));
+                        consumed.forEach((t) => addUpright(t));
                     } else {
                         if (consumed.length >= 2) {
                             addUpright(consumed[0]);
                             addRotated(stolen);
                             addUpright(consumed[1]);
                         } else {
-                            consumed.forEach(t => addUpright(t));
+                            consumed.forEach((t) => addUpright(t));
                             addRotated(stolen);
                         }
                     }
@@ -815,10 +906,13 @@ export class Renderer3D implements IRenderer {
     // Own hand (flat, bottom layer)
     // =========================================================================
     private renderOwnHand(
-        player: PlayerState, vpIdx: number, state: BoardState,
-        pc: number, activeWaits: Set<string>
+        player: PlayerState,
+        vpIdx: number,
+        state: BoardState,
+        pc: number,
+        activeWaits: Set<string>,
     ): HTMLElement {
-        const [tw, th] = this.layout.tileSizes.ownTile;
+        const [_tw, _th] = this.layout.tileSizes.ownTile;
         const handArea = document.createElement('div');
         handArea.className = 'own-hand-area-3d';
 
@@ -859,10 +953,15 @@ export class Renderer3D implements IRenderer {
                 if (activeWaits.has(normT)) {
                     const overlay = document.createElement('div');
                     Object.assign(overlay.style, {
-                        position: 'absolute', top: '0', left: '0',
-                        width: '100%', height: '100%',
+                        position: 'absolute',
+                        top: '0',
+                        left: '0',
+                        width: '100%',
+                        height: '100%',
                         backgroundColor: 'rgba(255, 0, 0, 0.4)',
-                        zIndex: '10', pointerEvents: 'none', borderRadius: '4px',
+                        zIndex: '10',
+                        pointerEvents: 'none',
+                        borderRadius: '4px',
                     });
                     tDiv.appendChild(overlay);
                 }
@@ -877,7 +976,7 @@ export class Renderer3D implements IRenderer {
             const meldsDiv = document.createElement('div');
             meldsDiv.className = 'own-melds-3d';
 
-            player.melds.forEach(m => {
+            player.melds.forEach((m) => {
                 this.renderOwnMeld(meldsDiv, m, vpIdx, pc);
             });
             handArea.appendChild(meldsDiv);
@@ -889,7 +988,8 @@ export class Renderer3D implements IRenderer {
     private renderOwnMeld(
         container: HTMLElement,
         m: { type: string; tiles: string[]; from: number },
-        actor: number, pc: number
+        actor: number,
+        pc: number,
     ): void {
         const mGroup = document.createElement('div');
         mGroup.className = 'own-meld-group-3d';
@@ -909,10 +1009,17 @@ export class Renderer3D implements IRenderer {
             d.appendChild(TileRenderer.getTileElement(t));
             mGroup.appendChild(d);
         };
+        const addRotatedStacked = (bottom: string, top: string) => {
+            const d = document.createElement('div');
+            d.className = 'meld-tile-own-rotated-stacked';
+            d.appendChild(TileRenderer.getTileElement(bottom));
+            d.appendChild(TileRenderer.getTileElement(top));
+            mGroup.appendChild(d);
+        };
 
         if (m.type === 'ankan') {
             tiles.forEach((t, i) => {
-                const tileId = (i === 0 || i === 3) ? 'back' : t;
+                const tileId = i === 0 || i === 3 ? 'back' : t;
                 addUpright(tileId);
             });
         } else if (m.type === 'kakan') {
@@ -923,19 +1030,19 @@ export class Renderer3D implements IRenderer {
 
             // Kakan: stolen tile + added tile stacked rotated
             if (rel === 1) {
-                consumed.forEach(t => addUpright(t));
-                addRotated(stolen);
+                consumed.forEach((t) => addUpright(t));
+                addRotatedStacked(stolen, added);
             } else if (rel === 3) {
-                addRotated(stolen);
-                consumed.forEach(t => addUpright(t));
+                addRotatedStacked(stolen, added);
+                consumed.forEach((t) => addUpright(t));
             } else {
                 if (consumed.length >= 2) {
                     addUpright(consumed[0]);
-                    addRotated(stolen);
+                    addRotatedStacked(stolen, added);
                     addUpright(consumed[1]);
                 } else {
-                    consumed.forEach(t => addUpright(t));
-                    addRotated(stolen);
+                    consumed.forEach((t) => addUpright(t));
+                    addRotatedStacked(stolen, added);
                 }
             }
         } else {
@@ -945,11 +1052,11 @@ export class Renderer3D implements IRenderer {
 
             if (m.type === 'daiminkan') {
                 if (rel === 1) {
-                    consumed.forEach(t => addUpright(t));
+                    consumed.forEach((t) => addUpright(t));
                     addRotated(stolen);
                 } else if (rel === 3) {
                     addRotated(stolen);
-                    consumed.forEach(t => addUpright(t));
+                    consumed.forEach((t) => addUpright(t));
                 } else {
                     if (consumed.length >= 3) {
                         addUpright(consumed[0]);
@@ -957,29 +1064,29 @@ export class Renderer3D implements IRenderer {
                         addRotated(stolen);
                         addUpright(consumed[2]);
                     } else {
-                        consumed.forEach(t => addUpright(t));
+                        consumed.forEach((t) => addUpright(t));
                         addRotated(stolen);
                     }
                 }
             } else {
                 // Pon / Chi
                 if (rel === 1) {
-                    consumed.forEach(t => addUpright(t));
+                    consumed.forEach((t) => addUpright(t));
                     addRotated(stolen);
                 } else if (rel === 3) {
                     addRotated(stolen);
-                    consumed.forEach(t => addUpright(t));
+                    consumed.forEach((t) => addUpright(t));
                 } else if (rel === 2) {
                     if (consumed.length >= 2) {
                         addUpright(consumed[0]);
                         addRotated(stolen);
                         addUpright(consumed[1]);
                     } else {
-                        consumed.forEach(t => addUpright(t));
+                        consumed.forEach((t) => addUpright(t));
                         addRotated(stolen);
                     }
                 } else {
-                    consumed.forEach(t => addUpright(t));
+                    consumed.forEach((t) => addUpright(t));
                     addRotated(stolen);
                 }
             }
@@ -992,8 +1099,10 @@ export class Renderer3D implements IRenderer {
     // Score panel (UI overlay)
     // =========================================================================
     private renderPlayerPanel(
-        player: PlayerState, playerIdx: number,
-        relIndex: number, state: BoardState
+        player: PlayerState,
+        playerIdx: number,
+        relIndex: number,
+        state: BoardState,
     ): HTMLElement {
         const panel = document.createElement('div');
         panel.className = 'player-panel-3d';
@@ -1035,9 +1144,14 @@ export class Renderer3D implements IRenderer {
         if (player.kitaCount > 0) {
             const kitaBadge = document.createElement('div');
             Object.assign(kitaBadge.style, {
-                fontSize: '11px', color: '#fff', background: 'rgba(120, 50, 180, 0.85)',
-                borderRadius: '4px', padding: '1px 5px', marginTop: '2px',
-                fontWeight: 'bold', textAlign: 'center',
+                fontSize: '11px',
+                color: '#fff',
+                background: 'rgba(120, 50, 180, 0.85)',
+                borderRadius: '4px',
+                padding: '1px 5px',
+                marginTop: '2px',
+                fontWeight: 'bold',
+                textAlign: 'center',
             });
             kitaBadge.textContent = `Pei ×${player.kitaCount}`;
             panel.appendChild(kitaBadge);
@@ -1081,7 +1195,7 @@ export class Renderer3D implements IRenderer {
                 callCssClass = callDef.cssClass;
                 actorIdx = evt.actor;
             } else if (type === 'hora') {
-                label = (evt.target === evt.actor) ? 'Tsumo' : 'Ron';
+                label = evt.target === evt.actor ? 'Tsumo' : 'Ron';
                 callCssClass = 'call-hora';
                 actorIdx = evt.actor;
             }
@@ -1153,7 +1267,7 @@ export class Renderer3D implements IRenderer {
         label.style.marginRight = '4px';
         el.appendChild(label);
 
-        waits.forEach(w => {
+        waits.forEach((w) => {
             const tile = document.createElement('div');
             tile.className = 'wait-tile-3d';
             tile.appendChild(TileRenderer.getTileElement(w));

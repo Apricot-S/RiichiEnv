@@ -1,7 +1,14 @@
-import { MjaiEvent, PlayerState, BoardState, ConditionTracker } from './types';
-import { calculateWaits, calculateScore, mjaiToTileId, tileIdToMjai, MeldInput, ConditionsInput } from './wasm/bridge';
+import { createGameConfig4P, type GameConfig } from './config';
+import type { BoardState, ConditionTracker, MjaiEvent } from './types';
+import {
+    type ConditionsInput,
+    calculateScore,
+    calculateWaits,
+    type MeldInput,
+    mjaiToTileId,
+    tileIdToMjai,
+} from './wasm/bridge';
 import { isWasmReady } from './wasm/loader';
-import { GameConfig, createGameConfig4P } from './config';
 
 // Helper to sort hand (simple alphanumeric sort for now, ideally strictly by tile order)
 const sortHand = (hand: string[]) => {
@@ -14,8 +21,13 @@ const sortHand = (hand: string[]) => {
 
         // Handle Honors (z)
         const honorMap: { [key: string]: number } = {
-            'E': 1, 'S': 2, 'W': 3, 'N': 4, // Winds
-            'P': 5, 'F': 6, 'C': 7          // Dragons (Haku/White, Hatsu/Green, Chun/Red)
+            E: 1,
+            S: 2,
+            W: 3,
+            N: 4, // Winds
+            P: 5,
+            F: 6,
+            C: 7, // Dragons (Haku/White, Hatsu/Green, Chun/Red)
         };
 
         if (honorMap[t]) {
@@ -27,10 +39,10 @@ const sortHand = (hand: string[]) => {
             if (t.endsWith('r')) {
                 isRed = true;
                 suit = t.charAt(t.length - 2); // 5mr -> m
-                num = parseInt(t.charAt(0));
+                num = parseInt(t.charAt(0), 10);
             } else {
                 suit = t.charAt(t.length - 1); // 1m -> m
-                num = parseInt(t.charAt(0));
+                num = parseInt(t.charAt(0), 10);
             }
 
             // Handle "0m" case if present in data (treat as Red 5)
@@ -40,7 +52,7 @@ const sortHand = (hand: string[]) => {
             }
         }
 
-        const suitOrder: Record<string, number> = { 'm': 0, 'p': 100, 's': 200, 'z': 300 };
+        const suitOrder: Record<string, number> = { m: 0, p: 100, s: 200, z: 300 };
         const redOffset = isRed ? 0.1 : 0;
 
         return (suitOrder[suit] ?? 900) + num + redOffset;
@@ -50,11 +62,9 @@ const sortHand = (hand: string[]) => {
 
 /** Convert PlayerState melds to WASM MeldInput format (136-encoding). */
 function meldsToWasmInput(melds: { type: string; tiles: string[]; from: number }[]): MeldInput[] {
-    return melds.map(m => ({
+    return melds.map((m) => ({
         meld_type: m.type,
-        tiles: m.tiles
-            .map(t => mjaiToTileId(t))
-            .filter((id): id is number => id !== null)
+        tiles: m.tiles.map((t) => mjaiToTileId(t)).filter((id): id is number => id !== null),
     }));
 }
 
@@ -74,7 +84,7 @@ function initialConditions(playerCount: number = 4): ConditionTracker {
 export class GameState {
     events: MjaiEvent[];
     cursor: number;
-    kyokus: { index: number, round: number, honba: number, scores: number[] }[];
+    kyokus: { index: number; round: number; honba: number; scores: number[] }[];
     readonly config: GameConfig;
 
     // Cache state at each step to allow fast jumping
@@ -90,14 +100,14 @@ export class GameState {
     constructor(events: MjaiEvent[], config?: GameConfig) {
         this.config = config ?? createGameConfig4P();
         // Filter out null events and start/end game events
-        this.events = events.filter(e => e && e.type !== 'start_game' && e.type !== 'end_game');
+        this.events = events.filter((e) => e && e.type !== 'start_game' && e.type !== 'end_game');
         this.cursor = 0;
         this.current = this.initialState();
 
         this.kyokus = this.getKyokuCheckpoints();
 
         // Jump to first meaningful state (start_kyoku + 1)
-        const firstKyoku = this.events.findIndex(e => e.type === 'start_kyoku');
+        const firstKyoku = this.events.findIndex((e) => e.type === 'start_kyoku');
         if (firstKyoku !== -1) {
             this.jumpTo(firstKyoku + 1);
         }
@@ -115,15 +125,15 @@ export class GameState {
     }
 
     // Returns list of indices where new rounds start
-    getKyokuCheckpoints(): { index: number, round: number, honba: number, scores: number[] }[] {
-        const checkpoints: { index: number, round: number, honba: number, scores: number[] }[] = [];
+    getKyokuCheckpoints(): { index: number; round: number; honba: number; scores: number[] }[] {
+        const checkpoints: { index: number; round: number; honba: number; scores: number[] }[] = [];
         this.events.forEach((e, i) => {
             if (e.type === 'start_kyoku') {
                 checkpoints.push({
                     index: i,
                     round: this.getRoundIndex(e),
                     honba: e.honba || 0,
-                    scores: e.scores || this.config.defaultScores
+                    scores: e.scores || this.config.defaultScores,
                 });
             }
         });
@@ -134,16 +144,18 @@ export class GameState {
         const pc = this.config.playerCount;
         return {
             playerCount: pc,
-            players: Array(pc).fill(0).map((_, i) => ({
-                hand: [],
-                discards: [],
-                melds: [],
-                score: this.config.defaultScores[i],
-                riichi: false,
-                pendingRiichi: false,
-                wind: 0,
-                kitaCount: 0,
-            })),
+            players: Array(pc)
+                .fill(0)
+                .map((_, i) => ({
+                    hand: [],
+                    discards: [],
+                    melds: [],
+                    score: this.config.defaultScores[i],
+                    riichi: false,
+                    pendingRiichi: false,
+                    wind: 0,
+                    kitaCount: 0,
+                })),
             doraMarkers: [],
             round: 0,
             honba: 0,
@@ -223,17 +235,13 @@ export class GameState {
         for (let i = 0; i < pc; i++) {
             const p = this.current.players[i];
             p.waits = undefined;
-            const tileIds = p.hand
-                .map(t => mjaiToTileId(t))
-                .filter((id): id is number => id !== null);
+            const tileIds = p.hand.map((t) => mjaiToTileId(t)).filter((id): id is number => id !== null);
             const meldInputs = meldsToWasmInput(p.melds);
             const expectedLen = 13 - meldInputs.length * 3;
             if (tileIds.length === expectedLen) {
                 const waits34 = calculateWaits(tileIds, meldInputs);
                 if (Array.isArray(waits34) && waits34.length > 0) {
-                    p.waits = waits34
-                        .map(t34 => tileIdToMjai(t34 * 4))
-                        .filter((s): s is string => s !== null);
+                    p.waits = waits34.map((t34) => tileIdToMjai(t34 * 4)).filter((s): s is string => s !== null);
                 }
             }
         }
@@ -338,7 +346,7 @@ export class GameState {
                 index: this.events.length - 1,
                 round: this.getRoundIndex(event),
                 honba: event.honba || 0,
-                scores: event.scores || this.config.defaultScores
+                scores: event.scores || this.config.defaultScores,
             });
         }
 
@@ -357,10 +365,10 @@ export class GameState {
     private cloneState(state: BoardState): BoardState {
         return {
             playerCount: state.playerCount,
-            players: state.players.map(p => ({
+            players: state.players.map((p) => ({
                 hand: [...p.hand],
-                discards: p.discards.map(d => ({ ...d })),
-                melds: p.melds.map(m => ({ type: m.type, tiles: [...m.tiles], from: m.from })),
+                discards: p.discards.map((d) => ({ ...d })),
+                melds: p.melds.map((m) => ({ type: m.type, tiles: [...m.tiles], from: m.from })),
                 score: p.score,
                 riichi: p.riichi,
                 pendingRiichi: p.pendingRiichi,
@@ -472,27 +480,33 @@ export class GameState {
                         discardIdx: discardIdx,
                         insertIdx: insertIdx,
                         tsumogiri: !!e.tsumogiri,
-                        drawnTile: p.lastDrawnTile
+                        drawnTile: p.lastDrawnTile,
                     };
 
                     // Riichi Logic
                     let isRiichi = false;
 
-
                     // Robust check: If pendingRiichi is true OR current event has reach flag OR immediately following a Reach event
                     const lastEv = this.current.lastEvent;
-                    const prevWasReach = lastEv && lastEv.type === 'reach' && lastEv.actor === e.actor && (!lastEv.step || lastEv.step === '1' || lastEv.step === 1);
+                    const prevWasReach =
+                        lastEv &&
+                        lastEv.type === 'reach' &&
+                        lastEv.actor === e.actor &&
+                        (!lastEv.step || lastEv.step === '1' || lastEv.step === 1);
 
                     // Lookahead: If next event is Reach (Step 1), this is the declaration tile
                     // (Handle cases where Dahai comes BEFORE Reach)
                     const nextEv = this.events[this.cursor + 1];
-                    const nextIsReach = nextEv && nextEv.type === 'reach' && nextEv.actor === e.actor && (!nextEv.step || nextEv.step === '1' || nextEv.step === 1);
+                    const nextIsReach =
+                        nextEv &&
+                        nextEv.type === 'reach' &&
+                        nextEv.actor === e.actor &&
+                        (!nextEv.step || nextEv.step === '1' || nextEv.step === 1);
 
                     if (p.pendingRiichi || e.reach || prevWasReach || nextIsReach) {
                         isRiichi = true;
                         p.pendingRiichi = false;
                     }
-
 
                     p.discards.push({ tile: e.pai, isRiichi, isTsumogiri: !!e.tsumogiri });
 
@@ -501,7 +515,7 @@ export class GameState {
                         cond.firstTurnCompleted[e.actor] = true;
                     }
                     cond.turnCount++;
-                    cond.ippatsu[e.actor] = false;  // Turn passed without winning
+                    cond.ippatsu[e.actor] = false; // Turn passed without winning
                     cond.afterKan = false;
 
                     // WASM-first waits computation with melds
@@ -510,7 +524,7 @@ export class GameState {
                     if (!this._isReplaying) {
                         if (isWasmReady()) {
                             const tileIds = p.hand
-                                .map(t => mjaiToTileId(t))
+                                .map((t) => mjaiToTileId(t))
                                 .filter((id): id is number => id !== null);
                             const meldInputs = meldsToWasmInput(p.melds);
                             const expectedLen = 13 - meldInputs.length * 3;
@@ -518,7 +532,7 @@ export class GameState {
                                 const waits34 = calculateWaits(tileIds, meldInputs);
                                 if (Array.isArray(waits34) && waits34.length > 0) {
                                     p.waits = waits34
-                                        .map(t34 => tileIdToMjai(t34 * 4))
+                                        .map((t34) => tileIdToMjai(t34 * 4))
                                         .filter((s): s is string => s !== null);
                                 }
                             }
@@ -538,7 +552,7 @@ export class GameState {
             case 'daiminkan':
                 if (e.actor !== undefined && e.target !== undefined && e.pai && e.consumed) {
                     const p = this.current.players[e.actor];
-                    e.consumed.forEach(t => {
+                    e.consumed.forEach((t) => {
                         const idx = p.hand.indexOf(t);
                         if (idx >= 0) p.hand.splice(idx, 1);
                     });
@@ -547,7 +561,7 @@ export class GameState {
                     p.melds.push({
                         type: e.type,
                         tiles: [...e.consumed, e.pai],
-                        from: e.target
+                        from: e.target,
                     });
 
                     p.waits = undefined;
@@ -559,7 +573,7 @@ export class GameState {
                     if (targetP.discards.length > 0) {
                         const stolen = targetP.discards.pop();
                         // If stolen tile was Riichi declared, player must re-declare on next discard
-                        if (stolen && stolen.isRiichi) {
+                        if (stolen?.isRiichi) {
                             targetP.pendingRiichi = true;
                         }
                     }
@@ -577,14 +591,14 @@ export class GameState {
             case 'ankan': // Closed Kan
                 if (e.actor !== undefined && e.consumed) {
                     const p = this.current.players[e.actor];
-                    e.consumed.forEach(t => {
+                    e.consumed.forEach((t) => {
                         const idx = p.hand.indexOf(t);
                         if (idx >= 0) p.hand.splice(idx, 1);
                     });
                     p.melds.push({
                         type: e.type,
                         tiles: e.consumed, // all 4 tiles
-                        from: e.actor
+                        from: e.actor,
                     });
                     p.waits = undefined;
 
@@ -611,17 +625,17 @@ export class GameState {
                     const targetNorm = normalize(addedTile);
 
                     // Find existing Pon
-                    const pon = p.melds.find(m => m.type === 'pon' && normalize(m.tiles[0]) === targetNorm);
+                    const pon = p.melds.find((m) => m.type === 'pon' && normalize(m.tiles[0]) === targetNorm);
 
                     if (pon) {
                         pon.type = 'kakan';
                         pon.tiles.push(addedTile);
                     } else {
-                        console.warn("[GameState] Kakan: Could not find original Pon for", addedTile);
+                        console.warn('[GameState] Kakan: Could not find original Pon for', addedTile);
                         p.melds.push({
                             type: 'kakan',
                             tiles: [addedTile, addedTile, addedTile, addedTile], // Placeholder
-                            from: e.actor
+                            from: e.actor,
                         });
                     }
 
@@ -698,7 +712,7 @@ export class GameState {
                 // Capture conditions at hora time for WASM scoring at end_kyoku
                 if (e.type === 'hora' && e.actor !== undefined) {
                     const cond = this.current.conditions;
-                    const isTsumo = (e.actor === e.target);
+                    const isTsumo = e.actor === e.target;
                     e._horaConditions = {
                         ippatsu: cond.ippatsu[e.actor],
                         rinshan: isTsumo && cond.afterKan,
@@ -709,11 +723,11 @@ export class GameState {
                     };
                 }
                 if (e.scores) {
-                    this.current.players.forEach((p, i) => p.score = e.scores[i]);
+                    this.current.players.forEach((p, i) => (p.score = e.scores[i]));
                 }
                 break;
 
-            case 'end_kyoku':
+            case 'end_kyoku': {
                 // Check for preceding ryukyoku event
                 let ryukyokuEvent: MjaiEvent | null = null;
                 for (let i = this.cursor - 1; i >= 0; i--) {
@@ -730,7 +744,7 @@ export class GameState {
                     e.meta.ryukyoku = {
                         reason: ryukyokuEvent.reason,
                         deltas: ryukyokuEvent.deltas,
-                        scores: ryukyokuEvent.scores
+                        scores: ryukyokuEvent.scores,
                     };
                 }
 
@@ -754,7 +768,7 @@ export class GameState {
                 }
 
                 // Enrich results with data from preceding hora events
-                if (e.meta && e.meta.results) {
+                if (e.meta?.results) {
                     e.meta.results.forEach((res: any) => {
                         // 0. Check if pai is already in the result object (non-standard but possible)
                         if (res.pai) {
@@ -769,7 +783,7 @@ export class GameState {
                             }
 
                             if (prev.type === 'hora') {
-                                if (prev.actor == res.actor) {
+                                if (prev.actor === res.actor) {
                                     // Capture hora-time conditions for WASM scoring
                                     res._horaConditions = prev._horaConditions;
 
@@ -795,14 +809,14 @@ export class GameState {
 
                                             if (target !== undefined && target !== actor) {
                                                 // Ron: Look for dahai from target
-                                                if (e2.type === 'dahai' && e2.actor == target) {
+                                                if (e2.type === 'dahai' && e2.actor === target) {
                                                     res.winningTile = e2.pai;
                                                     found = true;
                                                     break;
                                                 }
                                             } else {
                                                 // Tsumo: Look for tsumo from actor
-                                                if (e2.type === 'tsumo' && e2.actor == actor) {
+                                                if (e2.type === 'tsumo' && e2.actor === actor) {
                                                     res.winningTile = e2.pai;
                                                     found = true;
                                                     break;
@@ -827,6 +841,7 @@ export class GameState {
                     }
                 }
                 break;
+            }
         }
         this.current.lastEvent = e;
     }
@@ -836,7 +851,7 @@ export class GameState {
         results.forEach((res: any) => {
             const actor = res.actor;
             const target = res.target;
-            const isTsumo = (actor === target);
+            const isTsumo = actor === target;
             const winningTile = res.winningTile;
 
             if (winningTile === undefined) return; // Can't compute without winning tile
@@ -846,22 +861,20 @@ export class GameState {
             if (winTileId === null) return;
 
             // Build hand tiles (136-encoding), excluding the winning tile for tsumo
-            let handForScoring = [...player.hand];
+            const handForScoring = [...player.hand];
             if (isTsumo) {
                 // For tsumo, hand has 14 tiles; remove the win tile to get 13
                 const winIdx = handForScoring.indexOf(winningTile);
                 if (winIdx >= 0) handForScoring.splice(winIdx, 1);
             }
 
-            const tileIds = handForScoring
-                .map(t => mjaiToTileId(t))
-                .filter((id): id is number => id !== null);
+            const tileIds = handForScoring.map((t) => mjaiToTileId(t)).filter((id): id is number => id !== null);
 
             const meldInputs = meldsToWasmInput(player.melds);
 
             // Dora indicators
             const doraIds = this.current.doraMarkers
-                .map(t => mjaiToTileId(t))
+                .map((t) => mjaiToTileId(t))
                 .filter((id): id is number => id !== null);
 
             // Ura dora indicators
@@ -879,8 +892,8 @@ export class GameState {
                 riichi: player.riichi,
                 double_riichi: horaC.doubleRiichi || false,
                 ippatsu: horaC.ippatsu || false,
-                haitei: (horaC.wallRemaining === 0) && isTsumo,
-                houtei: (horaC.wallRemaining === 0) && !isTsumo,
+                haitei: horaC.wallRemaining === 0 && isTsumo,
+                houtei: horaC.wallRemaining === 0 && !isTsumo,
                 rinshan: horaC.rinshan || false,
                 chankan: horaC.chankan || false,
                 tsumo_first_turn: horaC.tsumoFirstTurn || false,
@@ -891,16 +904,9 @@ export class GameState {
                 is_sanma: pc === 3,
             };
 
-            const wasmResult = calculateScore(
-                tileIds,
-                meldInputs,
-                winTileId,
-                doraIds,
-                uraIds,
-                conditions
-            );
+            const wasmResult = calculateScore(tileIds, meldInputs, winTileId, doraIds, uraIds, conditions);
 
-            if (wasmResult && wasmResult.is_win) {
+            if (wasmResult?.is_win) {
                 // Convert WASM result to renderer format
                 let points: number;
                 const koCount = this.config.playerCount - 2;

@@ -1,8 +1,12 @@
-import { Tile } from '../types';
+import type { Tile } from '../types';
 import { TileRenderer } from './tile_renderer';
 
 export class RiverRenderer {
-    static renderRiver(discards: Tile[], highlightTiles?: Set<string>, dahaiAnim?: { discardIdx: number, insertIdx: number, tsumogiri: boolean }): HTMLElement {
+    static renderRiver(
+        discards: Tile[],
+        highlightTiles?: Set<string>,
+        dahaiAnim?: { discardIdx: number; insertIdx: number; tsumogiri: boolean },
+    ): HTMLElement {
         // River
         const riverDiv = document.createElement('div');
         riverDiv.className = 'river-container';
@@ -22,7 +26,7 @@ export class RiverRenderer {
             rowDiv.className = 'river-row';
             rowDiv.style.height = '46px';
 
-            rowTiles.forEach(d => {
+            rowTiles.forEach((d) => {
                 const cell = document.createElement('div');
                 cell.style.width = '34px';
                 cell.style.height = '46px';
@@ -64,7 +68,7 @@ export class RiverRenderer {
                 // Yes: p.discards.push({ tile: e.pai ... }).
                 // So indexOf is safe.
 
-                const isLast = (idx === discards.length - 1);
+                const isLast = idx === discards.length - 1;
                 if (isLast && dahaiAnim) {
                     tileWrapper.classList.add('dahai-anim');
 
@@ -104,12 +108,14 @@ export class RiverRenderer {
                         const overlay = document.createElement('div');
                         Object.assign(overlay.style, {
                             position: 'absolute',
-                            top: '0', left: '0',
-                            width: '100%', height: '100%',
+                            top: '0',
+                            left: '0',
+                            width: '100%',
+                            height: '100%',
                             backgroundColor: 'rgba(255, 0, 0, 0.4)',
                             zIndex: '10', // Just above tile
                             pointerEvents: 'none',
-                            borderRadius: '4px'
+                            borderRadius: '4px',
                         });
                         // Append to wrapper so it moves with tile
                         tileWrapper.appendChild(overlay);

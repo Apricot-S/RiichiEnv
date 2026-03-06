@@ -89,7 +89,9 @@ export function createLayoutConfig3P(): LayoutConfig {
  * Checks start_kyoku.tehais.length or start_game.names.length.
  * Falls back to 4 if detection fails.
  */
-export function detectPlayerCount(events: { type: string; tehais?: any[]; names?: any[];[key: string]: any }[]): number {
+export function detectPlayerCount(
+    events: { type: string; tehais?: any[]; names?: any[]; [key: string]: any }[],
+): number {
     for (const e of events) {
         if (e.type === 'start_kyoku' && Array.isArray(e.tehais)) {
             return e.tehais.length;
@@ -139,9 +141,9 @@ export function createLayout3DConfig4P(): LayoutConfig3D {
         viewAreaHeight: 720,
         contentWidth: 1280,
         contentHeight: 720,
-        tableSize: 1100, /** **/
-        perspective: 1800, /** **/
-        tiltAngle: 48, /** **/
+        tableSize: 1100 /** **/,
+        perspective: 1800 /** **/,
+        tiltAngle: 48 /** **/,
         handLayerHeight: 120,
         tileSizes: {
             riverTile: [26, 36],

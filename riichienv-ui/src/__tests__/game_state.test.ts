@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock WASM modules before importing GameState
 vi.mock('../wasm/bridge', () => ({
@@ -12,25 +12,27 @@ vi.mock('../wasm/loader', () => ({
     isWasmReady: vi.fn(() => false),
 }));
 
+import { createGameConfig3P } from '../config';
 import { GameState } from '../game_state';
-import { createGameConfig4P, createGameConfig3P } from '../config';
-import { MjaiEvent } from '../types';
+import type { MjaiEvent } from '../types';
 
 // Helper: create a minimal start_kyoku event
-function makeStartKyoku(opts?: Partial<{
-    bakaze: string;
-    kyoku: number;
-    honba: number;
-    kyotaku: number;
-    oya: number;
-    scores: number[];
-    dora_marker: string;
-    tehais: string[][];
-}>): MjaiEvent {
+function makeStartKyoku(
+    opts?: Partial<{
+        bakaze: string;
+        kyoku: number;
+        honba: number;
+        kyotaku: number;
+        oya: number;
+        scores: number[];
+        dora_marker: string;
+        tehais: string[][];
+    }>,
+): MjaiEvent {
     const playerCount = opts?.tehais?.length ?? 4;
-    const defaultTehais = Array(playerCount).fill(null).map(() =>
-        ['1m', '2m', '3m', '4m', '5m', '6m', '7m', '8m', '9m', '1p', '2p', '3p', '4p']
-    );
+    const defaultTehais = Array(playerCount)
+        .fill(null)
+        .map(() => ['1m', '2m', '3m', '4m', '5m', '6m', '7m', '8m', '9m', '1p', '2p', '3p', '4p']);
     return {
         type: 'start_kyoku',
         bakaze: opts?.bakaze ?? 'E',
@@ -78,7 +80,7 @@ describe('GameState', () => {
         it('should have default scores in initial state', () => {
             const gs = new GameState([]);
             const state = gs.getState();
-            state.players.forEach(p => {
+            state.players.forEach((p) => {
                 expect(p.score).toBe(25000);
             });
         });
@@ -90,11 +92,7 @@ describe('GameState', () => {
         });
 
         it('should filter out start_game and end_game events', () => {
-            const events: MjaiEvent[] = [
-                { type: 'start_game' },
-                makeStartKyoku(),
-                { type: 'end_game' },
-            ];
+            const events: MjaiEvent[] = [{ type: 'start_game' }, makeStartKyoku(), { type: 'end_game' }];
             const gs = new GameState(events);
             expect(gs.events).toHaveLength(1);
             expect(gs.events[0].type).toBe('start_kyoku');
@@ -114,7 +112,7 @@ describe('GameState', () => {
             const config = createGameConfig3P();
             const gs = new GameState([], config);
             const state = gs.getState();
-            state.players.forEach(p => {
+            state.players.forEach((p) => {
                 expect(p.score).toBe(35000);
             });
         });
@@ -132,7 +130,7 @@ describe('GameState', () => {
             const events: MjaiEvent[] = [makeStartKyoku()];
             const gs = new GameState(events);
             const state = gs.getState();
-            state.players.forEach(p => {
+            state.players.forEach((p) => {
                 expect(p.hand).toHaveLength(13);
             });
         });
@@ -168,7 +166,7 @@ describe('GameState', () => {
             const state = gs.getState();
             expect(state.conditions.callsMade).toBe(false);
             expect(state.conditions.afterKan).toBe(false);
-            expect(state.conditions.ippatsu.every(v => v === false)).toBe(true);
+            expect(state.conditions.ippatsu.every((v) => v === false)).toBe(true);
         });
 
         it('should reset wall remaining', () => {
@@ -181,10 +179,7 @@ describe('GameState', () => {
 
     describe('tsumo processing', () => {
         it('should add tile to hand', () => {
-            const events: MjaiEvent[] = [
-                makeStartKyoku(),
-                { type: 'tsumo', actor: 0, pai: '1s' },
-            ];
+            const events: MjaiEvent[] = [makeStartKyoku(), { type: 'tsumo', actor: 0, pai: '1s' }];
             const gs = new GameState(events);
             gs.jumpTo(events.length);
             const state = gs.getState();
@@ -193,10 +188,7 @@ describe('GameState', () => {
         });
 
         it('should decrement wall remaining', () => {
-            const events: MjaiEvent[] = [
-                makeStartKyoku(),
-                { type: 'tsumo', actor: 0, pai: '1s' },
-            ];
+            const events: MjaiEvent[] = [makeStartKyoku(), { type: 'tsumo', actor: 0, pai: '1s' }];
             const gs = new GameState(events);
             gs.jumpTo(events.length);
             const state = gs.getState();
@@ -204,10 +196,7 @@ describe('GameState', () => {
         });
 
         it('should set current actor', () => {
-            const events: MjaiEvent[] = [
-                makeStartKyoku(),
-                { type: 'tsumo', actor: 2, pai: '1s' },
-            ];
+            const events: MjaiEvent[] = [makeStartKyoku(), { type: 'tsumo', actor: 2, pai: '1s' }];
             const gs = new GameState(events);
             gs.jumpTo(events.length);
             const state = gs.getState();
@@ -279,7 +268,7 @@ describe('GameState', () => {
             const gs = new GameState(events);
             gs.jumpTo(events.length);
             const state = gs.getState();
-            expect(state.conditions.ippatsu.every(v => v === false)).toBe(true);
+            expect(state.conditions.ippatsu.every((v) => v === false)).toBe(true);
         });
 
         it('should add meld to player', () => {
@@ -482,9 +471,9 @@ describe('GameState', () => {
 
     describe('kita processing', () => {
         it('should remove N tile from hand', () => {
-            const tehais = Array(3).fill(null).map(() =>
-                ['1m', '9m', '1p', '9p', '1s', '9s', 'E', 'S', 'W', 'P', 'F', 'C', 'N']
-            );
+            const tehais = Array(3)
+                .fill(null)
+                .map(() => ['1m', '9m', '1p', '9p', '1s', '9s', 'E', 'S', 'W', 'P', 'F', 'C', 'N']);
             const config = createGameConfig3P();
             const events: MjaiEvent[] = [
                 makeStartKyoku({ tehais, scores: [35000, 35000, 35000] }),
@@ -498,13 +487,13 @@ describe('GameState', () => {
             // After start_kyoku: 13 tiles. After tsumo: 14 tiles. After kita: 13 tiles (one N removed).
             expect(state.players[0].hand).toHaveLength(13);
             // One N should remain (from initial hand)
-            expect(state.players[0].hand.filter(t => t === 'N')).toHaveLength(1);
+            expect(state.players[0].hand.filter((t) => t === 'N')).toHaveLength(1);
         });
 
         it('should increment kitaCount', () => {
-            const tehais = Array(3).fill(null).map(() =>
-                ['1m', '9m', '1p', '9p', '1s', '9s', 'E', 'S', 'W', 'P', 'F', 'C', 'N']
-            );
+            const tehais = Array(3)
+                .fill(null)
+                .map(() => ['1m', '9m', '1p', '9p', '1s', '9s', 'E', 'S', 'W', 'P', 'F', 'C', 'N']);
             const config = createGameConfig3P();
             const events: MjaiEvent[] = [
                 makeStartKyoku({ tehais, scores: [35000, 35000, 35000] }),
@@ -518,9 +507,9 @@ describe('GameState', () => {
         });
 
         it('should set afterKan for rinshan draw', () => {
-            const tehais = Array(3).fill(null).map(() =>
-                ['1m', '9m', '1p', '9p', '1s', '9s', 'E', 'S', 'W', 'P', 'F', 'C', 'N']
-            );
+            const tehais = Array(3)
+                .fill(null)
+                .map(() => ['1m', '9m', '1p', '9p', '1s', '9s', 'E', 'S', 'W', 'P', 'F', 'C', 'N']);
             const config = createGameConfig3P();
             const events: MjaiEvent[] = [
                 makeStartKyoku({ tehais, scores: [35000, 35000, 35000] }),
@@ -534,9 +523,9 @@ describe('GameState', () => {
         });
 
         it('should clear ippatsu on kita', () => {
-            const tehais = Array(3).fill(null).map(() =>
-                ['1m', '9m', '1p', '9p', '1s', '9s', 'E', 'S', 'W', 'P', 'F', 'C', 'N']
-            );
+            const tehais = Array(3)
+                .fill(null)
+                .map(() => ['1m', '9m', '1p', '9p', '1s', '9s', 'E', 'S', 'W', 'P', 'F', 'C', 'N']);
             const config = createGameConfig3P();
             const events: MjaiEvent[] = [
                 makeStartKyoku({ tehais, scores: [35000, 35000, 35000] }),
@@ -549,13 +538,13 @@ describe('GameState', () => {
             const gs = new GameState(events, config);
             gs.jumpTo(events.length);
             const state = gs.getState();
-            expect(state.conditions.ippatsu.every(v => v === false)).toBe(true);
+            expect(state.conditions.ippatsu.every((v) => v === false)).toBe(true);
         });
 
         it('should reset kitaCount on new kyoku', () => {
-            const tehais = Array(3).fill(null).map(() =>
-                ['1m', '9m', '1p', '9p', '1s', '9s', 'E', 'S', 'W', 'P', 'F', 'C', 'N']
-            );
+            const tehais = Array(3)
+                .fill(null)
+                .map(() => ['1m', '9m', '1p', '9p', '1s', '9s', 'E', 'S', 'W', 'P', 'F', 'C', 'N']);
             const config = createGameConfig3P();
             const events: MjaiEvent[] = [
                 makeStartKyoku({ tehais, scores: [35000, 35000, 35000] }),
@@ -583,12 +572,10 @@ describe('GameState', () => {
 
         it('should have condition arrays matching player count for 3P', () => {
             const config = createGameConfig3P();
-            const tehais3P = Array(3).fill(null).map(() =>
-                ['1m', '2m', '3m', '4m', '5m', '6m', '7m', '8m', '9m', '1p', '2p', '3p', '4p']
-            );
-            const events: MjaiEvent[] = [
-                makeStartKyoku({ tehais: tehais3P, scores: [35000, 35000, 35000] }),
-            ];
+            const tehais3P = Array(3)
+                .fill(null)
+                .map(() => ['1m', '2m', '3m', '4m', '5m', '6m', '7m', '8m', '9m', '1p', '2p', '3p', '4p']);
+            const events: MjaiEvent[] = [makeStartKyoku({ tehais: tehais3P, scores: [35000, 35000, 35000] })];
             const gs = new GameState(events, config);
             const state = gs.getState();
             expect(state.conditions.ippatsu).toHaveLength(3);

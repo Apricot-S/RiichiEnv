@@ -1,4 +1,4 @@
-import { LiveViewer } from './live_viewer';
+import type { LiveViewer } from './live_viewer';
 
 /**
  * Controller for live game mode.
@@ -8,7 +8,6 @@ import { LiveViewer } from './live_viewer';
  */
 export class LiveController {
     viewer: LiveViewer;
-    private logBtn: HTMLElement | null = null;
 
     constructor(viewer: LiveViewer) {
         this.viewer = viewer;
@@ -35,7 +34,6 @@ export class LiveController {
     }
 
     toggleLog(btn: HTMLElement, panel: HTMLElement) {
-        this.logBtn = btn;
         const display = panel.style.display;
         if (display === 'none' || !display) {
             panel.style.display = 'block';

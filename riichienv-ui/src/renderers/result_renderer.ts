@@ -1,9 +1,8 @@
-
 import { YAKU_MAP } from '../constants';
 import { ICON_ARROW_LEFT, ICON_ARROW_RIGHT } from '../icons';
-import { BoardState, PlayerState } from '../types';
-import { TileRenderer } from './tile_renderer';
+import type { BoardState } from '../types';
 import { HandRenderer } from './hand_renderer';
+import { TileRenderer } from './tile_renderer';
 
 export class ResultRenderer {
     // We keep track of the current page index internally, or we can just render the modal and let it handle its own state.
@@ -35,12 +34,12 @@ export class ResultRenderer {
             const score = res.score;
             const actor = res.actor;
             const target = res.target;
-            const isTsumo = (actor === target);
+            const isTsumo = actor === target;
 
             // Header (Result Title)
             const header = document.createElement('div');
             header.className = 're-modal-title';
-            const titleText = `P${actor} ${isTsumo ? 'Tsumo' : 'Ron from P' + target}`;
+            const titleText = `P${actor} ${isTsumo ? 'Tsumo' : `Ron from P${target}`}`;
             header.textContent = totalPages > 1 ? `${titleText} (${idx + 1}/${totalPages})` : titleText;
             content.appendChild(header);
 
@@ -62,14 +61,14 @@ export class ResultRenderer {
                     marginBottom: '15px',
                     padding: '12px',
                     background: 'rgba(0,0,0,0.3)',
-                    borderRadius: '8px'
+                    borderRadius: '8px',
                 });
 
                 // Closed Hand
                 const closedDiv = document.createElement('div');
                 Object.assign(closedDiv.style, {
                     display: 'flex',
-                    alignItems: 'flex-end'
+                    alignItems: 'flex-end',
                 });
 
                 // If winningTile is known (from enriched meta), we exclude it from the main hand logic if it was a Tsumo?
@@ -77,12 +76,12 @@ export class ResultRenderer {
                 // Tsumo: Tile is in `player.hand`.
                 // Ron: Tile is NOT in `player.hand`.
                 // We want to display `[Hand] [WinningTile]`.
-                // If Tsumo, we should remove the winning tile from the `hand` array we display in the first block, 
+                // If Tsumo, we should remove the winning tile from the `hand` array we display in the first block,
                 // and show it in the second block.
                 // If Ron, `hand` is already correct (waiting state), and we show `winningTile` in second block.
 
                 // Clone hand to avoid mutating state
-                let displayHand = [...player.hand];
+                const displayHand = [...player.hand];
                 const winningTile = res.winningTile;
 
                 /* 
@@ -93,7 +92,7 @@ export class ResultRenderer {
                    Problem: exact instance matching. `winningTile` string (e.g. '1m').
                    If multiple '1m', removing one is fine.
                 */
-                let tileToShow = winningTile;
+                const tileToShow = winningTile;
 
                 if (isTsumo && winningTile) {
                     // Remove one instance of winningTile from displayHand
@@ -104,7 +103,7 @@ export class ResultRenderer {
                 }
 
                 // 1a. Hand Body
-                displayHand.forEach(t => {
+                displayHand.forEach((t) => {
                     const tDiv = document.createElement('div');
                     tDiv.style.width = '40px';
                     tDiv.style.height = '56px';
@@ -139,14 +138,14 @@ export class ResultRenderer {
                         display: 'flex',
                         alignItems: 'flex-end',
                         gap: '5px',
-                        marginLeft: '30px' // Separated from winning tile
+                        marginLeft: '30px', // Separated from winning tile
                     });
 
                     // User said: "winning tile is to the right of hand. If melds, winning tile further right is melds."
                     // Layout: [Closed] -- [Win] -- [Melds]
                     // My code order is correct.
 
-                    player.melds.forEach(m => {
+                    player.melds.forEach((m) => {
                         HandRenderer.renderMeld(meldsDiv, m, actor);
                     });
                     handContainer.appendChild(meldsDiv);
@@ -164,7 +163,7 @@ export class ResultRenderer {
                 marginBottom: '15px',
                 padding: '5px 10px',
                 background: 'rgba(0,0,0,0.2)',
-                borderRadius: '6px'
+                borderRadius: '6px',
             });
 
             // Dora
@@ -173,7 +172,7 @@ export class ResultRenderer {
                 Object.assign(row.style, {
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '10px'
+                    gap: '10px',
                 });
                 const lbl = document.createElement('span');
                 lbl.style.fontWeight = 'bold';
@@ -184,7 +183,7 @@ export class ResultRenderer {
                 tilesRow.style.display = 'flex';
                 tilesRow.style.gap = '2px';
 
-                tiles.forEach(t => {
+                tiles.forEach((t) => {
                     const tDiv = document.createElement('div');
                     tDiv.style.width = '30px';
                     tDiv.style.height = '42px'; // Smaller for indicators
@@ -196,13 +195,13 @@ export class ResultRenderer {
             };
 
             if (state.doraMarkers && state.doraMarkers.length > 0) {
-                doraContainer.appendChild(createIndicatorRow("Dora:", state.doraMarkers));
+                doraContainer.appendChild(createIndicatorRow('Dora:', state.doraMarkers));
             }
 
             // Ura Dora
             // Now accessed via res.uraMarkers (enriched in GameState)
             if (res.uraMarkers && Array.isArray(res.uraMarkers) && res.uraMarkers.length > 0) {
-                doraContainer.appendChild(createIndicatorRow("Ura Dora:", res.uraMarkers));
+                doraContainer.appendChild(createIndicatorRow('Ura Dora:', res.uraMarkers));
             }
 
             body.appendChild(doraContainer);
@@ -237,7 +236,7 @@ export class ResultRenderer {
                         fontFamily: '"Times New Roman", Times, serif',
                         fontSize: '1.8em',
                         fontWeight: 'bold',
-                        lineHeight: '1.8'
+                        lineHeight: '1.8',
                     });
 
                     sortedYaku.forEach((yId: number) => {
@@ -260,7 +259,6 @@ export class ResultRenderer {
                 // Apply special styling to content if Yakuman
                 if (isYakuman || isKazoe) {
                     content.classList.add('is-yakuman'); // Helper class for specific borders
-
                 } else {
                     content.classList.remove('is-yakuman');
                 }
@@ -283,7 +281,7 @@ export class ResultRenderer {
                     fontWeight: 'bold',
                     fontSize: '1.1em',
                     borderTop: '1px solid #444',
-                    paddingTop: '10px'
+                    paddingTop: '10px',
                 });
                 statsRow.innerHTML = `<span>${score.han} Han</span><span>${score.fu} Fu</span>`;
                 body.appendChild(statsRow);
@@ -305,11 +303,16 @@ export class ResultRenderer {
                     justifyContent: 'center',
                     gap: '20px',
                     marginTop: '15px',
-                    alignItems: 'center'
+                    alignItems: 'center',
                 });
 
                 const prevBtn = ResultRenderer.createNavBtn(ICON_ARROW_LEFT, idx > 0);
-                prevBtn.onclick = () => { if (pageIndex > 0) { pageIndex--; renderPage(pageIndex); } };
+                prevBtn.onclick = () => {
+                    if (pageIndex > 0) {
+                        pageIndex--;
+                        renderPage(pageIndex);
+                    }
+                };
                 controls.appendChild(prevBtn);
 
                 const indicator = document.createElement('span');
@@ -317,7 +320,12 @@ export class ResultRenderer {
                 controls.appendChild(indicator);
 
                 const nextBtn = ResultRenderer.createNavBtn(ICON_ARROW_RIGHT, idx < totalPages - 1);
-                nextBtn.onclick = () => { if (pageIndex < totalPages - 1) { pageIndex++; renderPage(pageIndex); } };
+                nextBtn.onclick = () => {
+                    if (pageIndex < totalPages - 1) {
+                        pageIndex++;
+                        renderPage(pageIndex);
+                    }
+                };
                 controls.appendChild(nextBtn);
 
                 content.appendChild(controls);
@@ -330,7 +338,10 @@ export class ResultRenderer {
         return modal;
     }
 
-    static renderRyukyokuModal(details: { reason?: string, deltas?: number[], scores?: number[] }, state: BoardState): HTMLElement {
+    static renderRyukyokuModal(
+        details: { reason?: string; deltas?: number[]; scores?: number[] },
+        _state: BoardState,
+    ): HTMLElement {
         const modal = document.createElement('div');
         modal.className = 're-modal-overlay';
 
@@ -353,7 +364,7 @@ export class ResultRenderer {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            padding: '20px'
+            padding: '20px',
         });
 
         // Reason
@@ -379,7 +390,7 @@ export class ResultRenderer {
                 gap: '20px',
                 marginTop: '20px',
                 width: '100%',
-                justifyContent: 'center'
+                justifyContent: 'center',
             });
 
             details.deltas.forEach((delta: number, i: number) => {
@@ -392,7 +403,7 @@ export class ResultRenderer {
                     minWidth: '80px',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '5px'
+                    gap: '5px',
                 });
 
                 const name = document.createElement('div');
@@ -429,7 +440,7 @@ export class ResultRenderer {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'white'
+            color: 'white',
         });
 
         if (!enabled) return btn;
@@ -449,19 +460,24 @@ export class ResultRenderer {
         return btn;
     }
 
-    private static getLimitInfo(han: number, fu: number, isYakuman: boolean, isKazoe: boolean): { text: string, css: string } | null {
-        if (isYakuman) return { text: "Yakuman", css: "limit-yakuman" };
-        if (isKazoe) return { text: "Kazoe Yakuman", css: "limit-yakuman" }; // Re-use yakuman style for Kazoe
-        if (han >= 11) return { text: "Sanbaiman", css: "limit-sanbaiman" };
-        if (han >= 8) return { text: "Baiman", css: "limit-baiman" };
-        if (han >= 6) return { text: "Haneman", css: "limit-haneman" };
-        
+    private static getLimitInfo(
+        han: number,
+        fu: number,
+        isYakuman: boolean,
+        isKazoe: boolean,
+    ): { text: string; css: string } | null {
+        if (isYakuman) return { text: 'Yakuman', css: 'limit-yakuman' };
+        if (isKazoe) return { text: 'Kazoe Yakuman', css: 'limit-yakuman' }; // Re-use yakuman style for Kazoe
+        if (han >= 11) return { text: 'Sanbaiman', css: 'limit-sanbaiman' };
+        if (han >= 8) return { text: 'Baiman', css: 'limit-baiman' };
+        if (han >= 6) return { text: 'Haneman', css: 'limit-haneman' };
+
         // Mangan Check
-        if (han >= 5) return { text: "Mangan", css: "limit-mangan" };
+        if (han >= 5) return { text: 'Mangan', css: 'limit-mangan' };
         // Kiriage Mangan: 4 han 30 fu is 7700 (not mangan), 4 han 40 fu is Mangan (8000)
         // 3 Han 70 fu is Mangan (8000)
-        if (han === 4 && fu >= 40) return { text: "Mangan", css: "limit-mangan" };
-        if (han === 3 && fu >= 70) return { text: "Mangan", css: "limit-mangan" };
+        if (han === 4 && fu >= 40) return { text: 'Mangan', css: 'limit-mangan' };
+        if (han === 3 && fu >= 70) return { text: 'Mangan', css: 'limit-mangan' };
 
         return null;
     }
