@@ -56,21 +56,6 @@ export function calculateWaits(tiles136: number[], melds: MeldInput[] = []): num
 }
 
 /**
- * Calculate shanten number for a hand.
- * Returns -1 for tenpai, 0 for iishanten, etc.
- */
-export function calculateShanten(tiles136: number[]): number | null {
-    if (!isWasmReady()) return null;
-    const wasm = getWasm()!;
-    try {
-        return wasm.calc_shanten(JSON.stringify(tiles136));
-    } catch (e) {
-        console.warn('[WASM] calculateShanten failed:', e);
-        return null;
-    }
-}
-
-/**
  * Calculate score for a winning hand.
  */
 export function calculateScore(
@@ -121,20 +106,6 @@ export function tileIdToMjai(tid: number): string | null {
     try {
         return wasm.tile_id_to_mjai(tid);
     } catch (_e) {
-        return null;
-    }
-}
-
-/**
- * Check if a hand is tenpai.
- */
-export function checkTenpai(tiles136: number[], melds: MeldInput[] = []): boolean | null {
-    if (!isWasmReady()) return null;
-    const wasm = getWasm()!;
-    try {
-        return wasm.is_tenpai(JSON.stringify(tiles136), JSON.stringify(melds));
-    } catch (e) {
-        console.warn('[WASM] checkTenpai failed:', e);
         return null;
     }
 }

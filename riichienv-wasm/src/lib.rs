@@ -2,7 +2,6 @@ use wasm_bindgen::prelude::*;
 
 use riichienv_core::hand_evaluator::HandEvaluator;
 use riichienv_core::parser::{mjai_to_tid, tid_to_mjai};
-use riichienv_core::shanten::calculate_shanten;
 use riichienv_core::types::{Conditions, Meld, MeldType, Wind};
 
 /// Input format for melds passed from JavaScript.
@@ -110,18 +109,6 @@ pub fn calc_waits(tiles_json: &str, melds_json: &str) -> Result<JsValue, JsValue
         .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
 }
 
-/// Calculate shanten number for a given hand.
-///
-/// Input: JSON array of tile IDs (136-encoding).
-/// Returns: shanten number (-1 = tenpai, 0 = iishanten, etc.)
-#[wasm_bindgen]
-pub fn calc_shanten(tiles_json: &str) -> Result<i32, JsValue> {
-    let tiles: Vec<u32> = serde_json::from_str(tiles_json)
-        .map_err(|e| JsValue::from_str(&format!("Failed to parse tiles: {}", e)))?;
-
-    Ok(calculate_shanten(&tiles))
-}
-
 /// Calculate score for a winning hand.
 ///
 /// Input: hand tiles (136-encoding), win tile, dora indicators, and conditions.
@@ -187,20 +174,3 @@ pub fn tile_id_to_mjai(tid: u8) -> String {
     tid_to_mjai(tid)
 }
 
-/// Check if a hand is tenpai (one tile away from winning).
-///
-/// Input: JSON array of tile IDs (136-encoding) for hand tiles.
-/// Returns: true if tenpai.
-#[wasm_bindgen]
-pub fn is_tenpai(tiles_json: &str, melds_json: &str) -> Result<bool, JsValue> {
-    let tiles: Vec<u8> = serde_json::from_str(tiles_json)
-        .map_err(|e| JsValue::from_str(&format!("Failed to parse tiles: {}", e)))?;
-
-    let meld_inputs: Vec<MeldInput> = serde_json::from_str(melds_json)
-        .map_err(|e| JsValue::from_str(&format!("Failed to parse melds: {}", e)))?;
-
-    let melds: Vec<Meld> = meld_inputs.iter().map(|m| m.to_meld()).collect();
-    let evaluator = HandEvaluator::new(tiles, melds);
-
-    Ok(evaluator.is_tenpai())
-}
