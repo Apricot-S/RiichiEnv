@@ -792,14 +792,14 @@ impl RiichiEnv {
         let np = self.variant.num_players() as usize;
 
         // Validate scores length when explicitly provided.
-        if let Some(ref sc) = scores {
-            if sc.len() != np {
-                return Err(pyo3::exceptions::PyValueError::new_err(format!(
-                    "scores length {} does not match number of players {}",
-                    sc.len(),
-                    np,
-                )));
-            }
+        if let Some(ref sc) = scores
+            && sc.len() != np
+        {
+            return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                "scores length {} does not match number of players {}",
+                sc.len(),
+                np,
+            )));
         }
 
         // For a new game, default starting scores based on the variant
