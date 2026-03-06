@@ -62,6 +62,7 @@ export class Renderer3D implements IRenderer {
         faces: { front?: boolean; back?: boolean; left?: boolean; right?: boolean } = { front: true, right: true },
     ): void {
         el.style.transformStyle = 'preserve-3d';
+        const isFlipped = tileId === 'back';
         // Side faces are 1px taller/wider than depth to overlap with the top face,
         // preventing sub-pixel rendering gaps at the seams.
         const d1 = depth + 1;
@@ -70,31 +71,39 @@ export class Renderer3D implements IRenderer {
         const topFace = document.createElement('div');
         topFace.className = 'tile-3d-top';
         topFace.style.transform = `translateZ(${depth}px)`;
+        if (isFlipped) topFace.style.background = '#c8a030';
         topFace.appendChild(TileRenderer.getTileElement(tileId));
         el.appendChild(topFace);
 
+        // For face-down tiles, invert side face gradients so yellow (base) appears on top.
+        // Normal:  front=cream→yellow(bottom), back=yellow→cream(top)
+        // Flipped: front=yellow→cream(bottom), back=cream→yellow(top)
         if (faces.front) {
             const f = document.createElement('div');
             f.className = 'tile-3d-front';
             f.style.height = `${d1}px`;
+            if (isFlipped) f.style.background = 'linear-gradient(to bottom, #c8a030 30%, #e4dec8 30%)';
             el.appendChild(f);
         }
         if (faces.back) {
             const b = document.createElement('div');
             b.className = 'tile-3d-back';
             b.style.height = `${d1}px`;
+            if (isFlipped) b.style.background = 'linear-gradient(to bottom, #e4dec8 70%, #c8a030 70%)';
             el.appendChild(b);
         }
         if (faces.right) {
             const r = document.createElement('div');
             r.className = 'tile-3d-right';
             r.style.width = `${d1}px`;
+            if (isFlipped) r.style.background = 'linear-gradient(to right, #dcd6c0 70%, #b08828 70%)';
             el.appendChild(r);
         }
         if (faces.left) {
             const l = document.createElement('div');
             l.className = 'tile-3d-left';
             l.style.width = `${d1}px`;
+            if (isFlipped) l.style.background = 'linear-gradient(to right, #b08828 30%, #dcd6c0 30%)';
             el.appendChild(l);
         }
     }

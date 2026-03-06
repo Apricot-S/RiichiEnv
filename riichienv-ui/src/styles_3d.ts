@@ -173,7 +173,6 @@ export const VIEWER_3D_CSS = `
         transform: rotateY(90deg);
         border-radius: 2px 0 0 2px;
     }
-
     /* Opponent hand + melds area on table edge */
     .opp-hand-3d {
         position: absolute;
