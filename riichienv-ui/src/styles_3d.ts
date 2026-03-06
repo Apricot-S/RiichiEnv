@@ -124,7 +124,6 @@ export const VIEWER_3D_CSS = `
         position: absolute;
         top: 0; left: 0;
         width: 100%; height: 100%;
-        border-radius: 3px;
         overflow: hidden;
         background: #f0ead6;
     }
@@ -174,7 +173,6 @@ export const VIEWER_3D_CSS = `
         transform: rotateY(90deg);
         border-radius: 2px 0 0 2px;
     }
-
     /* Opponent hand + melds area on table edge */
     .opp-hand-3d {
         position: absolute;
@@ -350,11 +348,13 @@ export const VIEWER_3D_CSS = `
         flex-direction: row-reverse;
         gap: 3px;
         align-items: flex-end;
+        flex-shrink: 0;
     }
     .own-meld-group-3d {
         display: flex;
         align-items: flex-end;
         margin-left: 5px;
+        flex-shrink: 0;
     }
     .meld-tile-own {
         width: 40px;
@@ -381,6 +381,10 @@ export const VIEWER_3D_CSS = `
             0 2px 0 0 #c8c0a8,
             1px 2px 0 0 #bfb7a3,
             1px 3px 5px rgba(0,0,0,0.25);
+    }
+    .meld-tile-own-rotated .tile-bg,
+    .meld-tile-own-rotated-stacked .tile-bg {
+        box-shadow: none;
     }
     .meld-tile-own-rotated .tile-layer {
         position: absolute;
