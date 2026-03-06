@@ -366,7 +366,10 @@ mod unit_tests {
         let log = &state.mjai_log;
         let ek_pos = log.iter().position(|s| s.contains("\"end_kyoku\""));
         let eg_pos = log.iter().position(|s| s.contains("\"end_game\""));
-        assert!(ek_pos.is_some(), "end_kyoku must be emitted before end_game on tobi");
+        assert!(
+            ek_pos.is_some(),
+            "end_kyoku must be emitted before end_game on tobi"
+        );
         assert!(eg_pos.is_some(), "end_game must be emitted on tobi");
         assert!(
             ek_pos.unwrap() < eg_pos.unwrap(),
