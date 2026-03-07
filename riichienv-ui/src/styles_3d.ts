@@ -440,41 +440,31 @@ export const VIEWER_3D_CSS = `
     .player-panel-3d {
         position: absolute;
         pointer-events: auto;
-        background: rgba(0,0,0,0.7);
-        padding: 6px 12px;
-        border-radius: 6px;
         text-align: center;
         font-family: sans-serif;
         color: white;
         cursor: pointer;
-        transition: background-color 0.2s;
         white-space: nowrap;
         display: flex;
         flex-direction: column;
         align-items: center;
-    }
-    .player-panel-3d:hover {
-        background: rgba(60,60,100,0.8);
-    }
-    .player-panel-3d.active-vp {
-        border: 2px solid #aaa;
-        background: rgba(0,0,0,0.85);
-    }
-    .player-panel-3d .player-name {
-        font-size: 14px;
-        font-weight: bold;
-        color: #ffffff;
-        margin-top: 2px;
-        text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        gap: 3px;
     }
     .player-panel-3d .avatar-3d {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        border-radius: 8px;
         overflow: hidden;
         background: rgba(255,255,255,0.1);
-        margin: 0 auto;
+        border: 3px solid #000;
         flex-shrink: 0;
+        transition: transform 0.2s;
+    }
+    .player-panel-3d:hover .avatar-3d {
+        transform: scale(1.1);
+    }
+    .player-panel-3d.active-vp .avatar-3d {
+        box-shadow: 0 0 0 2px #aaa;
     }
     .player-panel-3d .avatar-img {
         width: 100%;
@@ -490,6 +480,25 @@ export const VIEWER_3D_CSS = `
         color: #fff;
         background: linear-gradient(135deg, #4a6cf7, #6366f1);
         text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    .player-panel-3d .player-name {
+        font-size: 16px;
+        font-weight: bold;
+        color: #ffffff;
+        background: rgba(0,0,0,0.65);
+        padding: 1px 8px;
+        border-radius: 4px;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        max-width: 12ch;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .player-panel-3d:hover .player-name {
+        background: rgba(60,60,100,0.8);
+    }
+    .player-panel-3d.active-vp .player-name {
+        border: 1px solid #aaa;
+        background: rgba(0,0,0,0.85);
     }
 
     .floating-score-3d {
