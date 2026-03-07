@@ -49,12 +49,18 @@ export interface ConditionTracker {
 
 // --- Public API types ---
 
+export interface PlayerConfig {
+    name?: string;
+    avatarUrl?: string;
+}
+
 export interface ViewerOptions {
     log: MjaiEvent[];
     renderer?: '2d' | '3d';
     perspective?: number;
     freeze?: boolean;
     initialPosition?: { kyoku?: number; step?: number };
+    players?: PlayerConfig[];
 }
 
 export interface ViewerPosition {
@@ -81,6 +87,8 @@ export type ViewerEventMap = {
 export interface BoardState {
     playerCount: number;
     players: PlayerState[];
+    playerNames: string[];
+    playerAvatars: (string | null)[];
     doraMarkers: string[];
     round: number; // Kyoku (0-indexed, 0=E1)
     honba: number;

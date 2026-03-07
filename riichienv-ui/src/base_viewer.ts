@@ -11,7 +11,7 @@ import {
     ICON_PLAY_PAUSE,
 } from './icons';
 import type { IRenderer } from './renderers/renderer_interface';
-import type { MjaiEvent } from './types';
+import type { MjaiEvent, PlayerConfig } from './types';
 import { initWasm } from './wasm/loader';
 
 export interface BaseViewerInit {
@@ -21,6 +21,7 @@ export interface BaseViewerInit {
     perspective?: number;
     freeze?: boolean;
     config?: GameConfig;
+    players?: PlayerConfig[];
 }
 
 /**
@@ -56,7 +57,7 @@ export abstract class BaseViewer {
         initWasm().catch(() => {});
 
         const gc = this.resolveGameConfig(init);
-        this.gameState = new GameState(init.log, gc);
+        this.gameState = new GameState(init.log, gc, init.players);
 
         // Build DOM skeleton (without renderer-specific parts)
         container.innerHTML = '';
@@ -336,9 +337,11 @@ export abstract class BaseViewer {
 
         const thead = document.createElement('thead');
         const headerRow = document.createElement('tr');
+        const state = this.gameState.getState();
         headerRow.innerHTML = '<th>Round</th><th>Honba</th>';
         for (let i = 0; i < pc; i++) {
-            headerRow.innerHTML += `<th>P${i} Score</th>`;
+            const name = state.playerNames?.[i] || `P${i}`;
+            headerRow.innerHTML += `<th>${name}</th>`;
         }
         thead.appendChild(headerRow);
         table.appendChild(thead);

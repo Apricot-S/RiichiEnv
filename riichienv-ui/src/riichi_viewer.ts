@@ -41,7 +41,9 @@ export class RiichiViewer {
     }
 
     static mount(container: HTMLElement | string, options: ViewerOptions): RiichiViewer {
-        const el = typeof container === 'string' ? document.getElementById(container) : container;
+        const el = typeof container === 'string'
+            ? document.getElementById(container.replace(/^#/, ''))
+            : container;
         if (!el) throw new Error(`Container ${container} not found`);
 
         const rendererType = options.renderer ?? '3d';
@@ -49,11 +51,9 @@ export class RiichiViewer {
 
         let viewer: BaseViewer;
         if (rendererType === '2d') {
-            // Use BaseViewer init path directly through Viewer
-            // We need to create a temporary ID or use element directly
-            viewer = Viewer.fromElement(el, options.log, initialStep, options.perspective, options.freeze ?? false);
+            viewer = Viewer.fromElement(el, options.log, initialStep, options.perspective, options.freeze ?? false, undefined, undefined, options.players);
         } else {
-            viewer = Viewer3D.fromElement(el, options.log, initialStep, options.perspective, options.freeze ?? false);
+            viewer = Viewer3D.fromElement(el, options.log, initialStep, options.perspective, options.freeze ?? false, undefined, undefined, options.players);
         }
 
         const rv = new RiichiViewer(viewer);

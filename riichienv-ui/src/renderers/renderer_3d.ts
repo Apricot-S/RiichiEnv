@@ -1,7 +1,6 @@
 import { CHAR_MAP, CHAR_SPRITE_BASE64 } from '../char_assets';
 import { createLayout3DConfig4P, type LayoutConfig3D } from '../config';
 import { CALL_TYPES } from '../constants';
-import { AVATAR_PLACEHOLDER } from '../icons';
 import { VIEWER_CSS } from '../styles';
 import { VIEWER_3D_CSS } from '../styles_3d';
 import type { BoardState, PlayerState, Tile } from '../types';
@@ -1154,16 +1153,22 @@ export class Renderer3D implements IRenderer {
         // Avatar (centered)
         const avatar = document.createElement('div');
         avatar.className = 'avatar-3d';
-        const avatarImg = document.createElement('img');
-        avatarImg.src = AVATAR_PLACEHOLDER;
-        avatarImg.className = 'avatar-img';
-        avatar.appendChild(avatarImg);
+        const avatarUrl = state.playerAvatars[playerIdx];
+        if (avatarUrl) {
+            const avatarImg = document.createElement('img');
+            avatarImg.src = avatarUrl;
+            avatarImg.className = 'avatar-img';
+            avatar.appendChild(avatarImg);
+        } else {
+            avatar.classList.add('avatar-default');
+            avatar.textContent = (state.playerNames[playerIdx] || `P${playerIdx}`).charAt(0).toUpperCase();
+        }
         panel.appendChild(avatar);
 
         // Player name
         const playerName = document.createElement('div');
         playerName.className = 'player-name';
-        playerName.textContent = `P${playerIdx}`;
+        playerName.textContent = state.playerNames[playerIdx] || `P${playerIdx}`;
         panel.appendChild(playerName);
 
         // Kita count badge

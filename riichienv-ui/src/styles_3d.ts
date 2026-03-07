@@ -481,6 +481,16 @@ export const VIEWER_3D_CSS = `
         height: 100%;
         object-fit: cover;
     }
+    .player-panel-3d .avatar-default {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: bold;
+        color: #fff;
+        background: linear-gradient(135deg, #4a6cf7, #6366f1);
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
 
     .floating-score-3d {
         position: absolute;

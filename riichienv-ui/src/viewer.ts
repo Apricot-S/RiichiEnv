@@ -2,7 +2,7 @@ import { BaseViewer } from './base_viewer';
 import { createLayoutConfig3P, createLayoutConfig4P, type GameConfig, type LayoutConfig } from './config';
 import { Renderer2D } from './renderers/renderer_2d';
 import type { IRenderer } from './renderers/renderer_interface';
-import type { MjaiEvent } from './types';
+import type { MjaiEvent, PlayerConfig } from './types';
 
 export class Viewer extends BaseViewer {
     /** Create a Viewer from an HTMLElement directly (no URL parsing, no containerId). */
@@ -14,19 +14,23 @@ export class Viewer extends BaseViewer {
         freeze: boolean = false,
         config?: GameConfig,
         layout?: LayoutConfig,
+        players?: PlayerConfig[],
     ): Viewer {
         Viewer._pendingLayout = layout;
         Viewer._pendingElement = el;
+        Viewer._pendingPlayers = players;
         try {
-            return new Viewer('__fromElement__', log, initialStep, perspective, freeze, config, layout);
+            return new Viewer('__fromElement__', log, initialStep, perspective, freeze, config, layout, players);
         } finally {
             Viewer._pendingElement = undefined;
             Viewer._pendingLayout = undefined;
+            Viewer._pendingPlayers = undefined;
         }
     }
 
     private static _pendingElement?: HTMLElement;
     private static _pendingLayout?: LayoutConfig;
+    private static _pendingPlayers?: PlayerConfig[];
 
     constructor(
         containerId: string,
@@ -36,6 +40,7 @@ export class Viewer extends BaseViewer {
         freeze: boolean = false,
         config?: GameConfig,
         layout?: LayoutConfig,
+        players?: PlayerConfig[],
     ) {
         let el: HTMLElement;
         let effectiveInitialStep = initialStep;
@@ -66,6 +71,7 @@ export class Viewer extends BaseViewer {
                 perspective,
                 freeze,
                 config,
+                players: players ?? Viewer._pendingPlayers,
             });
         } finally {
             Viewer._pendingLayout = undefined;

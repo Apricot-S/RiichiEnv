@@ -39,7 +39,9 @@ export class ResultRenderer {
             // Header (Result Title)
             const header = document.createElement('div');
             header.className = 're-modal-title';
-            const titleText = `P${actor} ${isTsumo ? 'Tsumo' : `Ron from P${target}`}`;
+            const actorName = state.playerNames?.[actor] || `P${actor}`;
+            const targetName = state.playerNames?.[target] || `P${target}`;
+            const titleText = `${actorName} ${isTsumo ? 'Tsumo' : `Ron from ${targetName}`}`;
             header.textContent = totalPages > 1 ? `${titleText} (${idx + 1}/${totalPages})` : titleText;
             content.appendChild(header);
 
@@ -340,7 +342,7 @@ export class ResultRenderer {
 
     static renderRyukyokuModal(
         details: { reason?: string; deltas?: number[]; scores?: number[] },
-        _state: BoardState,
+        state: BoardState,
     ): HTMLElement {
         const modal = document.createElement('div');
         modal.className = 're-modal-overlay';
@@ -407,7 +409,7 @@ export class ResultRenderer {
                 });
 
                 const name = document.createElement('div');
-                name.textContent = `Player ${i}`;
+                name.textContent = state.playerNames?.[i] || `Player ${i}`;
                 name.style.fontSize = '0.9em';
                 name.style.color = '#ccc';
 

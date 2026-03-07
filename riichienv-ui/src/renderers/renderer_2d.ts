@@ -252,6 +252,7 @@ export class Renderer2D implements IRenderer {
                 this.viewpoint,
                 state.currentActor,
                 this.onViewpointChange || (() => {}),
+                state.playerNames[i],
             );
             children.push(infoBox);
 

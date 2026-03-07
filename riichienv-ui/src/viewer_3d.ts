@@ -2,7 +2,7 @@ import { BaseViewer } from './base_viewer';
 import { createLayout3DConfig3P, createLayout3DConfig4P, type GameConfig, type LayoutConfig3D } from './config';
 import { Renderer3D } from './renderers/renderer_3d';
 import type { IRenderer } from './renderers/renderer_interface';
-import type { MjaiEvent } from './types';
+import type { MjaiEvent, PlayerConfig } from './types';
 
 export class Viewer3D extends BaseViewer {
     /** Create a Viewer3D from an HTMLElement directly (no URL parsing, no containerId). */
@@ -14,19 +14,23 @@ export class Viewer3D extends BaseViewer {
         freeze: boolean = false,
         config?: GameConfig,
         layout?: LayoutConfig3D,
+        players?: PlayerConfig[],
     ): Viewer3D {
         Viewer3D._pendingLayout = layout;
         Viewer3D._pendingElement = el;
+        Viewer3D._pendingPlayers = players;
         try {
-            return new Viewer3D('__fromElement__', log, initialStep, perspective, freeze, config, layout);
+            return new Viewer3D('__fromElement__', log, initialStep, perspective, freeze, config, layout, players);
         } finally {
             Viewer3D._pendingElement = undefined;
             Viewer3D._pendingLayout = undefined;
+            Viewer3D._pendingPlayers = undefined;
         }
     }
 
     private static _pendingElement?: HTMLElement;
     private static _pendingLayout?: LayoutConfig3D;
+    private static _pendingPlayers?: PlayerConfig[];
 
     constructor(
         containerId: string,
@@ -36,6 +40,7 @@ export class Viewer3D extends BaseViewer {
         freeze: boolean = false,
         config?: GameConfig,
         layout?: LayoutConfig3D,
+        players?: PlayerConfig[],
     ) {
         let el: HTMLElement;
         let effectiveInitialStep = initialStep;
@@ -66,6 +71,7 @@ export class Viewer3D extends BaseViewer {
                 perspective,
                 freeze,
                 config,
+                players: players ?? Viewer3D._pendingPlayers,
             });
         } finally {
             Viewer3D._pendingLayout = undefined;

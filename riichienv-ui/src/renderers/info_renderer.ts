@@ -5,6 +5,7 @@ export class InfoRenderer {
         viewpoint: number,
         currentActor: number,
         onViewpointChange: (idx: number) => void,
+        playerName?: string,
     ): HTMLElement {
         const infoBox = document.createElement('div');
         infoBox.className = 'player-info-box';
@@ -23,7 +24,7 @@ export class InfoRenderer {
 
         infoBox.innerHTML = `
             <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 4px; color: white;">
-                P${index}
+                ${playerName || `P${index}`}
             </div>
         `;
 
