@@ -463,9 +463,6 @@ export const VIEWER_3D_CSS = `
     .player-panel-3d:hover .avatar-3d {
         transform: scale(1.1);
     }
-    .player-panel-3d.active-vp .avatar-3d {
-        box-shadow: 0 0 0 2px #aaa;
-    }
     .player-panel-3d .avatar-img {
         width: 100%;
         height: 100%;
@@ -495,10 +492,6 @@ export const VIEWER_3D_CSS = `
     }
     .player-panel-3d:hover .player-name {
         background: rgba(60,60,100,0.8);
-    }
-    .player-panel-3d.active-vp .player-name {
-        border: 1px solid #aaa;
-        background: rgba(0,0,0,0.85);
     }
 
     .floating-score-3d {
