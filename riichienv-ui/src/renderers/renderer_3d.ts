@@ -122,7 +122,7 @@ export class Renderer3D implements IRenderer {
                 height: '100%',
                 backgroundColor: color,
                 pointerEvents: 'none',
-                borderRadius: '3px',
+                borderRadius: 'inherit',
                 zIndex,
             });
             topFace.appendChild(ov);
