@@ -22,11 +22,15 @@ export class InfoRenderer {
             marginLeft: '0',
         });
 
-        infoBox.innerHTML = `
-            <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 4px; color: white;">
-                ${playerName || `P${index}`}
-            </div>
-        `;
+        const nameDiv = document.createElement('div');
+        Object.assign(nameDiv.style, {
+            fontSize: '1.2em',
+            fontWeight: 'bold',
+            marginBottom: '4px',
+            color: 'white',
+        });
+        nameDiv.textContent = playerName || `P${index}`;
+        infoBox.appendChild(nameDiv);
 
         // Blinking Bar for Active Player
         if (index === currentActor) {

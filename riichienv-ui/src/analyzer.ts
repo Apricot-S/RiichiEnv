@@ -210,23 +210,25 @@ export function computeKyokuKeyEvents(gameState: GameState, kyokuIndex: number):
         }
     }
 
-    // Phase 2: Walk game state for tenpai tracking
+    // Phase 2: Walk game state incrementally for tenpai tracking
     const savedCursor = gameState.cursor;
 
     gameState.jumpTo(startIdx + 1); // After start_kyoku
     const prevWaits: (string | undefined)[] = Array(pc).fill(undefined);
 
-    for (let step = startIdx + 1; step < endIdx; step++) {
+    // Walk forward one step at a time to avoid repeated jumpTo() + recomputeWaits() overhead
+    while (gameState.cursor < endIdx) {
+        const step = gameState.cursor;
         const evt = events[step];
+        gameState.stepForward();
 
-        // Only process dahai - that's when waits are recomputed
+        // Only check waits after dahai/reach_accepted - that's when waits are recomputed
         if (evt.type === 'dahai' || evt.type === 'reach_accepted') {
-            gameState.jumpTo(step + 1); // State after this event
             const state = gameState.getState();
 
             for (let p = 0; p < pc; p++) {
                 const waits = state.players[p].waits;
-                const waitsKey = waits?.sort().join(',') ?? '';
+                const waitsKey = waits ? [...waits].sort().join(',') : '';
                 const prevKey = prevWaits[p] ?? '';
 
                 if (prevKey === '' && waitsKey !== '') {

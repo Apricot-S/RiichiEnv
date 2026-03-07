@@ -421,10 +421,15 @@ export abstract class BaseViewer {
         const thead = document.createElement('thead');
         const headerRow = document.createElement('tr');
         const state = this.gameState.getState();
-        headerRow.innerHTML = '<th>Round</th><th>Honba</th>';
+        for (const label of ['Round', 'Honba']) {
+            const th = document.createElement('th');
+            th.textContent = label;
+            headerRow.appendChild(th);
+        }
         for (let i = 0; i < pc; i++) {
-            const name = state.playerNames?.[i] || `P${i}`;
-            headerRow.innerHTML += `<th>${name}</th>`;
+            const th = document.createElement('th');
+            th.textContent = state.playerNames?.[i] || `P${i}`;
+            headerRow.appendChild(th);
         }
         thead.appendChild(headerRow);
         table.appendChild(thead);
