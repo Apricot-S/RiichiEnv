@@ -132,7 +132,7 @@ export class GameState {
 
     private static extractPlayerNames(events: MjaiEvent[]): string[] {
         for (const e of events) {
-            if (e.type === 'start_game' && Array.isArray(e.names)) {
+            if (e && e.type === 'start_game' && Array.isArray(e.names)) {
                 return e.names;
             }
         }

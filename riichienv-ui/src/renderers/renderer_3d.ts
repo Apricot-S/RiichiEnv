@@ -263,7 +263,7 @@ export class Renderer3D implements IRenderer {
 
             const meldSurface = document.createElement('div');
             meldSurface.className = 'table-surface';
-            const meldSurfaceSize = this.layout.tableSize + 76 * 2;
+            const meldSurfaceSize = this.layout.tableSize + frameWidth * 2;
             Object.assign(meldSurface.style, {
                 width: `${meldSurfaceSize}px`,
                 height: `${meldSurfaceSize}px`,
