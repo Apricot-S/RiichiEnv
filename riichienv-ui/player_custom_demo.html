@@ -257,7 +257,7 @@
         const summaries = viewer.getKyokuSummaries();
         const winds = ['E', 'S', 'W', 'N'];
         const windFull = { E: 'East', S: 'South', W: 'West', N: 'North' };
-        const pc = 4;
+        const pc = playerNames.length;
 
         function roundLabel(round, honba) {
           const w = winds[Math.floor(round / pc)] || 'E';

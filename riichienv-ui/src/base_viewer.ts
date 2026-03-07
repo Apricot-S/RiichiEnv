@@ -72,6 +72,8 @@ export abstract class BaseViewer {
             padding: '0',
             border: 'none',
             boxSizing: 'border-box',
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
         });
 
         const scrollContainer = document.createElement('div');
