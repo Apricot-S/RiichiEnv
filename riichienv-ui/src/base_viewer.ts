@@ -259,12 +259,6 @@ export abstract class BaseViewer {
         lbl.textContent = label;
         wrapper.appendChild(lbl);
 
-        // Forward clicks on the wrapper to the button
-        wrapper.onclick = (e) => {
-            e.stopPropagation();
-            btn.click();
-        };
-
         return wrapper;
     }
 

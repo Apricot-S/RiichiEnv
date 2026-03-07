@@ -277,10 +277,10 @@ export class Renderer3D implements IRenderer {
             const meldInner = document.createElement('div');
             Object.assign(meldInner.style, {
                 position: 'absolute',
-                top: '76px',
-                left: '76px',
-                right: '76px',
-                bottom: '76px',
+                top: `${frameWidth}px`,
+                left: `${frameWidth}px`,
+                right: `${frameWidth}px`,
+                bottom: `${frameWidth}px`,
                 transformStyle: 'preserve-3d',
             });
 
@@ -1184,7 +1184,7 @@ export class Renderer3D implements IRenderer {
     ): HTMLElement {
         const panel = document.createElement('div');
         panel.className = 'player-panel-3d';
-        if (playerIdx === this.viewpoint) panel.classList.add('active-vp');
+        // No visual distinction for active viewpoint — removed per design decision
 
         // Position — corners and edges
         const pc = state.playerCount;

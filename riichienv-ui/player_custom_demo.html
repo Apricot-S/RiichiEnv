@@ -311,7 +311,15 @@
             const d = s.deltas[p];
             const cls = d > 0 ? 'pos' : d < 0 ? 'neg' : 'zero';
             const sign = d > 0 ? '+' : '';
-            chip.innerHTML = `<span style="color:#aaa">${shortName(playerNames[p])}</span> <span class="score-delta ${cls}">${sign}${d}</span>`;
+            const nameSpan = document.createElement('span');
+            nameSpan.style.color = '#aaa';
+            nameSpan.textContent = shortName(playerNames[p]);
+            chip.appendChild(nameSpan);
+            chip.appendChild(document.createTextNode(' '));
+            const deltaSpan = document.createElement('span');
+            deltaSpan.className = 'score-delta ' + cls;
+            deltaSpan.textContent = sign + d;
+            chip.appendChild(deltaSpan);
             scores.appendChild(chip);
           }
           item.appendChild(scores);
@@ -395,7 +403,10 @@
             } else if (summary.result.type === 'ryukyoku') {
               const block = document.createElement('div');
               block.className = 'result-winner';
-              block.innerHTML = `<span style="color:#999">Draw: ${summary.result.reason || 'Exhaustive'}</span>`;
+              const reasonSpan = document.createElement('span');
+              reasonSpan.style.color = '#999';
+              reasonSpan.textContent = 'Draw: ' + (summary.result.reason || 'Exhaustive');
+              block.appendChild(reasonSpan);
               sec.appendChild(block);
             }
             detail.appendChild(sec);
@@ -409,12 +420,26 @@
             const d = summary.deltas[p];
             const cls = d > 0 ? 'pos' : d < 0 ? 'neg' : 'zero';
             const sign = d > 0 ? '+' : '';
-            scoreTable.innerHTML += `
-              <span style="color:#aaa">${playerNames[p]}</span>
-              <span style="color:#777">${summary.startScores[p]}</span>
-              <span style="color:#555">&rarr;</span>
-              <span class="score-delta ${cls}">${summary.endScores[p]} (${sign}${d})</span>
-            `;
+
+            const nm = document.createElement('span');
+            nm.style.color = '#aaa';
+            nm.textContent = playerNames[p];
+            scoreTable.appendChild(nm);
+
+            const start = document.createElement('span');
+            start.style.color = '#777';
+            start.textContent = String(summary.startScores[p]);
+            scoreTable.appendChild(start);
+
+            const arrow = document.createElement('span');
+            arrow.style.color = '#555';
+            arrow.textContent = '\u2192';
+            scoreTable.appendChild(arrow);
+
+            const end = document.createElement('span');
+            end.className = 'score-delta ' + cls;
+            end.textContent = summary.endScores[p] + ' (' + sign + d + ')';
+            scoreTable.appendChild(end);
           }
           scoreSec.appendChild(scoreTable);
           detail.appendChild(scoreSec);
