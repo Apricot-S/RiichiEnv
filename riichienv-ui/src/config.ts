@@ -144,14 +144,14 @@ export function createLayout3DConfig4P(): LayoutConfig3D {
         tableSize: 1100 /** **/,
         perspective: 1800 /** **/,
         tiltAngle: 48 /** **/,
-        handLayerHeight: 120,
+        handLayerHeight: 144,
         tileSizes: {
             riverTile: [26, 36],
             opponentTile: [30, 42],
-            ownTile: [50, 70],
+            ownTile: [60, 84],
             doraTile: [28, 39],
             meldTileTable: [20, 28],
-            meldTileOwn: [40, 56],
+            meldTileOwn: [48, 67],
         },
     };
 }
@@ -165,14 +165,14 @@ export function createLayout3DConfig3P(): LayoutConfig3D {
         tableSize: 1100,
         perspective: 1800,
         tiltAngle: 48,
-        handLayerHeight: 120,
+        handLayerHeight: 144,
         tileSizes: {
             riverTile: [26, 36],
             opponentTile: [30, 42],
-            ownTile: [50, 70],
+            ownTile: [60, 84],
             doraTile: [28, 39],
             meldTileTable: [20, 28],
-            meldTileOwn: [40, 56],
+            meldTileOwn: [48, 67],
         },
     };
 }

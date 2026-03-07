@@ -49,12 +49,18 @@ export interface ConditionTracker {
 
 // --- Public API types ---
 
+export interface PlayerConfig {
+    name?: string;
+    avatarUrl?: string;
+}
+
 export interface ViewerOptions {
     log: MjaiEvent[];
     renderer?: '2d' | '3d';
     perspective?: number;
     freeze?: boolean;
     initialPosition?: { kyoku?: number; step?: number };
+    players?: PlayerConfig[];
 }
 
 export interface ViewerPosition {
@@ -76,11 +82,59 @@ export type ViewerEventMap = {
     viewpointChange: { viewpoint: number };
 };
 
+// --- Analysis types ---
+
+export interface KyokuSummary {
+    index: number;
+    round: number;
+    honba: number;
+    startScores: number[];
+    endScores: number[];
+    deltas: number[];
+    result: KyokuResult | null;
+    playerActions: KyokuPlayerAction[];
+}
+
+export interface KyokuResult {
+    type: 'hora' | 'ryukyoku';
+    winners?: KyokuWinner[];
+    reason?: string;
+}
+
+export interface KyokuWinner {
+    actor: number;
+    target: number;
+    isTsumo: boolean;
+    points: number;
+    han: number;
+    fu: number;
+    yaku: string[];
+}
+
+export interface KyokuPlayerAction {
+    riichi: boolean;
+    tenpai: boolean;
+    houjuu: boolean;
+    hora: boolean;
+    tsumo: boolean;
+    meldTypes: string[];
+}
+
+export interface KyokuKeyEvent {
+    step: number;
+    type: string;
+    actor: number;
+    label: string;
+    detail?: string;
+}
+
 // --- Internal types ---
 
 export interface BoardState {
     playerCount: number;
     players: PlayerState[];
+    playerNames: string[];
+    playerAvatars: (string | null)[];
     doraMarkers: string[];
     round: number; // Kyoku (0-indexed, 0=E1)
     honba: number;

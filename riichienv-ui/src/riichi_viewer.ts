@@ -1,5 +1,6 @@
+import { computeKyokuKeyEvents, computeKyokuSummaries } from './analyzer';
 import type { BaseViewer } from './base_viewer';
-import type { KyokuInfo, ViewerEventMap, ViewerOptions, ViewerPosition } from './types';
+import type { KyokuInfo, KyokuKeyEvent, KyokuSummary, ViewerEventMap, ViewerOptions, ViewerPosition } from './types';
 import { Viewer } from './viewer';
 import { Viewer3D } from './viewer_3d';
 
@@ -41,7 +42,7 @@ export class RiichiViewer {
     }
 
     static mount(container: HTMLElement | string, options: ViewerOptions): RiichiViewer {
-        const el = typeof container === 'string' ? document.getElementById(container) : container;
+        const el = typeof container === 'string' ? document.getElementById(container.replace(/^#/, '')) : container;
         if (!el) throw new Error(`Container ${container} not found`);
 
         const rendererType = options.renderer ?? '3d';
@@ -49,11 +50,27 @@ export class RiichiViewer {
 
         let viewer: BaseViewer;
         if (rendererType === '2d') {
-            // Use BaseViewer init path directly through Viewer
-            // We need to create a temporary ID or use element directly
-            viewer = Viewer.fromElement(el, options.log, initialStep, options.perspective, options.freeze ?? false);
+            viewer = Viewer.fromElement(
+                el,
+                options.log,
+                initialStep,
+                options.perspective,
+                options.freeze ?? false,
+                undefined,
+                undefined,
+                options.players,
+            );
         } else {
-            viewer = Viewer3D.fromElement(el, options.log, initialStep, options.perspective, options.freeze ?? false);
+            viewer = Viewer3D.fromElement(
+                el,
+                options.log,
+                initialStep,
+                options.perspective,
+                options.freeze ?? false,
+                undefined,
+                undefined,
+                options.players,
+            );
         }
 
         const rv = new RiichiViewer(viewer);
@@ -134,7 +151,9 @@ export class RiichiViewer {
     toggleAutoPlay() {
         if (!this._viewer.controller) return;
         // Find or create a dummy button for the controller
-        const btn = this._viewer.container.querySelector('.icon-btn[title="Play/Pause"]') as HTMLElement;
+        const btn = this._viewer.container.querySelector(
+            '.icon-btn[title="Auto"], .icon-btn[title="Play/Pause"]',
+        ) as HTMLElement;
         if (btn) {
             this._viewer.controller.toggleAutoPlay(btn);
         }
@@ -161,6 +180,19 @@ export class RiichiViewer {
 
     getViewpoint(): number {
         return this._viewer.renderer.viewpoint;
+    }
+
+    getPlayerNames(): string[] {
+        return [...this._viewer.gameState.getState().playerNames];
+    }
+
+    // Analysis
+    getKyokuSummaries(): KyokuSummary[] {
+        return computeKyokuSummaries(this._viewer.gameState);
+    }
+
+    getKyokuKeyEvents(kyokuIndex: number): KyokuKeyEvent[] {
+        return computeKyokuKeyEvents(this._viewer.gameState, kyokuIndex);
     }
 
     // Events

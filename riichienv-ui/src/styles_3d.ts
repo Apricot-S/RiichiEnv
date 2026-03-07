@@ -324,6 +324,7 @@ export const VIEWER_3D_CSS = `
         align-items: flex-end;
         max-width: 900px;
         width: 100%;
+        margin-left: -50px;
     }
     .own-tiles-3d {
         display: flex;
@@ -332,8 +333,8 @@ export const VIEWER_3D_CSS = `
         flex-grow: 1;
     }
     .own-tile-3d {
-        width: 50px;
-        height: 70px;
+        width: 60px;
+        height: 84px;
         position: relative;
         border-radius: 5px;
         overflow: hidden;
@@ -343,96 +344,6 @@ export const VIEWER_3D_CSS = `
             1px 3px 0 0 #bfb7a3,
             1px 4px 6px rgba(0,0,0,0.3);
     }
-    .own-melds-3d {
-        display: flex;
-        flex-direction: row-reverse;
-        gap: 3px;
-        align-items: flex-end;
-        flex-shrink: 0;
-    }
-    .own-meld-group-3d {
-        display: flex;
-        align-items: flex-end;
-        margin-left: 5px;
-        flex-shrink: 0;
-    }
-    .meld-tile-own {
-        width: 40px;
-        height: 56px;
-        display: flex;
-        align-items: flex-end;
-        justify-content: center;
-        position: relative;
-        border-radius: 4px;
-        overflow: hidden;
-        background: #f0ead6;
-        box-shadow:
-            0 2px 0 0 #c8c0a8,
-            1px 2px 0 0 #bfb7a3,
-            1px 3px 5px rgba(0,0,0,0.25);
-    }
-    .meld-tile-own-rotated {
-        width: 56px;
-        height: 40px;
-        position: relative;
-        border-radius: 4px;
-        background: #f0ead6;
-        box-shadow:
-            0 2px 0 0 #c8c0a8,
-            1px 2px 0 0 #bfb7a3,
-            1px 3px 5px rgba(0,0,0,0.25);
-    }
-    .meld-tile-own-rotated .tile-bg,
-    .meld-tile-own-rotated-stacked .tile-bg {
-        box-shadow: none;
-    }
-    .meld-tile-own-rotated .tile-layer {
-        position: absolute;
-        width: 40px;
-        height: 56px;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%) rotate(90deg);
-        transform-origin: center center;
-    }
-    .meld-tile-own-rotated-stacked {
-        width: 56px;
-        height: 56px;
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    .meld-tile-own-rotated-stacked .tile-layer:first-child {
-        position: absolute;
-        width: 40px;
-        height: 56px;
-        left: 50%;
-        bottom: 8px;
-        transform: translateX(-50%) rotate(90deg);
-        transform-origin: center center;
-        border-radius: 4px;
-        background: #f0ead6;
-        box-shadow:
-            0 2px 0 0 #c8c0a8,
-            1px 2px 0 0 #bfb7a3,
-            1px 3px 5px rgba(0,0,0,0.25);
-    }
-    .meld-tile-own-rotated-stacked .tile-layer:last-child {
-        position: absolute;
-        width: 40px;
-        height: 56px;
-        left: 50%;
-        top: 0;
-        transform: translateX(-50%) rotate(90deg);
-        transform-origin: center center;
-        border-radius: 4px;
-        background: #f0ead6;
-        box-shadow:
-            0 2px 0 0 #c8c0a8,
-            1px 2px 0 0 #bfb7a3,
-            1px 3px 5px rgba(0,0,0,0.25);
-    }
 
     /* ========================================
        UI Overlay
@@ -440,46 +351,58 @@ export const VIEWER_3D_CSS = `
     .player-panel-3d {
         position: absolute;
         pointer-events: auto;
-        background: rgba(0,0,0,0.7);
-        padding: 6px 12px;
-        border-radius: 6px;
         text-align: center;
         font-family: sans-serif;
         color: white;
         cursor: pointer;
-        transition: background-color 0.2s;
         white-space: nowrap;
         display: flex;
         flex-direction: column;
         align-items: center;
-    }
-    .player-panel-3d:hover {
-        background: rgba(60,60,100,0.8);
-    }
-    .player-panel-3d.active-vp {
-        border: 2px solid #aaa;
-        background: rgba(0,0,0,0.85);
-    }
-    .player-panel-3d .player-name {
-        font-size: 14px;
-        font-weight: bold;
-        color: #ffffff;
-        margin-top: 2px;
-        text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        gap: 3px;
     }
     .player-panel-3d .avatar-3d {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        border-radius: 8px;
         overflow: hidden;
         background: rgba(255,255,255,0.1);
-        margin: 0 auto;
+        border: 3px solid #000;
         flex-shrink: 0;
+        transition: transform 0.2s;
+    }
+    .player-panel-3d:hover .avatar-3d {
+        transform: scale(1.1);
     }
     .player-panel-3d .avatar-img {
         width: 100%;
         height: 100%;
         object-fit: cover;
+    }
+    .player-panel-3d .avatar-default {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: bold;
+        color: #fff;
+        background: linear-gradient(135deg, #4a6cf7, #6366f1);
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    .player-panel-3d .player-name {
+        font-size: 16px;
+        font-weight: bold;
+        color: #ffffff;
+        background: rgba(0,0,0,0.65);
+        padding: 1px 8px;
+        border-radius: 4px;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        max-width: 12ch;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .player-panel-3d:hover .player-name {
+        background: rgba(60,60,100,0.8);
     }
 
     .floating-score-3d {

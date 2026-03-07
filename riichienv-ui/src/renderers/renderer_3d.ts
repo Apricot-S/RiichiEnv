@@ -1,7 +1,6 @@
 import { CHAR_MAP, CHAR_SPRITE_BASE64 } from '../char_assets';
 import { createLayout3DConfig4P, type LayoutConfig3D } from '../config';
 import { CALL_TYPES } from '../constants';
-import { AVATAR_PLACEHOLDER } from '../icons';
 import { VIEWER_CSS } from '../styles';
 import { VIEWER_3D_CSS } from '../styles_3d';
 import type { BoardState, PlayerState, Tile } from '../types';
@@ -123,7 +122,7 @@ export class Renderer3D implements IRenderer {
                 height: '100%',
                 backgroundColor: color,
                 pointerEvents: 'none',
-                borderRadius: '3px',
+                borderRadius: 'inherit',
                 zIndex,
             });
             topFace.appendChild(ov);
@@ -245,6 +244,53 @@ export class Renderer3D implements IRenderer {
             handLayer.appendChild(handEl);
         }
         sceneFrag.appendChild(handLayer);
+
+        // 4b. Own melds layer (above hand gradient, same 3D perspective as table)
+        if (vpPlayer && vpPlayer.melds.length > 0) {
+            const meldPerspective = document.createElement('div');
+            meldPerspective.className = 'table-perspective';
+            Object.assign(meldPerspective.style, {
+                perspective: `${this.layout.perspective}px`,
+                perspectiveOrigin: '50% 40%',
+                position: 'absolute',
+                top: '0',
+                left: '0',
+                width: '100%',
+                height: '100%',
+                zIndex: '25',
+                pointerEvents: 'none',
+            });
+
+            const meldSurface = document.createElement('div');
+            meldSurface.className = 'table-surface';
+            const meldSurfaceSize = this.layout.tableSize + frameWidth * 2;
+            Object.assign(meldSurface.style, {
+                width: `${meldSurfaceSize}px`,
+                height: `${meldSurfaceSize}px`,
+                top: tableTop,
+                transform: `translate(-50%, -50%) rotateX(${this.layout.tiltAngle}deg)`,
+                background: 'none',
+                border: 'none',
+                boxShadow: 'none',
+            });
+
+            const meldInner = document.createElement('div');
+            Object.assign(meldInner.style, {
+                position: 'absolute',
+                top: `${frameWidth}px`,
+                left: `${frameWidth}px`,
+                right: `${frameWidth}px`,
+                bottom: `${frameWidth}px`,
+                transformStyle: 'preserve-3d',
+            });
+
+            const ownMelds = this.renderOwnMeldsOnTable(vpPlayer, this.viewpoint, pc);
+            ownMelds.style.pointerEvents = 'auto';
+            meldInner.appendChild(ownMelds);
+            meldSurface.appendChild(meldInner);
+            meldPerspective.appendChild(meldSurface);
+            sceneFrag.appendChild(meldPerspective);
+        }
 
         // 5. Build Layer 3: UI Overlay
         const uiOverlay = document.createElement('div');
@@ -929,13 +975,140 @@ export class Renderer3D implements IRenderer {
     }
 
     // =========================================================================
+    // Own player melds on 3D table (relIndex=0, bottom edge)
+    // =========================================================================
+    private renderOwnMeldsOnTable(player: PlayerState, playerIdx: number, pc: number): HTMLElement {
+        const tw = this.layout.tileSizes.opponentTile[0];
+        const ts = this.layout.tableSize;
+        const [_rtw, rth] = this.layout.tileSizes.riverTile;
+        const riverH = 3 * rth + 2;
+        const riverScale = 1.35;
+        const halfRiverExtent = (riverH * riverScale) / 2;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'opp-hand-3d';
+        // Position at bottom edge (relIndex=0), right-aligned
+        Object.assign(wrapper.style, {
+            left: '50%',
+            top: `${Math.round((ts * 0.745 - rth + halfRiverExtent + ts) / 2)}px`,
+            transform: 'translate(calc(-50% + 60px), calc(-50% + 30px))',
+            justifyContent: 'flex-end',
+        });
+
+        const faces = { front: true, right: true, left: true };
+
+        const meldsDiv = document.createElement('div');
+        meldsDiv.className = 'opp-melds-inner';
+
+        player.melds.forEach((m) => {
+            const mGroup = document.createElement('div');
+            mGroup.className = 'opp-meld-group';
+
+            const rel = (m.from - playerIdx + pc) % pc;
+            const tiles = [...m.tiles];
+
+            const addUpright = (t: string) => {
+                const d = document.createElement('div');
+                d.className = 'opp-tile';
+                this.setTile3D(d, t, tw, faces);
+                mGroup.appendChild(d);
+            };
+            const addRotated = (t: string) => {
+                const d = document.createElement('div');
+                d.className = 'opp-tile-rotated';
+                this.setTile3D(d, t, tw, faces);
+                mGroup.appendChild(d);
+            };
+
+            if (m.type === 'ankan') {
+                tiles.forEach((t, i) => {
+                    const tileId = i === 0 || i === 3 ? 'back' : t;
+                    addUpright(tileId);
+                });
+            } else if (m.type === 'kakan') {
+                const added = tiles.pop()!;
+                const stolen = tiles.pop()!;
+                const consumed = tiles;
+
+                if (rel === 1) {
+                    consumed.forEach((t) => addUpright(t));
+                    addRotated(stolen);
+                    addUpright(added);
+                } else if (rel === 3) {
+                    addRotated(stolen);
+                    addUpright(added);
+                    consumed.forEach((t) => addUpright(t));
+                } else {
+                    if (consumed.length >= 2) {
+                        addUpright(consumed[0]);
+                        addRotated(stolen);
+                        addUpright(added);
+                        addUpright(consumed[1]);
+                    } else {
+                        consumed.forEach((t) => addUpright(t));
+                        addRotated(stolen);
+                        addUpright(added);
+                    }
+                }
+            } else {
+                const stolen = tiles.pop()!;
+                const consumed = tiles;
+
+                if (m.type === 'daiminkan') {
+                    if (rel === 1) {
+                        consumed.forEach((t) => addUpright(t));
+                        addRotated(stolen);
+                    } else if (rel === 3) {
+                        addRotated(stolen);
+                        consumed.forEach((t) => addUpright(t));
+                    } else {
+                        if (consumed.length >= 3) {
+                            addUpright(consumed[0]);
+                            addRotated(stolen);
+                            addUpright(consumed[1]);
+                            addUpright(consumed[2]);
+                        } else {
+                            consumed.forEach((t) => addUpright(t));
+                            addRotated(stolen);
+                        }
+                    }
+                } else {
+                    if (rel === 1) {
+                        consumed.forEach((t) => addUpright(t));
+                        addRotated(stolen);
+                    } else if (rel === 3) {
+                        addRotated(stolen);
+                        consumed.forEach((t) => addUpright(t));
+                    } else if (rel === 2) {
+                        if (consumed.length >= 2) {
+                            addUpright(consumed[0]);
+                            addRotated(stolen);
+                            addUpright(consumed[1]);
+                        } else {
+                            consumed.forEach((t) => addUpright(t));
+                            addRotated(stolen);
+                        }
+                    } else {
+                        consumed.forEach((t) => addUpright(t));
+                        addRotated(stolen);
+                    }
+                }
+            }
+            meldsDiv.appendChild(mGroup);
+        });
+        wrapper.appendChild(meldsDiv);
+
+        return wrapper;
+    }
+
+    // =========================================================================
     // Own hand (flat, bottom layer)
     // =========================================================================
     private renderOwnHand(
         player: PlayerState,
         vpIdx: number,
         state: BoardState,
-        pc: number,
+        _pc: number,
         activeWaits: Set<string>,
     ): HTMLElement {
         const [_tw, _th] = this.layout.tileSizes.ownTile;
@@ -997,128 +1170,7 @@ export class Renderer3D implements IRenderer {
         });
         handArea.appendChild(tilesDiv);
 
-        // Melds
-        if (player.melds.length > 0) {
-            const meldsDiv = document.createElement('div');
-            meldsDiv.className = 'own-melds-3d';
-
-            player.melds.forEach((m) => {
-                this.renderOwnMeld(meldsDiv, m, vpIdx, pc);
-            });
-            handArea.appendChild(meldsDiv);
-        }
-
         return handArea;
-    }
-
-    private renderOwnMeld(
-        container: HTMLElement,
-        m: { type: string; tiles: string[]; from: number },
-        actor: number,
-        pc: number,
-    ): void {
-        const mGroup = document.createElement('div');
-        mGroup.className = 'own-meld-group-3d';
-
-        const rel = (m.from - actor + pc) % pc;
-        const tiles = [...m.tiles];
-
-        const addUpright = (t: string) => {
-            const d = document.createElement('div');
-            d.className = 'meld-tile-own';
-            d.appendChild(TileRenderer.getTileElement(t));
-            mGroup.appendChild(d);
-        };
-        const addRotated = (t: string) => {
-            const d = document.createElement('div');
-            d.className = 'meld-tile-own-rotated';
-            d.appendChild(TileRenderer.getTileElement(t));
-            mGroup.appendChild(d);
-        };
-        const addRotatedStacked = (bottom: string, top: string) => {
-            const d = document.createElement('div');
-            d.className = 'meld-tile-own-rotated-stacked';
-            d.appendChild(TileRenderer.getTileElement(bottom));
-            d.appendChild(TileRenderer.getTileElement(top));
-            mGroup.appendChild(d);
-        };
-
-        if (m.type === 'ankan') {
-            tiles.forEach((t, i) => {
-                const tileId = i === 0 || i === 3 ? 'back' : t;
-                addUpright(tileId);
-            });
-        } else if (m.type === 'kakan') {
-            const added = tiles.pop()!;
-            const ponTiles = tiles;
-            const stolen = ponTiles.pop()!;
-            const consumed = ponTiles;
-
-            // Kakan: stolen tile + added tile stacked rotated
-            if (rel === 1) {
-                consumed.forEach((t) => addUpright(t));
-                addRotatedStacked(stolen, added);
-            } else if (rel === 3) {
-                addRotatedStacked(stolen, added);
-                consumed.forEach((t) => addUpright(t));
-            } else {
-                if (consumed.length >= 2) {
-                    addUpright(consumed[0]);
-                    addRotatedStacked(stolen, added);
-                    addUpright(consumed[1]);
-                } else {
-                    consumed.forEach((t) => addUpright(t));
-                    addRotatedStacked(stolen, added);
-                }
-            }
-        } else {
-            // Pon/Chi/Daiminkan
-            const stolen = tiles.pop()!;
-            const consumed = tiles;
-
-            if (m.type === 'daiminkan') {
-                if (rel === 1) {
-                    consumed.forEach((t) => addUpright(t));
-                    addRotated(stolen);
-                } else if (rel === 3) {
-                    addRotated(stolen);
-                    consumed.forEach((t) => addUpright(t));
-                } else {
-                    if (consumed.length >= 3) {
-                        addUpright(consumed[0]);
-                        addRotated(stolen);
-                        addUpright(consumed[1]);
-                        addUpright(consumed[2]);
-                    } else {
-                        consumed.forEach((t) => addUpright(t));
-                        addRotated(stolen);
-                    }
-                }
-            } else {
-                // Pon / Chi
-                if (rel === 1) {
-                    consumed.forEach((t) => addUpright(t));
-                    addRotated(stolen);
-                } else if (rel === 3) {
-                    addRotated(stolen);
-                    consumed.forEach((t) => addUpright(t));
-                } else if (rel === 2) {
-                    if (consumed.length >= 2) {
-                        addUpright(consumed[0]);
-                        addRotated(stolen);
-                        addUpright(consumed[1]);
-                    } else {
-                        consumed.forEach((t) => addUpright(t));
-                        addRotated(stolen);
-                    }
-                } else {
-                    consumed.forEach((t) => addUpright(t));
-                    addRotated(stolen);
-                }
-            }
-        }
-
-        container.appendChild(mGroup);
     }
 
     // =========================================================================
@@ -1132,20 +1184,20 @@ export class Renderer3D implements IRenderer {
     ): HTMLElement {
         const panel = document.createElement('div');
         panel.className = 'player-panel-3d';
-        if (playerIdx === this.viewpoint) panel.classList.add('active-vp');
+        // No visual distinction for active viewpoint — removed per design decision
 
         // Position — corners and edges
         const pc = state.playerCount;
         const panelPositions4P: { [key: number]: { [k: string]: string } } = {
             0: { bottom: '130px', left: '25%', transform: 'translateX(-50%)' },
-            1: { right: '50px', top: '45%', transform: 'translateY(-50%)' },
-            2: { top: '100px', right: '380px' },
-            3: { left: '100px', top: '120px' },
+            1: { right: '20px', top: 'calc(45% - 70px)', transform: 'translateY(-50%)' },
+            2: { top: '100px', right: '350px' },
+            3: { left: '40px', top: '120px' },
         };
         const panelPositions3P: { [key: number]: { [k: string]: string } } = {
             0: { bottom: '130px', left: '25%', transform: 'translateX(-50%)' },
-            1: { right: '50px', top: '45%', transform: 'translateY(-50%)' },
-            2: { top: '100px', right: '380px' },
+            1: { right: '20px', top: 'calc(45% - 70px)', transform: 'translateY(-50%)' },
+            2: { top: '100px', right: '350px' },
         };
         const panelPositions = pc === 3 ? panelPositions3P : panelPositions4P;
         const pos = panelPositions[relIndex] || panelPositions[0];
@@ -1154,16 +1206,22 @@ export class Renderer3D implements IRenderer {
         // Avatar (centered)
         const avatar = document.createElement('div');
         avatar.className = 'avatar-3d';
-        const avatarImg = document.createElement('img');
-        avatarImg.src = AVATAR_PLACEHOLDER;
-        avatarImg.className = 'avatar-img';
-        avatar.appendChild(avatarImg);
+        const avatarUrl = state.playerAvatars[playerIdx];
+        if (avatarUrl) {
+            const avatarImg = document.createElement('img');
+            avatarImg.src = avatarUrl;
+            avatarImg.className = 'avatar-img';
+            avatar.appendChild(avatarImg);
+        } else {
+            avatar.classList.add('avatar-default');
+            avatar.textContent = (state.playerNames[playerIdx] || `P${playerIdx}`).charAt(0).toUpperCase();
+        }
         panel.appendChild(avatar);
 
         // Player name
         const playerName = document.createElement('div');
         playerName.className = 'player-name';
-        playerName.textContent = `P${playerIdx}`;
+        playerName.textContent = state.playerNames[playerIdx] || `P${playerIdx}`;
         panel.appendChild(playerName);
 
         // Kita count badge
@@ -1276,13 +1334,13 @@ export class Renderer3D implements IRenderer {
         // Position near each player's panel on UI overlay
         const waitPositions4P: { [key: number]: { [k: string]: string } } = {
             0: { bottom: '110px', left: '40%' },
-            1: { right: '50px', top: '55%' },
+            1: { right: '50px', top: 'calc(55% - 60px)' },
             2: { top: '55px', right: '380px' },
             3: { left: '70px', top: '30%' },
         };
         const waitPositions3P: { [key: number]: { [k: string]: string } } = {
             0: { bottom: '110px', left: '40%' },
-            1: { right: '50px', top: '55%' },
+            1: { right: '50px', top: 'calc(55% - 60px)' },
             2: { top: '55px', right: '380px' },
         };
         const waitPositions = pc === 3 ? waitPositions3P : waitPositions4P;

@@ -5,13 +5,15 @@ import { GameState } from './game_state';
 import {
     ICON_ARROW_LEFT,
     ICON_ARROW_RIGHT,
+    ICON_CHEVRON_DOUBLE_LEFT,
+    ICON_CHEVRON_DOUBLE_RIGHT,
     ICON_CHEVRON_LEFT,
     ICON_CHEVRON_RIGHT,
     ICON_EYE,
     ICON_PLAY_PAUSE,
 } from './icons';
 import type { IRenderer } from './renderers/renderer_interface';
-import type { MjaiEvent } from './types';
+import type { MjaiEvent, PlayerConfig } from './types';
 import { initWasm } from './wasm/loader';
 
 export interface BaseViewerInit {
@@ -21,6 +23,7 @@ export interface BaseViewerInit {
     perspective?: number;
     freeze?: boolean;
     config?: GameConfig;
+    players?: PlayerConfig[];
 }
 
 /**
@@ -56,7 +59,7 @@ export abstract class BaseViewer {
         initWasm().catch(() => {});
 
         const gc = this.resolveGameConfig(init);
-        this.gameState = new GameState(init.log, gc);
+        this.gameState = new GameState(init.log, gc, init.players);
 
         // Build DOM skeleton (without renderer-specific parts)
         container.innerHTML = '';
@@ -69,6 +72,8 @@ export abstract class BaseViewer {
             padding: '0',
             border: 'none',
             boxSizing: 'border-box',
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
         });
 
         const scrollContainer = document.createElement('div');
@@ -134,7 +139,7 @@ export abstract class BaseViewer {
                 right: '20%',
                 backgroundColor: 'rgba(0,0,0,0.65)',
                 display: 'grid',
-                gridTemplateColumns: 'repeat(3, auto)',
+                gridTemplateColumns: 'auto repeat(2, auto)',
                 gap: '6px',
                 padding: '8px',
                 alignItems: 'center',
@@ -222,43 +227,116 @@ export abstract class BaseViewer {
         svg.setAttribute('fill', 'none');
         svg.setAttribute('stroke', 'currentColor');
         svg.setAttribute('stroke-width', '1.5');
-        svg.style.width = '24px';
-        svg.style.height = '24px';
+        svg.style.width = '28px';
+        svg.style.height = '28px';
         svg.innerHTML = svgContent;
 
         btn.appendChild(svg);
         return btn;
     }
 
+    private createLabeledBtn(id: string, svgContent: string, label: string): HTMLDivElement {
+        const wrapper = document.createElement('div');
+        Object.assign(wrapper.style, {
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '2px',
+            cursor: 'pointer',
+        });
+
+        const btn = this.createBtn(id, svgContent, label);
+        wrapper.appendChild(btn);
+
+        const lbl = document.createElement('div');
+        Object.assign(lbl.style, {
+            fontSize: '10px',
+            color: '#aaa',
+            textAlign: 'center',
+            fontFamily: 'sans-serif',
+            lineHeight: '1',
+        });
+        lbl.textContent = label;
+        wrapper.appendChild(lbl);
+
+        return wrapper;
+    }
+
     private setupControls(rightSidebar: HTMLElement) {
         if (!this.isFrozen) {
-            const btnLog = this.createBtn('btn-log', ICON_EYE, 'Debug');
-            btnLog.onclick = () => this.controller.toggleLog(btnLog, this.debugPanel);
-            rightSidebar.appendChild(btnLog);
+            // Left options box (Debug + Auto)
+            const optionsBox = document.createElement('div');
+            Object.assign(optionsBox.style, {
+                position: 'absolute',
+                left: '10px',
+                bottom: '20%',
+                backgroundColor: 'rgba(0,0,0,0.65)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+                padding: '10px',
+                alignItems: 'center',
+                zIndex: '500',
+                borderRadius: '10px',
+                backdropFilter: 'blur(4px)',
+            });
 
-            const btnPTurn = this.createBtn('btn-pturn', ICON_ARROW_LEFT, 'Prev Round');
+            const logWrapper = this.createLabeledBtn('btn-log', ICON_EYE, 'Debug');
+            // Re-wire click to use the actual btn for toggle state
+            const logBtn = logWrapper.querySelector('.icon-btn') as HTMLElement;
+            logWrapper.onclick = (e) => {
+                e.stopPropagation();
+                this.controller.toggleLog(logBtn, this.debugPanel);
+            };
+            optionsBox.appendChild(logWrapper);
+
+            const autoWrapper = this.createLabeledBtn('btn-auto', ICON_PLAY_PAUSE, 'Auto');
+            const autoBtn = autoWrapper.querySelector('.icon-btn') as HTMLElement;
+            autoWrapper.onclick = (e) => {
+                e.stopPropagation();
+                this.controller.toggleAutoPlay(autoBtn);
+            };
+            optionsBox.appendChild(autoWrapper);
+
+            this.viewArea.appendChild(optionsBox);
+
+            // Right sidebar (navigation only)
+            const createRowLabel = (text: string): HTMLElement => {
+                const lbl = document.createElement('div');
+                Object.assign(lbl.style, {
+                    fontSize: '13px',
+                    color: '#aaa',
+                    fontFamily: 'sans-serif',
+                    whiteSpace: 'nowrap',
+                    paddingRight: '4px',
+                });
+                lbl.textContent = text;
+                return lbl;
+            };
+
+            rightSidebar.appendChild(createRowLabel('Round'));
+            const btnPKyoku = this.createBtn('btn-pkyoku', ICON_CHEVRON_DOUBLE_LEFT, 'Prev Kyoku');
+            btnPKyoku.onclick = () => this.controller.prevKyoku();
+            rightSidebar.appendChild(btnPKyoku);
+            const btnNKyoku = this.createBtn('btn-nkyoku', ICON_CHEVRON_DOUBLE_RIGHT, 'Next Kyoku');
+            btnNKyoku.onclick = () => this.controller.nextKyoku();
+            rightSidebar.appendChild(btnNKyoku);
+
+            rightSidebar.appendChild(createRowLabel('Turn'));
+            const btnPTurn = this.createBtn('btn-pturn', ICON_ARROW_LEFT, 'Prev Turn');
             btnPTurn.onclick = () => this.controller.prevTurn();
             rightSidebar.appendChild(btnPTurn);
-
-            const btnNTurn = this.createBtn('btn-nturn', ICON_ARROW_RIGHT, 'Next Round');
+            const btnNTurn = this.createBtn('btn-nturn', ICON_ARROW_RIGHT, 'Next Turn');
             btnNTurn.onclick = () => this.controller.nextTurn();
             rightSidebar.appendChild(btnNTurn);
 
+            rightSidebar.appendChild(createRowLabel('Step'));
             const btnPrev = this.createBtn('btn-prev', ICON_CHEVRON_LEFT, 'Prev Step');
             btnPrev.onclick = () => this.controller.stepBackward();
             rightSidebar.appendChild(btnPrev);
-
             const btnNext = this.createBtn('btn-next', ICON_CHEVRON_RIGHT, 'Next Step');
             btnNext.onclick = () => this.controller.stepForward();
             rightSidebar.appendChild(btnNext);
-
-            const btnAuto = this.createBtn('btn-auto', ICON_PLAY_PAUSE, 'Play/Pause');
-            btnAuto.onclick = () => this.controller.toggleAutoPlay(btnAuto);
-            rightSidebar.appendChild(btnAuto);
-
-            const rBtn = document.createElement('div');
-            rBtn.style.display = 'none';
-            rightSidebar.appendChild(rBtn);
 
             this.controller = new ReplayController(this);
             this.controller.setupKeyboardControls(this.viewArea);
@@ -336,9 +414,16 @@ export abstract class BaseViewer {
 
         const thead = document.createElement('thead');
         const headerRow = document.createElement('tr');
-        headerRow.innerHTML = '<th>Round</th><th>Honba</th>';
+        const state = this.gameState.getState();
+        for (const label of ['Round', 'Honba']) {
+            const th = document.createElement('th');
+            th.textContent = label;
+            headerRow.appendChild(th);
+        }
         for (let i = 0; i < pc; i++) {
-            headerRow.innerHTML += `<th>P${i} Score</th>`;
+            const th = document.createElement('th');
+            th.textContent = state.playerNames?.[i] || `P${i}`;
+            headerRow.appendChild(th);
         }
         thead.appendChild(headerRow);
         table.appendChild(thead);

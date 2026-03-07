@@ -1,5 +1,5 @@
 import { createGameConfig4P, type GameConfig } from './config';
-import type { BoardState, ConditionTracker, MjaiEvent } from './types';
+import type { BoardState, ConditionTracker, MjaiEvent, PlayerConfig } from './types';
 import {
     type ConditionsInput,
     calculateScore,
@@ -90,6 +90,10 @@ export class GameState {
     // Cache state at each step to allow fast jumping
     current: BoardState;
 
+    // Player customization
+    private _playerNames: string[];
+    private _playerAvatars: (string | null)[];
+
     // Checkpoint cache: cursor position -> deep-cloned BoardState
     private stateCache: Map<number, BoardState> = new Map();
     private static readonly CHECKPOINT_INTERVAL = 20;
@@ -97,8 +101,21 @@ export class GameState {
     // Flag to skip expensive WASM calculations during bulk replay
     private _isReplaying: boolean = false;
 
-    constructor(events: MjaiEvent[], config?: GameConfig) {
+    constructor(events: MjaiEvent[], config?: GameConfig, playerConfigs?: PlayerConfig[]) {
         this.config = config ?? createGameConfig4P();
+        const pc = this.config.playerCount;
+
+        // Extract player names from start_game event in log
+        const logNames = GameState.extractPlayerNames(events);
+
+        // Build player names: option override > log names > default
+        this._playerNames = Array(pc)
+            .fill(0)
+            .map((_, i) => playerConfigs?.[i]?.name || logNames[i] || `player${i}`);
+        this._playerAvatars = Array(pc)
+            .fill(0)
+            .map((_, i) => playerConfigs?.[i]?.avatarUrl || null);
+
         // Filter out null events and start/end game events
         this.events = events.filter((e) => e && e.type !== 'start_game' && e.type !== 'end_game');
         this.cursor = 0;
@@ -111,6 +128,15 @@ export class GameState {
         if (firstKyoku !== -1) {
             this.jumpTo(firstKyoku + 1);
         }
+    }
+
+    private static extractPlayerNames(events: MjaiEvent[]): string[] {
+        for (const e of events) {
+            if (e && e.type === 'start_game' && Array.isArray(e.names)) {
+                return e.names;
+            }
+        }
+        return [];
     }
 
     getState(): BoardState {
@@ -156,6 +182,8 @@ export class GameState {
                     wind: 0,
                     kitaCount: 0,
                 })),
+            playerNames: [...this._playerNames],
+            playerAvatars: [...this._playerAvatars],
             doraMarkers: [],
             round: 0,
             honba: 0,
@@ -377,6 +405,8 @@ export class GameState {
                 lastDrawnTile: p.lastDrawnTile,
                 kitaCount: p.kitaCount,
             })),
+            playerNames: [...state.playerNames],
+            playerAvatars: [...state.playerAvatars],
             doraMarkers: [...state.doraMarkers],
             round: state.round,
             honba: state.honba,
