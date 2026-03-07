@@ -221,10 +221,13 @@ export class Renderer3D implements IRenderer {
             const river = this.renderRiver3D(p.discards, relIndex, state, i, activeWaits);
             tableInner.appendChild(river);
 
-            // Opponent hand + melds on table (skip viewpoint player)
+            // Opponent hand + melds on table (skip viewpoint player's hand, but render melds)
             if (relIndex !== 0) {
                 const oppHand = this.renderOpponentHandArea(p, i, relIndex, pc, activeWaits);
                 tableInner.appendChild(oppHand);
+            } else if (p.melds.length > 0) {
+                const ownMelds = this.renderOwnMeldsOnTable(p, i, pc);
+                tableInner.appendChild(ownMelds);
             }
         });
 
@@ -928,6 +931,137 @@ export class Renderer3D implements IRenderer {
     }
 
     // =========================================================================
+    // Own player melds on 3D table (relIndex=0, bottom edge)
+    // =========================================================================
+    private renderOwnMeldsOnTable(
+        player: PlayerState,
+        playerIdx: number,
+        pc: number,
+    ): HTMLElement {
+        const tw = this.layout.tileSizes.opponentTile[0];
+        const ts = this.layout.tableSize;
+        const [_rtw, rth] = this.layout.tileSizes.riverTile;
+        const riverH = 3 * rth + 2;
+        const riverScale = 1.35;
+        const halfRiverExtent = (riverH * riverScale) / 2;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'opp-hand-3d';
+        // Position at bottom edge (relIndex=0), right-aligned
+        Object.assign(wrapper.style, {
+            left: '50%',
+            top: `${Math.round((ts * 0.745 - rth + halfRiverExtent + ts) / 2)}px`,
+            transform: 'translate(calc(-50% + 60px), calc(-50% + 30px))',
+            justifyContent: 'flex-end',
+        });
+
+        const faces = { front: true, right: true, left: true };
+
+        const meldsDiv = document.createElement('div');
+        meldsDiv.className = 'opp-melds-inner';
+
+        player.melds.forEach((m) => {
+            const mGroup = document.createElement('div');
+            mGroup.className = 'opp-meld-group';
+
+            const rel = (m.from - playerIdx + pc) % pc;
+            const tiles = [...m.tiles];
+
+            const addUpright = (t: string) => {
+                const d = document.createElement('div');
+                d.className = 'opp-tile';
+                this.setTile3D(d, t, tw, faces);
+                mGroup.appendChild(d);
+            };
+            const addRotated = (t: string) => {
+                const d = document.createElement('div');
+                d.className = 'opp-tile-rotated';
+                this.setTile3D(d, t, tw, faces);
+                mGroup.appendChild(d);
+            };
+
+            if (m.type === 'ankan') {
+                tiles.forEach((t, i) => {
+                    const tileId = i === 0 || i === 3 ? 'back' : t;
+                    addUpright(tileId);
+                });
+            } else if (m.type === 'kakan') {
+                const added = tiles.pop()!;
+                const stolen = tiles.pop()!;
+                const consumed = tiles;
+
+                if (rel === 1) {
+                    consumed.forEach((t) => addUpright(t));
+                    addRotated(stolen);
+                    addUpright(added);
+                } else if (rel === 3) {
+                    addRotated(stolen);
+                    addUpright(added);
+                    consumed.forEach((t) => addUpright(t));
+                } else {
+                    if (consumed.length >= 2) {
+                        addUpright(consumed[0]);
+                        addRotated(stolen);
+                        addUpright(added);
+                        addUpright(consumed[1]);
+                    } else {
+                        consumed.forEach((t) => addUpright(t));
+                        addRotated(stolen);
+                        addUpright(added);
+                    }
+                }
+            } else {
+                const stolen = tiles.pop()!;
+                const consumed = tiles;
+
+                if (m.type === 'daiminkan') {
+                    if (rel === 1) {
+                        consumed.forEach((t) => addUpright(t));
+                        addRotated(stolen);
+                    } else if (rel === 3) {
+                        addRotated(stolen);
+                        consumed.forEach((t) => addUpright(t));
+                    } else {
+                        if (consumed.length >= 3) {
+                            addUpright(consumed[0]);
+                            addRotated(stolen);
+                            addUpright(consumed[1]);
+                            addUpright(consumed[2]);
+                        } else {
+                            consumed.forEach((t) => addUpright(t));
+                            addRotated(stolen);
+                        }
+                    }
+                } else {
+                    if (rel === 1) {
+                        consumed.forEach((t) => addUpright(t));
+                        addRotated(stolen);
+                    } else if (rel === 3) {
+                        addRotated(stolen);
+                        consumed.forEach((t) => addUpright(t));
+                    } else if (rel === 2) {
+                        if (consumed.length >= 2) {
+                            addUpright(consumed[0]);
+                            addRotated(stolen);
+                            addUpright(consumed[1]);
+                        } else {
+                            consumed.forEach((t) => addUpright(t));
+                            addRotated(stolen);
+                        }
+                    } else {
+                        consumed.forEach((t) => addUpright(t));
+                        addRotated(stolen);
+                    }
+                }
+            }
+            meldsDiv.appendChild(mGroup);
+        });
+        wrapper.appendChild(meldsDiv);
+
+        return wrapper;
+    }
+
+    // =========================================================================
     // Own hand (flat, bottom layer)
     // =========================================================================
     private renderOwnHand(
@@ -996,128 +1130,7 @@ export class Renderer3D implements IRenderer {
         });
         handArea.appendChild(tilesDiv);
 
-        // Melds
-        if (player.melds.length > 0) {
-            const meldsDiv = document.createElement('div');
-            meldsDiv.className = 'own-melds-3d';
-
-            player.melds.forEach((m) => {
-                this.renderOwnMeld(meldsDiv, m, vpIdx, pc);
-            });
-            handArea.appendChild(meldsDiv);
-        }
-
         return handArea;
-    }
-
-    private renderOwnMeld(
-        container: HTMLElement,
-        m: { type: string; tiles: string[]; from: number },
-        actor: number,
-        pc: number,
-    ): void {
-        const mGroup = document.createElement('div');
-        mGroup.className = 'own-meld-group-3d';
-
-        const rel = (m.from - actor + pc) % pc;
-        const tiles = [...m.tiles];
-
-        const addUpright = (t: string) => {
-            const d = document.createElement('div');
-            d.className = 'meld-tile-own';
-            d.appendChild(TileRenderer.getTileElement(t));
-            mGroup.appendChild(d);
-        };
-        const addRotated = (t: string) => {
-            const d = document.createElement('div');
-            d.className = 'meld-tile-own-rotated';
-            d.appendChild(TileRenderer.getTileElement(t));
-            mGroup.appendChild(d);
-        };
-        const addRotatedStacked = (bottom: string, top: string) => {
-            const d = document.createElement('div');
-            d.className = 'meld-tile-own-rotated-stacked';
-            d.appendChild(TileRenderer.getTileElement(bottom));
-            d.appendChild(TileRenderer.getTileElement(top));
-            mGroup.appendChild(d);
-        };
-
-        if (m.type === 'ankan') {
-            tiles.forEach((t, i) => {
-                const tileId = i === 0 || i === 3 ? 'back' : t;
-                addUpright(tileId);
-            });
-        } else if (m.type === 'kakan') {
-            const added = tiles.pop()!;
-            const ponTiles = tiles;
-            const stolen = ponTiles.pop()!;
-            const consumed = ponTiles;
-
-            // Kakan: stolen tile + added tile stacked rotated
-            if (rel === 1) {
-                consumed.forEach((t) => addUpright(t));
-                addRotatedStacked(stolen, added);
-            } else if (rel === 3) {
-                addRotatedStacked(stolen, added);
-                consumed.forEach((t) => addUpright(t));
-            } else {
-                if (consumed.length >= 2) {
-                    addUpright(consumed[0]);
-                    addRotatedStacked(stolen, added);
-                    addUpright(consumed[1]);
-                } else {
-                    consumed.forEach((t) => addUpright(t));
-                    addRotatedStacked(stolen, added);
-                }
-            }
-        } else {
-            // Pon/Chi/Daiminkan
-            const stolen = tiles.pop()!;
-            const consumed = tiles;
-
-            if (m.type === 'daiminkan') {
-                if (rel === 1) {
-                    consumed.forEach((t) => addUpright(t));
-                    addRotated(stolen);
-                } else if (rel === 3) {
-                    addRotated(stolen);
-                    consumed.forEach((t) => addUpright(t));
-                } else {
-                    if (consumed.length >= 3) {
-                        addUpright(consumed[0]);
-                        addRotated(stolen);
-                        addUpright(consumed[1]);
-                        addUpright(consumed[2]);
-                    } else {
-                        consumed.forEach((t) => addUpright(t));
-                        addRotated(stolen);
-                    }
-                }
-            } else {
-                // Pon / Chi
-                if (rel === 1) {
-                    consumed.forEach((t) => addUpright(t));
-                    addRotated(stolen);
-                } else if (rel === 3) {
-                    addRotated(stolen);
-                    consumed.forEach((t) => addUpright(t));
-                } else if (rel === 2) {
-                    if (consumed.length >= 2) {
-                        addUpright(consumed[0]);
-                        addRotated(stolen);
-                        addUpright(consumed[1]);
-                    } else {
-                        consumed.forEach((t) => addUpright(t));
-                        addRotated(stolen);
-                    }
-                } else {
-                    consumed.forEach((t) => addUpright(t));
-                    addRotated(stolen);
-                }
-            }
-        }
-
-        container.appendChild(mGroup);
     }
 
     // =========================================================================

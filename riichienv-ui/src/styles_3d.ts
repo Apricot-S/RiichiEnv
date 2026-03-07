@@ -324,6 +324,7 @@ export const VIEWER_3D_CSS = `
         align-items: flex-end;
         max-width: 900px;
         width: 100%;
+        margin-left: -50px;
     }
     .own-tiles-3d {
         display: flex;
@@ -332,8 +333,8 @@ export const VIEWER_3D_CSS = `
         flex-grow: 1;
     }
     .own-tile-3d {
-        width: 50px;
-        height: 70px;
+        width: 60px;
+        height: 84px;
         position: relative;
         border-radius: 5px;
         overflow: hidden;
@@ -342,96 +343,6 @@ export const VIEWER_3D_CSS = `
             0 3px 0 0 #c8c0a8,
             1px 3px 0 0 #bfb7a3,
             1px 4px 6px rgba(0,0,0,0.3);
-    }
-    .own-melds-3d {
-        display: flex;
-        flex-direction: row-reverse;
-        gap: 3px;
-        align-items: flex-end;
-        flex-shrink: 0;
-    }
-    .own-meld-group-3d {
-        display: flex;
-        align-items: flex-end;
-        margin-left: 5px;
-        flex-shrink: 0;
-    }
-    .meld-tile-own {
-        width: 40px;
-        height: 56px;
-        display: flex;
-        align-items: flex-end;
-        justify-content: center;
-        position: relative;
-        border-radius: 4px;
-        overflow: hidden;
-        background: #f0ead6;
-        box-shadow:
-            0 2px 0 0 #c8c0a8,
-            1px 2px 0 0 #bfb7a3,
-            1px 3px 5px rgba(0,0,0,0.25);
-    }
-    .meld-tile-own-rotated {
-        width: 56px;
-        height: 40px;
-        position: relative;
-        border-radius: 4px;
-        background: #f0ead6;
-        box-shadow:
-            0 2px 0 0 #c8c0a8,
-            1px 2px 0 0 #bfb7a3,
-            1px 3px 5px rgba(0,0,0,0.25);
-    }
-    .meld-tile-own-rotated .tile-bg,
-    .meld-tile-own-rotated-stacked .tile-bg {
-        box-shadow: none;
-    }
-    .meld-tile-own-rotated .tile-layer {
-        position: absolute;
-        width: 40px;
-        height: 56px;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%) rotate(90deg);
-        transform-origin: center center;
-    }
-    .meld-tile-own-rotated-stacked {
-        width: 56px;
-        height: 56px;
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    .meld-tile-own-rotated-stacked .tile-layer:first-child {
-        position: absolute;
-        width: 40px;
-        height: 56px;
-        left: 50%;
-        bottom: 8px;
-        transform: translateX(-50%) rotate(90deg);
-        transform-origin: center center;
-        border-radius: 4px;
-        background: #f0ead6;
-        box-shadow:
-            0 2px 0 0 #c8c0a8,
-            1px 2px 0 0 #bfb7a3,
-            1px 3px 5px rgba(0,0,0,0.25);
-    }
-    .meld-tile-own-rotated-stacked .tile-layer:last-child {
-        position: absolute;
-        width: 40px;
-        height: 56px;
-        left: 50%;
-        top: 0;
-        transform: translateX(-50%) rotate(90deg);
-        transform-origin: center center;
-        border-radius: 4px;
-        background: #f0ead6;
-        box-shadow:
-            0 2px 0 0 #c8c0a8,
-            1px 2px 0 0 #bfb7a3,
-            1px 3px 5px rgba(0,0,0,0.25);
     }
 
     /* ========================================
