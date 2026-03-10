@@ -840,9 +840,17 @@ export class GameState {
                                             if (e2.type === 'start_kyoku') break;
 
                                             if (target !== undefined && target !== actor) {
-                                                // Ron: Look for dahai from target
-                                                if (e2.type === 'dahai' && e2.actor === target) {
-                                                    res.winningTile = e2.pai;
+                                                // Ron: Look for dahai from target,
+                                                // or kakan/ankan from target (chankan ron)
+                                                if (
+                                                    (e2.type === 'dahai' ||
+                                                        e2.type === 'kakan' ||
+                                                        e2.type === 'ankan') &&
+                                                    e2.actor === target
+                                                ) {
+                                                    // ankan has no pai field; use consumed[0]
+                                                    res.winningTile =
+                                                        e2.pai ?? e2.consumed?.[0];
                                                     found = true;
                                                     break;
                                                 }
