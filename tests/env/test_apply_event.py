@@ -44,10 +44,7 @@ _3P_TEHAIS = [
 
 def _mask_tehais(tehais: list[list[str]], my_seat: int) -> list[list[str]]:
     """Return tehais with only my_seat's hand visible; others are '?'."""
-    return [
-        hand if i == my_seat else _UNKNOWN_HAND_13
-        for i, hand in enumerate(tehais)
-    ]
+    return [hand if i == my_seat else _UNKNOWN_HAND_13 for i, hand in enumerate(tehais)]
 
 
 def _start_kyoku_event_4p(tehais=None, oya=0, my_seat=None):
