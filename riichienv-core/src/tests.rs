@@ -1963,7 +1963,7 @@ mod unit_tests {
         state.handle_kita(0, &kita_action);
 
         assert!(
-            !state.players[0].hand.iter().any(|&t| t == 120),
+            !state.players[0].hand.contains(&120),
             "Tile 120 must be removed from hand"
         );
         assert_eq!(state.players[0].kita_tiles, vec![120]);
