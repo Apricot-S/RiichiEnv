@@ -305,6 +305,11 @@ pub fn calculate_effective_tiles_auto(hand_tiles: &[u32]) -> u32 {
     if hand_tiles.len() % 3 == 1 {
         return calculate_effective_tiles(hand_tiles);
     }
+    assert!(
+        hand_tiles.len() % 3 == 2,
+        "calculate_effective_tiles_auto requires a 3n+1 or 3n+2 hand, got {}",
+        hand_tiles.len()
+    );
     let shanten = calculate_shanten(hand_tiles);
     let mut max_eff = 0u32;
     for idx in 0..hand_tiles.len() {
@@ -520,6 +525,11 @@ pub fn calculate_effective_tiles_3p_auto(hand_tiles: &[u32]) -> u32 {
     if hand_tiles.len() % 3 == 1 {
         return calculate_effective_tiles_3p(hand_tiles);
     }
+    assert!(
+        hand_tiles.len() % 3 == 2,
+        "calculate_effective_tiles_3p_auto requires a 3n+1 or 3n+2 hand, got {}",
+        hand_tiles.len()
+    );
     let shanten = calculate_shanten_3p(hand_tiles);
     let mut max_eff = 0u32;
     for idx in 0..hand_tiles.len() {
@@ -608,6 +618,58 @@ mod tests {
     /// Helper: build tile IDs from tile-type indices (each using instance 0).
     fn tiles_from_types(types: &[u32]) -> Vec<u32> {
         types.iter().map(|&t| t * 4).collect()
+    }
+
+    #[test]
+    fn test_effective_tiles_auto_13_tile() {
+        // 123m 456m 789m 12p 11z (13 tiles, tenpai waiting on 3p)
+        let hand = tiles_from_types(&[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 27, 27]);
+        assert_eq!(hand.len() % 3, 1);
+        let eff = calculate_effective_tiles_auto(&hand);
+        // tenpai hand: only 3p (type 11) reduces shanten from 0 to -1
+        assert_eq!(eff, calculate_effective_tiles(&hand));
+        assert_eq!(eff, 1);
+    }
+
+    #[test]
+    fn test_effective_tiles_auto_14_tile() {
+        // 123m 456m 789m 12p 112z (14 tiles, shanten=0)
+        let hand = tiles_from_types(&[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 27, 27, 28]);
+        assert_eq!(hand.len() % 3, 2);
+        let eff = calculate_effective_tiles_auto(&hand);
+        // Best discard: 2z -> tenpai waiting 3p -> 1 effective tile
+        assert!(
+            eff >= 1,
+            "14-tile hand should have at least 1 effective tile"
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "requires a 3n+1 or 3n+2 hand")]
+    fn test_effective_tiles_auto_rejects_3n_hand() {
+        let hand = tiles_from_types(&[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 27]);
+        assert_eq!(hand.len() % 3, 0);
+        calculate_effective_tiles_auto(&hand);
+    }
+
+    #[test]
+    fn test_effective_tiles_3p_auto_14_tile() {
+        // 123p 456p 789p 12s 112z (14 tiles)
+        let hand = tiles_from_types(&[9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 27, 27, 28]);
+        assert_eq!(hand.len() % 3, 2);
+        let eff = calculate_effective_tiles_3p_auto(&hand);
+        assert!(
+            eff >= 1,
+            "14-tile 3p hand should have at least 1 effective tile"
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "requires a 3n+1 or 3n+2 hand")]
+    fn test_effective_tiles_3p_auto_rejects_3n_hand() {
+        let hand = tiles_from_types(&[9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 27]);
+        assert_eq!(hand.len() % 3, 0);
+        calculate_effective_tiles_3p_auto(&hand);
     }
 
     #[test]

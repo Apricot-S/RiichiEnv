@@ -426,7 +426,7 @@ def main() -> None:
     args = parser.parse_args()
 
     if not args.paths:
-        args.paths = ["/data/workspace/tenhou/2026"]
+        parser.error("at least one path is required")
 
     log_files: list[Path] = []
     for p in args.paths:
