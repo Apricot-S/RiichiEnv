@@ -103,10 +103,15 @@ class TestApplyEventMjaiLog4P:
         env.apply_event(_start_kyoku_4p())
         env.apply_event({"type": "tsumo", "actor": 0, "pai": "5p"})
         env.apply_event({"type": "dahai", "actor": 0, "pai": "1m", "tsumogiri": False})
-        env.apply_event({
-            "type": "pon", "actor": 1, "target": 0,
-            "pai": "1m", "consumed": ["1m", "1m"],
-        })
+        env.apply_event(
+            {
+                "type": "pon",
+                "actor": 1,
+                "target": 0,
+                "pai": "1m",
+                "consumed": ["1m", "1m"],
+            }
+        )
 
         log_types = [e["type"] for e in env.mjai_log]
         assert "pon" in log_types
@@ -124,10 +129,15 @@ class TestApplyEventMjaiLog4P:
         env.apply_event({**_start_kyoku_4p(), "tehais": tehais})
         env.apply_event({"type": "tsumo", "actor": 0, "pai": "5p"})
         env.apply_event({"type": "dahai", "actor": 0, "pai": "3m", "tsumogiri": False})
-        env.apply_event({
-            "type": "chi", "actor": 1, "target": 0,
-            "pai": "3m", "consumed": ["4m", "5m"],
-        })
+        env.apply_event(
+            {
+                "type": "chi",
+                "actor": 1,
+                "target": 0,
+                "pai": "3m",
+                "consumed": ["4m", "5m"],
+            }
+        )
 
         log_types = [e["type"] for e in env.mjai_log]
         assert "chi" in log_types
@@ -217,10 +227,15 @@ class TestApplyEventMjaiLog3P:
         env.apply_event(_start_kyoku_3p())
         env.apply_event({"type": "tsumo", "actor": 0, "pai": "3z"})
         env.apply_event({"type": "dahai", "actor": 0, "pai": "1p", "tsumogiri": False})
-        env.apply_event({
-            "type": "pon", "actor": 1, "target": 0,
-            "pai": "1p", "consumed": ["1p", "1p"],
-        })
+        env.apply_event(
+            {
+                "type": "pon",
+                "actor": 1,
+                "target": 0,
+                "pai": "1p",
+                "consumed": ["1p", "1p"],
+            }
+        )
 
         log_types = [e["type"] for e in env.mjai_log]
         assert "pon" in log_types
@@ -237,15 +252,22 @@ class TestObserveEventMjaiLog:
     def test_observe_event_logs_events_4p(self):
         env = RiichiEnv(game_mode="default")
         env.observe_event({"type": "start_game"}, 0)
-        env.observe_event({**_start_kyoku_4p(), "tehais": [
-            _4P_TEHAIS[0],
-            ["?"] * 13,
-            ["?"] * 13,
-            ["?"] * 13,
-        ]}, 0)
+        env.observe_event(
+            {
+                **_start_kyoku_4p(),
+                "tehais": [
+                    _4P_TEHAIS[0],
+                    ["?"] * 13,
+                    ["?"] * 13,
+                    ["?"] * 13,
+                ],
+            },
+            0,
+        )
         env.observe_event({"type": "tsumo", "actor": 0, "pai": "5p"}, 0)
         env.observe_event(
-            {"type": "dahai", "actor": 0, "pai": "5p", "tsumogiri": True}, 0,
+            {"type": "dahai", "actor": 0, "pai": "5p", "tsumogiri": True},
+            0,
         )
 
         log_types = [e["type"] for e in env.mjai_log]
@@ -254,14 +276,21 @@ class TestObserveEventMjaiLog:
     def test_observe_event_logs_events_3p(self):
         env = RiichiEnv(game_mode="3p-red-half")
         env.observe_event({"type": "start_game"}, 0)
-        env.observe_event({**_start_kyoku_3p(), "tehais": [
-            _3P_TEHAIS[0],
-            ["?"] * 13,
-            ["?"] * 13,
-        ]}, 0)
+        env.observe_event(
+            {
+                **_start_kyoku_3p(),
+                "tehais": [
+                    _3P_TEHAIS[0],
+                    ["?"] * 13,
+                    ["?"] * 13,
+                ],
+            },
+            0,
+        )
         env.observe_event({"type": "tsumo", "actor": 0, "pai": "3z"}, 0)
         env.observe_event(
-            {"type": "dahai", "actor": 0, "pai": "3z", "tsumogiri": True}, 0,
+            {"type": "dahai", "actor": 0, "pai": "3z", "tsumogiri": True},
+            0,
         )
 
         log_types = [e["type"] for e in env.mjai_log]
