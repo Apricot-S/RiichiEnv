@@ -4,6 +4,7 @@ use crate::types::{Conditions, Wind};
 use serde_json::Value;
 
 use super::GameState3P;
+use super::wall::DEAD_WALL_SIZE_3P;
 
 impl GameState3P {
     pub fn handle_kita(&mut self, pid: u8, act: &Action) {
@@ -150,7 +151,7 @@ impl GameState3P {
         }
 
         // Must have tiles left in wall (enough for rinshan draw)
-        if self.wall.tiles.len() <= 14 {
+        if self.wall.tiles.len() <= DEAD_WALL_SIZE_3P {
             return Vec::new();
         }
 
@@ -171,15 +172,16 @@ impl GameState3P {
     pub fn resolve_kita_rinshan(&mut self, pid: u8) {
         let p_idx = pid as usize;
 
-        if self.wall.tiles.len() > 14 {
+        if self.wall.tiles.len() > DEAD_WALL_SIZE_3P {
             // Reveal any pending kan dora (e.g. from a prior kakan/daiminkan)
             while self.wall.pending_kan_dora_count > 0 {
                 self.wall.pending_kan_dora_count -= 1;
                 self._reveal_kan_dora();
             }
 
-            // Draw from rinshan (front of wall vector)
-            let t = self.wall.tiles.remove(0);
+            // Draw from rinshan (dead wall), falling back to live wall
+            // when all dedicated rinshan slots are exhausted (e.g. many kitas).
+            let t = self.wall.draw_rinshan_tile().expect("rinshan draw failed despite len > 14");
             self.players[p_idx].hand.push(t);
             self.drawn_tile = Some(t);
             self.wall.rinshan_draw_count += 1;

@@ -1983,7 +1983,7 @@ mod unit_tests {
 
         let mut state = create_sanma_test_state(5);
         state._initialize_round(0, 0, 0, 0, None, None);
-        // Riichi remains legal only while wall.tiles.len() > 14, so use a fixed long wall.
+        // Riichi remains legal only while wall.tiles.len() > DEAD_WALL_SIZE_3P, so use a fixed long wall.
         state.wall.tiles = (36u8..56).collect(); // 1p-5p: all sanma-legal
 
         // Player 1: hand in tenpai (waiting on 7s)

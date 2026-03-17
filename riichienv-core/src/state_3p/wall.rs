@@ -4,6 +4,46 @@ use sha2::{Digest, Sha256};
 
 use crate::types::{TILES_4P, is_sanma_excluded_tile};
 
+/// Dead wall size for 3-player mahjong.
+///
+/// # 3P dead wall layout (7 stacks = 14 tiles)
+///
+/// ```text
+///          Dead wall (14 tiles)              Live wall
+///   |<─────────────────────────────>|<──────────── ... ──>
+///
+///   Stack:  R1   R2   R3   R4   D1   D2   D3   D4   D5    ...
+///   Upper: [r0] [r2] [r4] [r6] [d1] [d3] [d5] [d7] [d9]
+///   Lower: [r1] [r3] [r5] [r7] [u1] [u3] [u5] [u7] [u9]
+///          ├── rinshan (8) ────┤├─ dora 1-3 (6)─┤├ dora 4-5 ┤
+///                                                 (in live wall)
+/// ```
+///
+/// - **R1-R4** (8 tiles): rinshan draw area for kan and kita draws.
+/// - **D1-D3** (6 tiles): dora indicator stacks 1-3 (omote + ura pairs).
+///   Protected within the dead wall boundary.
+/// - **D4-D5** (4 tiles): dora indicator stacks 4-5.
+///   These reside in the live-wall area — their values are pre-extracted
+///   at wall setup, but the physical tiles may be drawn during normal play.
+///
+/// In 4P the dead wall is also 14 tiles, but split as 2 stacks rinshan +
+/// 5 stacks dora.  In 3P the rinshan area is doubled (4 stacks) because
+/// kita (north extraction) also draws from it, leaving room for only
+/// 3 dora stacks inside the dead wall.
+///
+/// Note: kita draws a rinshan tile but does NOT reveal a new dora
+/// indicator — only kan triggers dora revelation.
+///
+/// # Vec layout after reversal
+///
+/// ```text
+///   tiles[0..8]   = rinshan R1-R4 (remove(0) draws from here)
+///   tiles[8..14]  = dora stacks D1-D3 (protected by threshold)
+///   tiles[14..18] = dora stacks D4-D5 (in live wall, may be drawn via pop)
+///   tiles[18..108] = live wall (pop draws from here)
+/// ```
+pub const DEAD_WALL_SIZE_3P: usize = 14;
+
 /// Wall state for 3-player mahjong (108 tiles, sanma hardcoded).
 #[derive(Debug, Clone)]
 pub struct WallState3P {
@@ -15,6 +55,8 @@ pub struct WallState3P {
     pub ura_indicator_tiles: [u8; 5],
     pub rinshan_draw_count: u8,
     pub pending_kan_dora_count: u8,
+    /// Number of dedicated rinshan tiles at the front of the wall (8 for 3P).
+    num_rinshan_slots: u8,
     pub wall_digest: String,
     pub salt: String,
     pub seed: Option<u64>,
@@ -30,6 +72,7 @@ impl WallState3P {
             ura_indicator_tiles: [0; 5],
             rinshan_draw_count: 0,
             pending_kan_dora_count: 0,
+            num_rinshan_slots: 8,
             wall_digest: String::new(),
             salt: String::new(),
             seed,
@@ -66,17 +109,41 @@ impl WallState3P {
         w.reverse();
         self.tiles = w;
 
-        // Pre-extract dora/ura indicators from standard layout.
-        // After reversal: D_i omote at tiles[4+2i], ura at tiles[5+2i].
+        // Pre-extract dora/ura indicators from the dead wall layout.
+        // 3P dead wall after reversal:
+        //   tiles[0..8]   = 8 rinshan draw tiles
+        //   tiles[8..14]  = dora stacks 1-3 (D_i omote at 8+2i, ura at 9+2i)
+        //   tiles[14..18] = dora stacks 4-5 (in the live wall area, pre-extracted)
         for i in 0..5 {
-            self.dora_indicator_tiles[i] = self.tiles[4 + 2 * i];
-            self.ura_indicator_tiles[i] = self.tiles[5 + 2 * i];
+            self.dora_indicator_tiles[i] = self.tiles[8 + 2 * i];
+            self.ura_indicator_tiles[i] = self.tiles[9 + 2 * i];
         }
 
         self.dora_indicators.clear();
         self.dora_indicators.push(self.dora_indicator_tiles[0]);
         self.rinshan_draw_count = 0;
         self.pending_kan_dora_count = 0;
+        self.num_rinshan_slots = 8;
+    }
+
+    /// Draw a tile for rinshan (dead wall draw after kan or kita).
+    ///
+    /// Takes from the dedicated rinshan area (8 tiles) at the front of the
+    /// wall via `remove(0)`.  If all 8 slots are exhausted, falls back to
+    /// the live wall end (`pop`) so that dora/ura indicator tiles are never
+    /// consumed.
+    pub fn draw_rinshan_tile(&mut self) -> Option<u8> {
+        if (self.rinshan_draw_count as usize) < self.num_rinshan_slots as usize {
+            if !self.tiles.is_empty() {
+                Some(self.tiles.remove(0))
+            } else {
+                None
+            }
+        } else {
+            // All dedicated rinshan slots exhausted (common in 3P due to kita).
+            // Fall back to the live wall end so dora/ura indicators stay intact.
+            self.tiles.pop()
+        }
     }
 
     pub fn load_wall(&mut self, tiles: Vec<u8>) {
@@ -103,6 +170,7 @@ impl WallState3P {
         self.dora_indicators.push(self.dora_indicator_tiles[0]);
         self.rinshan_draw_count = 0;
         self.pending_kan_dora_count = 0;
+        self.num_rinshan_slots = 8;
     }
 }
 
@@ -111,4 +179,105 @@ fn splitmix64(x: u64) -> u64 {
     z = (z ^ (z >> 30)).wrapping_mul(0xBF58476D1CE4E5B9);
     z = (z ^ (z >> 27)).wrapping_mul(0x94D049BB133111EB);
     z ^ (z >> 31)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Regression test for issue #183: In 3P mode, the dead wall has
+    /// 8 rinshan tiles + 6 dora/ura indicators (stacks 1-3) = 14 tiles.
+    /// `draw_rinshan_tile` must never consume dora/ura indicator tiles.
+    #[test]
+    fn test_rinshan_draw_does_not_consume_dora_indicators() {
+        for seed in 0..1000 {
+            let mut wall = WallState3P::new(Some(seed));
+            wall.shuffle();
+
+            // Save the dora/ura indicator tile IDs (these must never be drawn).
+            let dora_tiles: Vec<u8> = wall.dora_indicator_tiles.to_vec();
+            let ura_tiles: Vec<u8> = wall.ura_indicator_tiles.to_vec();
+            let indicator_set: std::collections::HashSet<u8> =
+                dora_tiles.iter().chain(ura_tiles.iter()).copied().collect();
+
+            // Simulate dealing: pop ~40 tiles from the back (live wall).
+            for _ in 0..40 {
+                wall.tiles.pop();
+            }
+
+            // Simulate up to 12 rinshan draws (4 kans + 8 kitas, realistic max).
+            for draw_num in 0..12 {
+                if wall.tiles.len() <= DEAD_WALL_SIZE_3P {
+                    break;
+                }
+                let t = wall.draw_rinshan_tile()
+                    .expect("draw_rinshan_tile should succeed");
+                wall.rinshan_draw_count += 1;
+
+                assert!(
+                    !indicator_set.contains(&t),
+                    "seed={seed}, draw #{draw_num}: rinshan drew tile {t} \
+                     which is a dora/ura indicator! dora={dora_tiles:?}, ura={ura_tiles:?}"
+                );
+            }
+        }
+    }
+
+    /// Verify the dead wall layout: 8 rinshan slots at [0..8], dora
+    /// indicators at [8..18].
+    #[test]
+    fn test_dead_wall_layout_has_8_rinshan_slots() {
+        let mut wall = WallState3P::new(Some(42));
+        wall.shuffle();
+
+        assert_eq!(wall.tiles.len(), 108);
+        for i in 0..5 {
+            assert_eq!(wall.dora_indicator_tiles[i], wall.tiles[8 + 2 * i]);
+            assert_eq!(wall.ura_indicator_tiles[i], wall.tiles[9 + 2 * i]);
+        }
+    }
+
+    /// Verify that the old behavior (always remove(0) with only 4 rinshan
+    /// slots) WOULD have consumed dora indicators on the 5th+ draw.
+    #[test]
+    fn test_old_layout_remove0_would_consume_dora_indicators() {
+        // Simulate the OLD layout: dora at tiles[4..14], only 4 rinshan slots.
+        let mut found_collision = false;
+        for seed in 0..100 {
+            let mut wall = WallState3P::new(Some(seed));
+            wall.shuffle();
+
+            // Reconstruct old-style indicator positions (tiles[4..14])
+            let mut old_indicators = std::collections::HashSet::new();
+            for i in 0..5 {
+                old_indicators.insert(wall.tiles[4 + 2 * i]);
+                old_indicators.insert(wall.tiles[5 + 2 * i]);
+            }
+
+            // Simulate dealing
+            for _ in 0..40 {
+                wall.tiles.pop();
+            }
+
+            // Old behavior: always remove(0) with 4 rinshan slots
+            for draw_num in 0..8 {
+                if wall.tiles.is_empty() {
+                    break;
+                }
+                let t = wall.tiles.remove(0);
+                if draw_num >= 4 && old_indicators.contains(&t) {
+                    found_collision = true;
+                    break;
+                }
+            }
+            if found_collision {
+                break;
+            }
+        }
+        assert!(
+            found_collision,
+            "Expected the old remove(0) approach with 4 rinshan slots to \
+             consume dora indicators on the 5th+ draw"
+        );
+    }
 }
