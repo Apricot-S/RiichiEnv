@@ -952,10 +952,7 @@ impl RiichiEnv {
     /// Parse a Python event dict into (MjaiEvent, serde_json::Value).
     /// Parses the JSON string once into a Value, then converts to MjaiEvent
     /// via `from_value` to avoid double-parsing.
-    fn parse_mjai_event(
-        py: Python,
-        event: Py<PyAny>,
-    ) -> PyResult<(MjaiEvent, serde_json::Value)> {
+    fn parse_mjai_event(py: Python, event: Py<PyAny>) -> PyResult<(MjaiEvent, serde_json::Value)> {
         let json = py.import("json")?;
         let json_str: String = json.call_method1("dumps", (event,))?.extract()?;
         let json_val: serde_json::Value = serde_json::from_str(&json_str).map_err(|e| {
