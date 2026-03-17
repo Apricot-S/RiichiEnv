@@ -859,11 +859,28 @@ impl RiichiEnv {
     /// event application with observation retrieval.
     pub fn apply_event(&mut self, py: Python, event: Py<PyAny>) -> PyResult<()> {
         let json = py.import("json")?;
-        let s: String = json.call_method1("dumps", (event,))?.extract()?;
-        let ev: MjaiEvent = serde_json::from_str(&s).map_err(|e| {
+        let json_str: String = json.call_method1("dumps", (event,))?.extract()?;
+        let ev: MjaiEvent = serde_json::from_str(&json_str).map_err(|e| {
             pyo3::exceptions::PyValueError::new_err(format!("JSON Parse Error: {}", e))
         })?;
-        with_variant_mut!(self, |s| s.apply_mjai_event(ev));
+        // Parse once more as Value for the mjai_log push
+        let json_val: serde_json::Value = serde_json::from_str(&json_str).map_err(|e| {
+            pyo3::exceptions::PyValueError::new_err(format!("JSON Parse Error: {}", e))
+        })?;
+        let is_start_game = matches!(ev, MjaiEvent::StartGame { .. });
+        with_variant_mut!(self, |s| {
+            // When replaying from start_game, clear stale log from constructor
+            // so the viewer sees only user-supplied events.
+            if is_start_game {
+                s.mjai_log.clear();
+                for pl in s.mjai_log_per_player.iter_mut() {
+                    pl.clear();
+                }
+            }
+            s.apply_mjai_event(ev);
+            // Log the event so that get_viewer() can display it.
+            s._push_mjai_event(json_val);
+        });
         Ok(())
     }
 
@@ -881,8 +898,11 @@ impl RiichiEnv {
     ) -> PyResult<Option<Py<PyAny>>> {
         // Parse and apply the event
         let json = py.import("json")?;
-        let s: String = json.call_method1("dumps", (event,))?.extract()?;
-        let ev: MjaiEvent = serde_json::from_str(&s).map_err(|e| {
+        let json_str: String = json.call_method1("dumps", (event,))?.extract()?;
+        let ev: MjaiEvent = serde_json::from_str(&json_str).map_err(|e| {
+            pyo3::exceptions::PyValueError::new_err(format!("JSON Parse Error: {}", e))
+        })?;
+        let json_val: serde_json::Value = serde_json::from_str(&json_str).map_err(|e| {
             pyo3::exceptions::PyValueError::new_err(format!("JSON Parse Error: {}", e))
         })?;
 
@@ -902,7 +922,17 @@ impl RiichiEnv {
                 | MjaiEvent::Other
         );
 
-        with_variant_mut!(self, |s| s.apply_mjai_event(ev));
+        let is_start_game = matches!(ev, MjaiEvent::StartGame { .. });
+        with_variant_mut!(self, |s| {
+            if is_start_game {
+                s.mjai_log.clear();
+                for pl in s.mjai_log_per_player.iter_mut() {
+                    pl.clear();
+                }
+            }
+            s.apply_mjai_event(ev);
+            s._push_mjai_event(json_val);
+        });
 
         if skip_check {
             return Ok(None);
