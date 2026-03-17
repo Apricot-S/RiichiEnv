@@ -763,7 +763,10 @@ mod tests {
         let visible = vec![11 * 4, 11 * 4 + 1, 11 * 4 + 2];
 
         let ukeire = calculate_best_ukeire(&hand, &visible);
-        assert_eq!(ukeire, 2, "over-visible waits should clamp at zero remaining");
+        assert_eq!(
+            ukeire, 2,
+            "over-visible waits should clamp at zero remaining"
+        );
     }
 
     #[test]
@@ -778,6 +781,9 @@ mod tests {
         let visible = vec![20 * 4, 20 * 4 + 1, 20 * 4 + 2];
 
         let ukeire = calculate_best_ukeire_3p(&hand, &visible);
-        assert_eq!(ukeire, 2, "over-visible waits should clamp at zero remaining");
+        assert_eq!(
+            ukeire, 2,
+            "over-visible waits should clamp at zero remaining"
+        );
     }
 }
