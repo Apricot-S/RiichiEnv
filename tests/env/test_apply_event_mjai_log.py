@@ -8,7 +8,6 @@ Regression tests for https://github.com/smly/RiichiEnv/issues/184
 
 from riichienv import RiichiEnv
 
-
 # ---------------------------------------------------------------------------
 # Shared event builders
 # ---------------------------------------------------------------------------
