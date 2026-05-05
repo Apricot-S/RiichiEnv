@@ -117,8 +117,7 @@ impl Observation {
     pub fn find_action(&self, action_id: usize) -> Option<Action> {
         let encoder = ActionEncoder::FourPlayer;
         // Prefer non-red-five candidates so that 5m/5p/5s discards do not
-        // accidentally drop the akadora when a normal 5 is also legal
-        // (issue #206 plan B: action space cannot distinguish red vs normal 5).
+        // accidentally drop the akadora when a normal 5 is also legal.
         let mut fallback: Option<&Action> = None;
         for action in &self._legal_actions {
             let Ok(idx) = encoder.encode(action) else {
